@@ -22,7 +22,7 @@ public class EventBus implements MessageListener<Event>, IEventBus {
 
     private final Map<String, ITopic<Event>> topics = new HashMap<>();
 
-    private EventBusListener eventBusListener;
+    private EventBusListener eventBusListener = EventBusListener.NULL;
 
     private ITopic<Event> putAndGetTopic(String topicId) {
         ITopic<Event> topic = topics.get(topicId);
@@ -54,12 +54,7 @@ public class EventBus implements MessageListener<Event>, IEventBus {
 
     @Override
     public void onMessage(Message<Event> message) {
-        onEvent(message.getMessageObject());
-    }
-
-    @Override
-    public void onEvent(Event event) {
-        eventBusListener.onEvent(event);
+        eventBusListener.onEvent(message.getMessageObject());
     }
 
     @Override
@@ -70,7 +65,7 @@ public class EventBus implements MessageListener<Event>, IEventBus {
 
     @Override
     public void start() {
-        if (eventBusListener!=null) {
+        if (eventBusListener!=EventBusListener.NULL) {
             for (Action action: EnumSet.allOf(Action.class)) {
                 putAndGetTopic(action.toString());
             }
