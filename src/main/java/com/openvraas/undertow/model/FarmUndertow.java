@@ -16,6 +16,7 @@ import javax.enterprise.inject.Default;
 
 import com.openvraas.core.json.JsonObject;
 import com.openvraas.core.model.Backend;
+import com.openvraas.core.model.Backend.Health;
 import com.openvraas.core.model.BackendPool;
 import com.openvraas.core.model.Farm;
 import com.openvraas.core.model.Rule;
@@ -44,13 +45,22 @@ public class FarmUndertow extends Farm {
         Backend backend = (Backend) JsonObject.fromJson(jsonObject.toString(), Backend.class);
         String parentId = backend.getParentId();
         String backendId = backend.getId();
+        Backend.Health backendHealth = backend.getHealth();
 
         LoadBalancingProxyClient backendPool = backendPools.get(parentId);
         if (backendPool!=null) {
-            try {
-                backendPool.addHost(new URI(backendId));
-            } catch (URISyntaxException e) {
-                //log error
+            if (backendHealth==Health.HEALTHY) {
+                try {
+                    backendPool.addHost(new URI(backendId));
+                } catch (URISyntaxException e) {
+                    //log error
+                }
+            } else {
+                try {
+                    backendPool.removeHost(new URI(backendId));
+                } catch (URISyntaxException e) {
+                    //log error
+                }
             }
         }
         return super.addBackend(backend);
