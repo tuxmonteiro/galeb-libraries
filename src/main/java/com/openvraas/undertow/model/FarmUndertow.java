@@ -1,11 +1,14 @@
 package com.openvraas.undertow.model;
 
 import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.PathHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
+import io.undertow.server.handlers.proxy.ExclusivityChecker;
 import io.undertow.server.handlers.proxy.LoadBalancingProxyClient;
 import io.undertow.server.handlers.proxy.ProxyHandler;
+import io.undertow.util.Headers;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -86,7 +89,14 @@ public class FarmUndertow extends Farm {
     public Farm addBackendPool(JsonObject jsonObject) {
         BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
         String backendPoolId = backendPool.getId();
-        backendPools.put(backendPoolId, new LoadBalancingProxyClient().setConnectionsPerThread(20));
+        backendPools.put(backendPoolId, new LoadBalancingProxyClient(new ExclusivityChecker() {
+            @Override
+            public boolean isExclusivityRequired(HttpServerExchange exchange) {
+                //we always create a new connection for upgrade requests
+                return exchange.getRequestHeaders().contains(Headers.UPGRADE);
+            }
+        }).setConnectionsPerThread(20)
+          .addSessionCookieName("JSESSIONID"));
         return super.addBackendPool(backendPool);
     }
 
