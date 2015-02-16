@@ -32,7 +32,7 @@ public class FarmUndertow extends Farm {
 
     private final HttpHandler rootHandler = new NameVirtualHostHandler();
 
-    private final Map<String, LoadBalancingProxyClient> backendPools = new HashMap<>();
+    private final Map<String, LoadBalancingProxyClient> backendPoolsUndertow = new HashMap<>();
 
     public FarmUndertow() {
         super();
@@ -50,7 +50,7 @@ public class FarmUndertow extends Farm {
         String backendId = backend.getId();
         Backend.Health backendHealth = backend.getHealth();
 
-        LoadBalancingProxyClient backendPool = backendPools.get(parentId);
+        LoadBalancingProxyClient backendPool = backendPoolsUndertow.get(parentId);
         if (backendPool!=null) {
             if (backendHealth==Health.HEALTHY) {
                 try {
@@ -65,8 +65,12 @@ public class FarmUndertow extends Farm {
                     //log error
                 }
             }
+
+            return super.addBackend(backend);
+
+        } else {
+            throw new RuntimeException("ParentId not found");
         }
-        return super.addBackend(backend);
     }
 
     @Override
@@ -74,7 +78,7 @@ public class FarmUndertow extends Farm {
         Backend backend = (Backend) JsonObject.fromJson(jsonObject.toString(), Backend.class);
         String parentId = backend.getParentId();
         String backendId = backend.getId();
-        LoadBalancingProxyClient backendPool = backendPools.get(parentId);
+        LoadBalancingProxyClient backendPool = backendPoolsUndertow.get(parentId);
         if (backendPool!=null) {
             try {
                 backendPool.removeHost(new URI(backendId));
@@ -89,7 +93,7 @@ public class FarmUndertow extends Farm {
     public Farm addBackendPool(JsonObject jsonObject) {
         BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
         String backendPoolId = backendPool.getId();
-        backendPools.put(backendPoolId, new LoadBalancingProxyClient(new ExclusivityChecker() {
+        backendPoolsUndertow.put(backendPoolId, new LoadBalancingProxyClient(new ExclusivityChecker() {
             @Override
             public boolean isExclusivityRequired(HttpServerExchange exchange) {
                 //we always create a new connection for upgrade requests
@@ -103,16 +107,7 @@ public class FarmUndertow extends Farm {
     @Override
     public Farm delBackendPool(JsonObject jsonObject) {
         BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
-        String backendPoolId = backendPool.getId();
-        for (VirtualHost virtualhost: super.getVirtualHosts()) {
-            for (Rule rule: virtualhost.getRules()) {
-                String targetId = rule.getProperties().get("targetId").toString();
-                if (targetId!=null && targetId.equals(backendPoolId)) {
-                    delRule(rule);
-                }
-            }
-        }
-        backendPools.remove(backendPool);
+        backendPoolsUndertow.remove(backendPool);
         return super.delBackendPool(backendPool);
     }
 
@@ -122,22 +117,28 @@ public class FarmUndertow extends Farm {
         String virtualhostId = rule.getParentId();
         String match = ((String)rule.getProperties().get("match"));
         String targetId = ((String)rule.getProperties().get("targetId"));
+        int maxRequestTime = 30000;
 
-        LoadBalancingProxyClient backendPool = backendPools.get(targetId);
-        if (backendPool!=null) {
-            HttpHandler backendPoolHandler = new ProxyHandler(backendPool, 30000, ResponseCodeHandler.HANDLE_404);
-            final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) rootHandler).getHosts();
-            HttpHandler ruleHandler = hosts.get(virtualhostId);
-            if (ruleHandler==null) {
-                ruleHandler = new PathHandler(ResponseCodeHandler.HANDLE_404);
-            } else {
-                if (ResponseCodeHandler.class.getSimpleName().equals(ruleHandler.getClass().getSimpleName())) {
-                    ruleHandler = new PathHandler(ResponseCodeHandler.HANDLE_404);
-                }
+        final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) rootHandler).getHosts();
+        if (!hosts.containsKey(virtualhostId)) {
+            throw new RuntimeException("ParentId not found");
+        }
+
+        if (!"404".equals(targetId)) {
+            LoadBalancingProxyClient backendPool = backendPoolsUndertow.get(targetId);
+            if (backendPool==null) {
+                throw new RuntimeException("TargetId not found");
             }
-            ((PathHandler)ruleHandler).addPrefixPath(match, backendPoolHandler);
+            HttpHandler ruleHandler = hosts.get(virtualhostId);
+            if (!(ruleHandler instanceof PathHandler)) {
+                ruleHandler = new PathHandler(ResponseCodeHandler.HANDLE_404);
+            }
+            ruleHandler = new PathHandler(ResponseCodeHandler.HANDLE_404);
+            HttpHandler targetHandler = new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404);
+            ((PathHandler) ruleHandler).addPrefixPath(match, targetHandler);
             hosts.put(virtualhostId, ruleHandler);
         }
+
         return super.addRule(rule);
     }
 
