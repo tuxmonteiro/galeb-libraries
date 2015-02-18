@@ -11,9 +11,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.openvraas.core.util.consistenthash.ConsistentHash;
 import com.openvraas.core.util.consistenthash.HashAlgorithm;
 import com.openvraas.core.util.consistenthash.HashAlgorithm.HashType;
-import com.openvraas.undertow.handlers.loadbalance.LoadBalanceCriterion;
+import com.openvraas.undertow.handlers.loadbalance.AbstractLoadBalancePolicy;
 
-public class IPHashLB extends LoadBalanceCriterion {
+public class IPHashPolicy extends AbstractLoadBalancePolicy {
 
     public enum Params {
         IPHASH_HASH_ALGORITHM("HashAlgorithm"),
@@ -73,7 +73,7 @@ public class IPHashLB extends LoadBalanceCriterion {
     }
 
     @Override
-    public LoadBalanceCriterion setParams(final Map<String, Object> params,
+    public AbstractLoadBalancePolicy setParams(final Map<String, Object> params,
             final HttpServerExchange exchange) {
         String hashAlgorithmStr = (String) params.get(Params.IPHASH_HASH_ALGORITHM.toString());
         if (hashAlgorithmStr!=null) {

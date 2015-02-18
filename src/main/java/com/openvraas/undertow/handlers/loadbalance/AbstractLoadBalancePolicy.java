@@ -6,7 +6,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class LoadBalanceCriterion {
+public abstract class AbstractLoadBalancePolicy {
 
     public enum Algorithm {
         ROUNDROBIN("RoundRobinPolicy"),
@@ -42,7 +42,7 @@ public abstract class LoadBalanceCriterion {
 
     public static Algorithm DEFAULT_ALGORITHM = Algorithm.ROUNDROBIN;
 
-    public static LoadBalanceCriterion NULL = new LoadBalanceCriterion() {
+    public static AbstractLoadBalancePolicy NULL = new AbstractLoadBalancePolicy() {
         @Override
         public void reset() {
         }
@@ -58,7 +58,7 @@ public abstract class LoadBalanceCriterion {
         }
 
         @Override
-        public LoadBalanceCriterion setParams(final Map<String, Object> params, final HttpServerExchange exchange) {
+        public AbstractLoadBalancePolicy setParams(final Map<String, Object> params, final HttpServerExchange exchange) {
             return this;
         }
     };
@@ -69,6 +69,6 @@ public abstract class LoadBalanceCriterion {
 
     public abstract void reset();
 
-    public abstract LoadBalanceCriterion setParams(final Map<String, Object> params, final HttpServerExchange exchange);
+    public abstract AbstractLoadBalancePolicy setParams(final Map<String, Object> params, final HttpServerExchange exchange);
 
 }

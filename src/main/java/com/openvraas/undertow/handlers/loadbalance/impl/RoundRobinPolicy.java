@@ -5,9 +5,9 @@ import io.undertow.server.HttpServerExchange;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.openvraas.undertow.handlers.loadbalance.LoadBalanceCriterion;
+import com.openvraas.undertow.handlers.loadbalance.AbstractLoadBalancePolicy;
 
-public class RoundRobinLB extends LoadBalanceCriterion {
+public class RoundRobinPolicy extends AbstractLoadBalancePolicy {
 
     private final AtomicInteger currentHost = new AtomicInteger(0);
 
@@ -27,7 +27,7 @@ public class RoundRobinLB extends LoadBalanceCriterion {
     }
 
     @Override
-    public LoadBalanceCriterion setParams(Map<String, Object> params,
+    public AbstractLoadBalancePolicy setParams(Map<String, Object> params,
             HttpServerExchange exchange) {
         return this;
     }

@@ -24,7 +24,7 @@ import com.openvraas.core.model.Farm;
 import com.openvraas.core.model.Rule;
 import com.openvraas.core.model.VirtualHost;
 import com.openvraas.undertow.handlers.CustomLoadBalancingProxyClient;
-import com.openvraas.undertow.handlers.loadbalance.LoadBalanceCriterion;
+import com.openvraas.undertow.handlers.loadbalance.AbstractLoadBalancePolicy;
 
 @Default
 public class FarmUndertow extends Farm {
@@ -94,11 +94,11 @@ public class FarmUndertow extends Farm {
     public Farm addBackendPool(JsonObject jsonObject) {
         BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
         Map<String, Object> properties = backendPool.getProperties();
-        String loadBalanceAlgorithm = (String) properties.get(LoadBalanceCriterion.LOADBALANCE_ALGORITHM_NAME_FIELD);
-        boolean loadBalanceDefined = loadBalanceAlgorithm!=null && LoadBalanceCriterion.hasLoadBalanceAlgorithm(loadBalanceAlgorithm);
+        String loadBalanceAlgorithm = (String) properties.get(AbstractLoadBalancePolicy.LOADBALANCE_ALGORITHM_NAME_FIELD);
+        boolean loadBalanceDefined = loadBalanceAlgorithm!=null && AbstractLoadBalancePolicy.hasLoadBalanceAlgorithm(loadBalanceAlgorithm);
 
         if (!loadBalanceDefined) {
-            properties.put(LoadBalanceCriterion.LOADBALANCE_ALGORITHM_NAME_FIELD, LoadBalanceCriterion.DEFAULT_ALGORITHM.toString());
+            properties.put(AbstractLoadBalancePolicy.LOADBALANCE_ALGORITHM_NAME_FIELD, AbstractLoadBalancePolicy.DEFAULT_ALGORITHM.toString());
         }
 
         String backendPoolId = backendPool.getId();

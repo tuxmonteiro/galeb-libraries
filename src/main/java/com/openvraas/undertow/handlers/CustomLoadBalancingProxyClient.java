@@ -22,8 +22,8 @@ import io.undertow.util.CopyOnWriteMap;
 import org.xnio.OptionMap;
 import org.xnio.ssl.XnioSsl;
 
-import com.openvraas.undertow.handlers.loadbalance.LoadBalanceCriterion;
-import com.openvraas.undertow.handlers.loadbalance.LoadBalanceCriterionLocator;
+import com.openvraas.undertow.handlers.loadbalance.AbstractLoadBalancePolicy;
+import com.openvraas.undertow.handlers.loadbalance.LoadBalancePolicyLocator;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -71,11 +71,11 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
 
     private final ExclusivityChecker exclusivityChecker;
 
-    private volatile String loadBalanceAlgorithm = LoadBalanceCriterion.DEFAULT_ALGORITHM.toString();
+    private volatile String loadBalanceAlgorithm = AbstractLoadBalancePolicy.DEFAULT_ALGORITHM.toString();
 
-    private volatile LoadBalanceCriterion loadBalanceCriterion = LoadBalanceCriterion.NULL;
+    private volatile AbstractLoadBalancePolicy abstractLoadBalancePolicy = AbstractLoadBalancePolicy.NULL;
 
-    private final LoadBalanceCriterionLocator loadBalanceCriterionLocator = new LoadBalanceCriterionLocator();
+    private final LoadBalancePolicyLocator loadBalancePolicyLocator = new LoadBalancePolicyLocator();
 
     private static final ProxyTarget PROXY_TARGET = new ProxyTarget() {
     };
@@ -139,7 +139,7 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
         if (params!=null) {
             this.params.putAll(params);
         }
-        String algorithmLB = (String) params.get(LoadBalanceCriterion.LOADBALANCE_ALGORITHM_NAME_FIELD);
+        String algorithmLB = (String) params.get(AbstractLoadBalancePolicy.LOADBALANCE_ALGORITHM_NAME_FIELD);
         if (algorithmLB!=null) {
             this.loadBalanceAlgorithm = algorithmLB;
         }
@@ -293,11 +293,11 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
             return sticky;
         }
 
-        if (loadBalanceCriterion==LoadBalanceCriterion.NULL) {
-            loadBalanceCriterion = loadBalanceCriterionLocator.get(loadBalanceAlgorithm);
-            loadBalanceCriterion.reset();
+        if (abstractLoadBalancePolicy==AbstractLoadBalancePolicy.NULL) {
+            abstractLoadBalancePolicy = loadBalancePolicyLocator.get(loadBalanceAlgorithm);
+            abstractLoadBalancePolicy.reset();
         }
-        int host = loadBalanceCriterion.setParams(params, exchange).getChoice(hosts);
+        int host = abstractLoadBalancePolicy.setParams(params, exchange).getChoice(hosts);
 
         final int startHost = host; //if the all hosts have problems we come back to this one
         Host full = null;

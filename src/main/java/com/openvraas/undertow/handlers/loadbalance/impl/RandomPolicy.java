@@ -4,9 +4,9 @@ import io.undertow.server.HttpServerExchange;
 
 import java.util.Map;
 
-import com.openvraas.undertow.handlers.loadbalance.LoadBalanceCriterion;
+import com.openvraas.undertow.handlers.loadbalance.AbstractLoadBalancePolicy;
 
-public class RandomLB extends LoadBalanceCriterion {
+public class RandomPolicy extends AbstractLoadBalancePolicy {
 
     public int lastChosen = 0;
 
@@ -27,7 +27,7 @@ public class RandomLB extends LoadBalanceCriterion {
     }
 
     @Override
-    public LoadBalanceCriterion setParams(Map<String, Object> params,
+    public AbstractLoadBalancePolicy setParams(Map<String, Object> params,
             HttpServerExchange exchange) {
         return this;
     }
