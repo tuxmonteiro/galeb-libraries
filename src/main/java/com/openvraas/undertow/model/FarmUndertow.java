@@ -6,7 +6,6 @@ import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.PathHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.proxy.ExclusivityChecker;
-import io.undertow.server.handlers.proxy.LoadBalancingProxyClient;
 import io.undertow.server.handlers.proxy.ProxyHandler;
 import io.undertow.util.Headers;
 
@@ -24,6 +23,8 @@ import com.openvraas.core.model.BackendPool;
 import com.openvraas.core.model.Farm;
 import com.openvraas.core.model.Rule;
 import com.openvraas.core.model.VirtualHost;
+import com.openvraas.undertow.handlers.CustomLoadBalancingProxyClient;
+import com.openvraas.undertow.handlers.loadbalance.LoadBalanceCriterion;
 
 @Default
 public class FarmUndertow extends Farm {
@@ -32,7 +33,7 @@ public class FarmUndertow extends Farm {
 
     private final HttpHandler rootHandler = new NameVirtualHostHandler();
 
-    private final Map<String, LoadBalancingProxyClient> backendPoolsUndertow = new HashMap<>();
+    private final Map<String, CustomLoadBalancingProxyClient> backendPoolsUndertow = new HashMap<>();
 
     public FarmUndertow() {
         super();
@@ -50,7 +51,7 @@ public class FarmUndertow extends Farm {
         String backendId = backend.getId();
         Backend.Health backendHealth = backend.getHealth();
 
-        LoadBalancingProxyClient backendPool = backendPoolsUndertow.get(parentId);
+        CustomLoadBalancingProxyClient backendPool = backendPoolsUndertow.get(parentId);
         if (backendPool!=null) {
             if (backendHealth==Health.HEALTHY) {
                 try {
@@ -78,7 +79,7 @@ public class FarmUndertow extends Farm {
         Backend backend = (Backend) JsonObject.fromJson(jsonObject.toString(), Backend.class);
         String parentId = backend.getParentId();
         String backendId = backend.getId();
-        LoadBalancingProxyClient backendPool = backendPoolsUndertow.get(parentId);
+        CustomLoadBalancingProxyClient backendPool = backendPoolsUndertow.get(parentId);
         if (backendPool!=null) {
             try {
                 backendPool.removeHost(new URI(backendId));
@@ -92,22 +93,32 @@ public class FarmUndertow extends Farm {
     @Override
     public Farm addBackendPool(JsonObject jsonObject) {
         BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
+        Map<String, Object> properties = backendPool.getProperties();
+        String loadBalanceAlgorithm = (String) properties.get(LoadBalanceCriterion.LOADBALANCE_ALGORITHM_NAME_FIELD);
+        boolean loadBalanceDefined = loadBalanceAlgorithm!=null && LoadBalanceCriterion.hasLoadBalanceAlgorithm(loadBalanceAlgorithm);
+
+        if (!loadBalanceDefined) {
+            properties.put(LoadBalanceCriterion.LOADBALANCE_ALGORITHM_NAME_FIELD, LoadBalanceCriterion.DEFAULT_ALGORITHM.toString());
+        }
+
         String backendPoolId = backendPool.getId();
-        backendPoolsUndertow.put(backendPoolId, new LoadBalancingProxyClient(new ExclusivityChecker() {
+        backendPoolsUndertow.put(backendPoolId, new CustomLoadBalancingProxyClient(new ExclusivityChecker() {
             @Override
             public boolean isExclusivityRequired(HttpServerExchange exchange) {
                 //we always create a new connection for upgrade requests
                 return exchange.getRequestHeaders().contains(Headers.UPGRADE);
             }
         }).setConnectionsPerThread(20)
-          .addSessionCookieName("JSESSIONID"));
+          .addSessionCookieName("JSESSIONID")
+          .setParams(properties));
         return super.addBackendPool(backendPool);
     }
 
     @Override
     public Farm delBackendPool(JsonObject jsonObject) {
         BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
-        backendPoolsUndertow.remove(backendPool);
+        String backendPoolId = backendPool.getId();
+        backendPoolsUndertow.remove(backendPoolId);
         return super.delBackendPool(backendPool);
     }
 
@@ -125,7 +136,7 @@ public class FarmUndertow extends Farm {
         }
 
         if (!"404".equals(targetId)) {
-            LoadBalancingProxyClient backendPool = backendPoolsUndertow.get(targetId);
+            CustomLoadBalancingProxyClient backendPool = backendPoolsUndertow.get(targetId);
             if (backendPool==null) {
                 throw new RuntimeException("TargetId not found");
             }
