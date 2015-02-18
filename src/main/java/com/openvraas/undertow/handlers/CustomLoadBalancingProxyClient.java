@@ -22,8 +22,8 @@ import io.undertow.util.CopyOnWriteMap;
 import org.xnio.OptionMap;
 import org.xnio.ssl.XnioSsl;
 
-import com.openvraas.undertow.handlers.loadbalance.AbstractLoadBalancePolicy;
-import com.openvraas.undertow.handlers.loadbalance.LoadBalancePolicyLocator;
+import com.openvraas.undertow.loadbalance.AbstractLoadBalancePolicy;
+import com.openvraas.undertow.loadbalance.LoadBalancePolicyLocator;
 
 import java.net.InetSocketAddress;
 import java.net.URI;

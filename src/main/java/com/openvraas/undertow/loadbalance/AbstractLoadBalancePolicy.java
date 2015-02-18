@@ -1,4 +1,4 @@
-package com.openvraas.undertow.handlers.loadbalance;
+package com.openvraas.undertow.loadbalance;
 
 import io.undertow.server.HttpServerExchange;
 

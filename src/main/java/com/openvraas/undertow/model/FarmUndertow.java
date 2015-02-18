@@ -24,7 +24,7 @@ import com.openvraas.core.model.Farm;
 import com.openvraas.core.model.Rule;
 import com.openvraas.core.model.VirtualHost;
 import com.openvraas.undertow.handlers.CustomLoadBalancingProxyClient;
-import com.openvraas.undertow.handlers.loadbalance.AbstractLoadBalancePolicy;
+import com.openvraas.undertow.loadbalance.AbstractLoadBalancePolicy;
 
 @Default
 public class FarmUndertow extends Farm {

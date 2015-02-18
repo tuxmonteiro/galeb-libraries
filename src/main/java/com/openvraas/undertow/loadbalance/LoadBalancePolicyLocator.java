@@ -1,13 +1,13 @@
-package com.openvraas.undertow.handlers.loadbalance;
+package com.openvraas.undertow.loadbalance;
 
-import static com.openvraas.undertow.handlers.loadbalance.AbstractLoadBalancePolicy.Algorithm.*;
+import static com.openvraas.undertow.loadbalance.AbstractLoadBalancePolicy.Algorithm.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.openvraas.undertow.handlers.loadbalance.impl.RoundRobinPolicy;
-import com.openvraas.undertow.handlers.loadbalance.impl.RandomPolicy;
-import com.openvraas.undertow.handlers.loadbalance.impl.IPHashPolicy;
+import com.openvraas.undertow.loadbalance.impl.IPHashPolicy;
+import com.openvraas.undertow.loadbalance.impl.RandomPolicy;
+import com.openvraas.undertow.loadbalance.impl.RoundRobinPolicy;
 
 public class LoadBalancePolicyLocator {
 

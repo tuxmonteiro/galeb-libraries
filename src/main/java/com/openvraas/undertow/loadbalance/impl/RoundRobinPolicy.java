@@ -1,11 +1,11 @@
-package com.openvraas.undertow.handlers.loadbalance.impl;
+package com.openvraas.undertow.loadbalance.impl;
 
 import io.undertow.server.HttpServerExchange;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.openvraas.undertow.handlers.loadbalance.AbstractLoadBalancePolicy;
+import com.openvraas.undertow.loadbalance.AbstractLoadBalancePolicy;
 
 public class RoundRobinPolicy extends AbstractLoadBalancePolicy {
 

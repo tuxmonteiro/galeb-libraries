@@ -1,10 +1,10 @@
-package com.openvraas.undertow.handlers.loadbalance.impl;
+package com.openvraas.undertow.loadbalance.impl;
 
 import io.undertow.server.HttpServerExchange;
 
 import java.util.Map;
 
-import com.openvraas.undertow.handlers.loadbalance.AbstractLoadBalancePolicy;
+import com.openvraas.undertow.loadbalance.AbstractLoadBalancePolicy;
 
 public class RandomPolicy extends AbstractLoadBalancePolicy {
 

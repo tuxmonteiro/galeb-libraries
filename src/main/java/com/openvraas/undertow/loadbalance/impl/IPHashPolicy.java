@@ -1,4 +1,4 @@
-package com.openvraas.undertow.handlers.loadbalance.impl;
+package com.openvraas.undertow.loadbalance.impl;
 
 import io.undertow.server.HttpServerExchange;
 
@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.openvraas.core.util.consistenthash.ConsistentHash;
 import com.openvraas.core.util.consistenthash.HashAlgorithm;
 import com.openvraas.core.util.consistenthash.HashAlgorithm.HashType;
-import com.openvraas.undertow.handlers.loadbalance.AbstractLoadBalancePolicy;
+import com.openvraas.undertow.loadbalance.AbstractLoadBalancePolicy;
 
 public class IPHashPolicy extends AbstractLoadBalancePolicy {
 
