@@ -22,8 +22,9 @@ import io.undertow.util.CopyOnWriteMap;
 import org.xnio.OptionMap;
 import org.xnio.ssl.XnioSsl;
 
-import com.openvraas.undertow.loadbalance.AbstractLoadBalancePolicy;
-import com.openvraas.undertow.loadbalance.LoadBalancePolicyLocator;
+import com.openvraas.core.loadbalance.LoadBalancePolicy;
+import com.openvraas.core.loadbalance.LoadBalancePolicyLocator;
+import com.openvraas.undertow.util.UndertowSourceIP;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
@@ -52,7 +53,7 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
 
     private final Set<String> sessionCookieNames = new CopyOnWriteArraySet<>();
 
-    private final Map<String, Object> params = new CopyOnWriteMap<>();
+    private final Map<String, Object> loadBalancePolicyCriteria = new CopyOnWriteMap<>();
 
     /**
      * The number of connections to create per thread
@@ -71,9 +72,9 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
 
     private final ExclusivityChecker exclusivityChecker;
 
-    private volatile String loadBalanceAlgorithm = AbstractLoadBalancePolicy.DEFAULT_ALGORITHM.toString();
+    private volatile String loadBalanceAlgorithm = LoadBalancePolicy.DEFAULT_ALGORITHM.toString();
 
-    private volatile AbstractLoadBalancePolicy abstractLoadBalancePolicy = AbstractLoadBalancePolicy.NULL;
+    private volatile LoadBalancePolicy loadBalancePolicy = LoadBalancePolicy.NULL;
 
     private final LoadBalancePolicyLocator loadBalancePolicyLocator = new LoadBalancePolicyLocator();
 
@@ -137,9 +138,9 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
 
     public synchronized CustomLoadBalancingProxyClient setParams(final Map<String, Object> params) {
         if (params!=null) {
-            this.params.putAll(params);
+            this.loadBalancePolicyCriteria.putAll(params);
         }
-        String algorithmLB = (String) params.get(AbstractLoadBalancePolicy.LOADBALANCE_ALGORITHM_NAME_FIELD);
+        String algorithmLB = (String) params.get(LoadBalancePolicy.LOADBALANCE_POLICY_FIELD);
         if (algorithmLB!=null) {
             this.loadBalanceAlgorithm = algorithmLB;
         }
@@ -293,11 +294,14 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
             return sticky;
         }
 
-        if (abstractLoadBalancePolicy==AbstractLoadBalancePolicy.NULL) {
-            abstractLoadBalancePolicy = loadBalancePolicyLocator.get(loadBalanceAlgorithm);
-            abstractLoadBalancePolicy.reset();
+        if (loadBalancePolicy==LoadBalancePolicy.NULL) {
+            loadBalancePolicy = loadBalancePolicyLocator.get(loadBalanceAlgorithm);
+            loadBalancePolicy.reset();
         }
-        int host = abstractLoadBalancePolicy.setParams(params, exchange).getChoice(hosts);
+        if (loadBalancePolicy.needSourceIP()) {
+            loadBalancePolicyCriteria.put(LoadBalancePolicy.SOURCE_IP_CRITERION, new UndertowSourceIP(exchange).get());
+        }
+        int host = loadBalancePolicy.setCriteria(loadBalancePolicyCriteria).getChoice(hosts);
 
         final int startHost = host; //if the all hosts have problems we come back to this one
         Host full = null;
