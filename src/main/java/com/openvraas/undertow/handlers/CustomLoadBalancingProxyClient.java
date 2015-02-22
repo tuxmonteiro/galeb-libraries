@@ -18,6 +18,7 @@ import io.undertow.server.handlers.proxy.ProxyConnection;
 import io.undertow.server.handlers.proxy.ProxyConnectionPool;
 import io.undertow.util.AttachmentKey;
 import io.undertow.util.CopyOnWriteMap;
+import io.undertow.util.HttpString;
 
 import org.xnio.OptionMap;
 import org.xnio.ssl.XnioSsl;
@@ -233,6 +234,8 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
         }
 
         final Host host = selectHost(exchange);
+        exchange.getRequestHeaders().add(new HttpString("X-Proxy-Host"), host != null ? host.getUri().toString() : "UNDEF" );
+
         if (host == null) {
             callback.couldNotResolveBackend(exchange);
         } else {
@@ -393,6 +396,10 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
         @Override
         public int getMaxQueueSize() {
             return maxQueueSize;
+        }
+
+        public URI getUri() {
+            return uri;
         }
     }
 
