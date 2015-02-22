@@ -53,8 +53,6 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
 
     private final Set<String> sessionCookieNames = new CopyOnWriteArraySet<>();
 
-    private final Map<String, Object> loadBalancePolicyCriteria = new CopyOnWriteMap<>();
-
     /**
      * The number of connections to create per thread
      */
@@ -72,11 +70,11 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
 
     private final ExclusivityChecker exclusivityChecker;
 
-    private volatile String loadBalanceAlgorithm = LoadBalancePolicy.DEFAULT_ALGORITHM.toString();
-
     private volatile LoadBalancePolicy loadBalancePolicy = LoadBalancePolicy.NULL;
 
     private final LoadBalancePolicyLocator loadBalancePolicyLocator = new LoadBalancePolicyLocator();
+
+    private final Map<String, Object> params = new CopyOnWriteMap<>();
 
     private static final ProxyTarget PROXY_TARGET = new ProxyTarget() {
     };
@@ -136,15 +134,10 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
         return this;
     }
 
-    public synchronized CustomLoadBalancingProxyClient setParams(final Map<String, Object> params) {
-        if (params!=null) {
-            this.loadBalancePolicyCriteria.putAll(params);
+    public synchronized CustomLoadBalancingProxyClient setParams(final Map<String, Object> myParams) {
+        if (myParams!=null) {
+            params.putAll(myParams);
         }
-        String algorithmLB = (String) params.get(LoadBalancePolicy.LOADBALANCE_POLICY_FIELD);
-        if (algorithmLB!=null) {
-            this.loadBalanceAlgorithm = algorithmLB;
-        }
-
         return this;
     }
 
@@ -171,6 +164,9 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
         if (jvmRoute != null) {
             this.routes.put(jvmRoute, h);
         }
+
+        loadBalancePolicy.reset();
+
         return this;
     }
 
@@ -188,6 +184,9 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
         if (jvmRoute != null) {
             this.routes.put(jvmRoute, h);
         }
+
+        loadBalancePolicy.reset();
+
         return this;
     }
 
@@ -213,6 +212,9 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
         if (removedHost.jvmRoute != null) {
             routes.remove(removedHost.jvmRoute);
         }
+
+        loadBalancePolicy.reset();
+
         return this;
     }
 
@@ -295,13 +297,14 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
         }
 
         if (loadBalancePolicy==LoadBalancePolicy.NULL) {
-            loadBalancePolicy = loadBalancePolicyLocator.get(loadBalanceAlgorithm);
+            loadBalancePolicy = loadBalancePolicyLocator.setParams(params).get();
             loadBalancePolicy.reset();
         }
-        if (loadBalancePolicy.needSourceIP()) {
-            loadBalancePolicyCriteria.put(LoadBalancePolicy.SOURCE_IP_CRITERION, new UndertowSourceIP(exchange).get());
-        }
-        int host = loadBalancePolicy.setCriteria(loadBalancePolicyCriteria).getChoice(hosts);
+
+        int host = loadBalancePolicy.setCriteria(params)
+                                    .setCriteria(new UndertowSourceIP(), exchange)
+                                    .mapOfHosts(hosts)
+                                    .getChoice();
 
         final int startHost = host; //if the all hosts have problems we come back to this one
         Host full = null;
