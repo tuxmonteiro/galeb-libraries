@@ -5,6 +5,8 @@ import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.PathHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
+import io.undertow.server.handlers.accesslog.AccessLogHandler;
+import io.undertow.server.handlers.accesslog.AccessLogReceiver;
 import io.undertow.server.handlers.proxy.ExclusivityChecker;
 import io.undertow.server.handlers.proxy.ProxyHandler;
 import io.undertow.util.Headers;
@@ -15,6 +17,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.enterprise.inject.Default;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.spi.ExtendedLogger;
 
 import com.openvraas.core.json.JsonObject;
 import com.openvraas.core.loadbalance.LoadBalancePolicy;
@@ -32,7 +37,20 @@ public class FarmUndertow extends Farm {
 
     private static final long serialVersionUID = 1L;
 
-    private final HttpHandler rootHandler = new NameVirtualHostHandler();
+    private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
+
+    private final HttpHandler rootHandler = new AccessLogHandler(virtualHostHandler, new AccessLogReceiver() {
+
+        public static final String DEFAULT_CATEGORY = "com.openvraas.accesslog";
+
+        private final ExtendedLogger logger = LogManager.getContext().getLogger(DEFAULT_CATEGORY);
+
+        @Override
+        public void logMessage(String message) {
+            logger.info(message);
+        }
+
+    }, "%h %l %u %t \"%r\" %s %b (%v -> %{i,X-Proxy-Host})", null);
 
     private final Map<String, CustomLoadBalancingProxyClient> backendPoolsUndertow = new HashMap<>();
 
@@ -58,7 +76,7 @@ public class FarmUndertow extends Farm {
                 try {
                     backendPool.addHost(new URI(backendId));
                 } catch (URISyntaxException e) {
-                    //log error
+                    throw (URISyntaxException)e;
                 }
             } else {
                 try {
@@ -131,7 +149,7 @@ public class FarmUndertow extends Farm {
         String targetId = ((String)rule.getProperties().get("targetId"));
         int maxRequestTime = 30000;
 
-        final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) rootHandler).getHosts();
+        final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
         if (!hosts.containsKey(virtualhostId)) {
             throw new RuntimeException("ParentId not found");
         }
@@ -160,7 +178,7 @@ public class FarmUndertow extends Farm {
         String virtualhostId = rule.getParentId();
         String match = ((String)rule.getProperties().get("match"));
 
-        final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) rootHandler).getHosts();
+        final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
         HttpHandler ruleHandler = hosts.get(virtualhostId);
         if (ruleHandler!=null) {
             ((PathHandler)ruleHandler).removePrefixPath(match);
@@ -172,7 +190,7 @@ public class FarmUndertow extends Farm {
     public Farm addVirtualHost(JsonObject jsonObject) {
         VirtualHost virtualhost = (VirtualHost) JsonObject.fromJson(jsonObject.toString(), VirtualHost.class);
         String virtualhostId = virtualhost.getId();
-        ((NameVirtualHostHandler) rootHandler).addHost(virtualhostId, ResponseCodeHandler.HANDLE_404);
+        ((NameVirtualHostHandler) virtualHostHandler).addHost(virtualhostId, ResponseCodeHandler.HANDLE_404);
         return super.addVirtualHost(virtualhost);
     }
 
@@ -183,7 +201,7 @@ public class FarmUndertow extends Farm {
         for (Rule rule: virtualhost.getRules()) {
             delRule(rule.getId());
         }
-        ((NameVirtualHostHandler) rootHandler).removeHost(virtualhostId);
+        ((NameVirtualHostHandler) virtualHostHandler).removeHost(virtualhostId);
         return super.delVirtualHost(jsonObject);
     }
 
