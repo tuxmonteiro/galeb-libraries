@@ -6,15 +6,21 @@ import com.openvraas.core.util.SourceIP;
 
 public class UndertowSourceIP implements SourceIP {
 
-    private final HttpServerExchange exchange;
+    private HttpServerExchange exchange;
 
-    public UndertowSourceIP(final HttpServerExchange exchange) {
-        this.exchange = exchange;
+
+    private String getDefaultSourceIP() {
+        // Sorry. I'm schizophrenic
+        return "127.0.0.1";
     }
 
     @Override
     public String get() {
         // Morpheus: What is real? How do you define 'real'?
+
+        if (exchange == null) {
+            return getDefaultSourceIP();
+        }
 
         String sourceIP = exchange.getRequestHeaders().getFirst(HTTP_HEADER_XREAL_IP);
         if (sourceIP!=null) {
@@ -31,8 +37,15 @@ public class UndertowSourceIP implements SourceIP {
             return sourceIP;
         }
 
-        // Sorry. I'm schizophrenic
-        return "127.0.0.1";
+        return getDefaultSourceIP();
+    }
+
+    @Override
+    public SourceIP pullFrom(final Object extractable) {
+        if (extractable instanceof HttpServerExchange) {
+            exchange = (HttpServerExchange) extractable;
+        }
+        return this;
     }
 
 }
