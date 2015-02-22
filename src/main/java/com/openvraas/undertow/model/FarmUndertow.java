@@ -18,6 +18,7 @@ import javax.enterprise.inject.Default;
 
 import com.openvraas.core.json.JsonObject;
 import com.openvraas.core.loadbalance.LoadBalancePolicy;
+import com.openvraas.core.loadbalance.LoadBalancePolicyLocator;
 import com.openvraas.core.model.Backend;
 import com.openvraas.core.model.Backend.Health;
 import com.openvraas.core.model.BackendPool;
@@ -45,7 +46,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm addBackend(JsonObject jsonObject) {
+    public Farm addBackend(JsonObject jsonObject) throws Exception {
         Backend backend = (Backend) JsonObject.fromJson(jsonObject.toString(), Backend.class);
         String parentId = backend.getParentId();
         String backendId = backend.getId();
@@ -63,7 +64,7 @@ public class FarmUndertow extends Farm {
                 try {
                     backendPool.removeHost(new URI(backendId));
                 } catch (URISyntaxException e) {
-                    //log error
+                    throw (URISyntaxException)e;
                 }
             }
 
@@ -75,7 +76,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm delBackend(JsonObject jsonObject) {
+    public Farm delBackend(JsonObject jsonObject) throws Exception {
         Backend backend = (Backend) JsonObject.fromJson(jsonObject.toString(), Backend.class);
         String parentId = backend.getParentId();
         String backendId = backend.getId();
@@ -84,7 +85,7 @@ public class FarmUndertow extends Farm {
             try {
                 backendPool.removeHost(new URI(backendId));
             } catch (URISyntaxException e) {
-                //log error
+                throw (URISyntaxException)e;
             }
         }
         return super.delBackend(backend);
@@ -98,7 +99,7 @@ public class FarmUndertow extends Farm {
         boolean loadBalanceDefined = loadBalanceAlgorithm!=null && LoadBalancePolicy.hasLoadBalanceAlgorithm(loadBalanceAlgorithm);
 
         if (!loadBalanceDefined) {
-            properties.put(LoadBalancePolicy.LOADBALANCE_POLICY_FIELD, LoadBalancePolicy.DEFAULT_ALGORITHM.toString());
+            properties.put(LoadBalancePolicy.LOADBALANCE_POLICY_FIELD, LoadBalancePolicyLocator.DEFAULT_ALGORITHM.toString());
         }
 
         String backendPoolId = backendPool.getId();
