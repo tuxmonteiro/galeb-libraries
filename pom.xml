@@ -3,7 +3,7 @@
 
   <groupId>com.openvraas</groupId>
   <artifactId>openvraas-undertow</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
 
   <licenses>
     <license>
@@ -28,6 +28,7 @@
       <artifactId>openvraas-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+
     <dependency>
       <groupId>io.undertow</groupId>
       <artifactId>undertow-core</artifactId>
