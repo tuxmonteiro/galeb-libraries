@@ -31,15 +31,20 @@ import com.openvraas.core.model.Farm;
 import com.openvraas.core.model.Rule;
 import com.openvraas.core.model.VirtualHost;
 import com.openvraas.undertow.handlers.CustomLoadBalancingProxyClient;
+import com.openvraas.undertow.handlers.HostMetricsHandler;
 
 @Default
 public class FarmUndertow extends Farm {
 
     private static final long serialVersionUID = 1L;
 
+    private static final String LOGPATTERN = "%h %l %u %t \"%r\" %s %b (%v -> %{i,X-Proxy-Host} [%D]ms \"X-Real-IP: %{i,X-Real-IP}\" \"X-Forwarded-For: %{i,X-Forwarded-For}\")";
+
     private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
 
-    private final HttpHandler rootHandler = new AccessLogHandler(virtualHostHandler, new AccessLogReceiver() {
+    private final HttpHandler hostMetricsHandler = new HostMetricsHandler(virtualHostHandler);
+
+    private final HttpHandler rootHandler = new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
 
         public static final String DEFAULT_CATEGORY = "com.openvraas.accesslog";
 
@@ -50,12 +55,18 @@ public class FarmUndertow extends Farm {
             logger.info(message);
         }
 
-    }, "%h %l %u %t \"%r\" %s %b (%v -> %{i,X-Proxy-Host})", null);
+    }, LOGPATTERN, FarmUndertow.class.getClassLoader());
 
     private final Map<String, CustomLoadBalancingProxyClient> backendPoolsUndertow = new HashMap<>();
 
     public FarmUndertow() {
         super();
+    }
+
+    @Override
+    public Farm setOptions(Map<String, String> options) {
+        ((HostMetricsHandler) hostMetricsHandler).enabled("true".equals(options.get("EnableMetrics")));
+        return super.setOptions(options);
     }
 
     @Override

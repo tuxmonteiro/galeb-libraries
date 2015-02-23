@@ -32,6 +32,7 @@ public class RouterApplication {
 
     public RouterApplication setFarm(Farm farm) {
         this.farm = farm;
+        farm.setOptions(options);
         return this;
     }
 

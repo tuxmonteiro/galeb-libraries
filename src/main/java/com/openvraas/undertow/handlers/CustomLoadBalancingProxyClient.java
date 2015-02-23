@@ -235,6 +235,7 @@ public class CustomLoadBalancingProxyClient implements ProxyClient {
 
         final Host host = selectHost(exchange);
         exchange.getRequestHeaders().add(new HttpString("X-Proxy-Host"), host != null ? host.getUri().toString() : "UNDEF" );
+        exchange.getRequestHeaders().add(new HttpString("X-Start-Time"), System.nanoTime());
 
         if (host == null) {
             callback.couldNotResolveBackend(exchange);
