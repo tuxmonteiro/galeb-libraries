@@ -3,7 +3,7 @@
 
   <groupId>com.openvraas</groupId>
   <artifactId>openvraas-hazelcast</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
 
   <licenses>
     <license>
@@ -20,14 +20,15 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.hazelcast</groupId>
-      <artifactId>hazelcast</artifactId>
-      <version>${hazelcast.version}</version>
-    </dependency>
-    <dependency>
       <groupId>com.openvraas</groupId>
       <artifactId>openvraas-core</artifactId>
       <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hazelcast</groupId>
+      <artifactId>hazelcast</artifactId>
+      <version>${hazelcast.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
