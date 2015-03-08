@@ -120,6 +120,19 @@ public class FarmUndertow extends Farm {
         return super.delBackend(backend);
     }
 
+    private int maxConnPerThread() {
+        String maxConnStr = System.getProperty("com.openvraas.router.maxConn");
+        int maxConn = 100;
+        if (maxConnStr!=null) {
+            try {
+                maxConn = Integer.parseInt(maxConnStr);
+            } catch (NumberFormatException ignore) {
+            }
+        }
+        //TODO: get number of IOThreads, instead of the availableProcessors
+        return (int)Math.ceil((1.0*maxConn)/Runtime.getRuntime().availableProcessors());
+    }
+
     @Override
     public Farm addBackendPool(JsonObject jsonObject) {
         BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
@@ -138,7 +151,7 @@ public class FarmUndertow extends Farm {
                 //we always create a new connection for upgrade requests
                 return exchange.getRequestHeaders().contains(Headers.UPGRADE);
             }
-        }).setConnectionsPerThread(20)
+        }).setConnectionsPerThread(maxConnPerThread())
           .addSessionCookieName("JSESSIONID")
           .setParams(properties));
         return super.addBackendPool(backendPool);
