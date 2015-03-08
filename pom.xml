@@ -14,12 +14,13 @@
   </licenses>
 
   <properties>
-    <undertow.version>1.2.0.Beta8</undertow.version>
+    <undertow.version>1.2.0.Beta9</undertow.version>
     <org.jboss.resteasy.version>3.0.10.Final</org.jboss.resteasy.version>
     <org.jboss.weld.version>2.2.8.Final</org.jboss.weld.version>
     <org.jboss.logging.version>3.2.0.Final</org.jboss.logging.version>
     <org.apache.logging.log4j.version>2.1</org.apache.logging.log4j.version>
     <org.apache.commons.commons-lang3.version>3.3.2</org.apache.commons.commons-lang3.version>
+    <org.aspectj.version>1.8.5</org.aspectj.version>
   </properties>
 
   <dependencies>
@@ -88,10 +89,46 @@
       <artifactId>log4j-core</artifactId>
       <version>${org.apache.logging.log4j.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjrt</artifactId>
+      <version>${org.aspectj.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>aspectj-maven-plugin</artifactId>
+        <version>1.7</version>
+        <configuration>
+          <complianceLevel>1.7</complianceLevel>
+          <source>1.7</source>
+          <target>1.7</target>
+          <sources>
+            <source>
+              <basedir>src/main/aspect</basedir>
+              <includes>
+                <include>**/*.aj</include>
+              </includes>
+            </source>
+          </sources>
+          <weaveDependencies>
+            <weaveDependency>
+              <groupId>io.undertow</groupId>
+              <artifactId>undertow-core</artifactId>
+            </weaveDependency>
+          </weaveDependencies>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>2.5.1</version>
