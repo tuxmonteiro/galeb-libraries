@@ -9,12 +9,15 @@ import io.undertow.util.CopyOnWriteMap;
 
 public aspect HostThreadDataConnectionsAspect {
 
+    private static final boolean ENABLED = false;
+
     private volatile String threadId = "UNDEF";
     private final Map<String, Integer> counter = new CopyOnWriteMap<>();
     private final Map<String, Map<String, Integer>> uris = new CopyOnWriteMap<>();
 
-    after() : set(* io.undertow.server.handlers.proxy.ProxyConnectionPool.HostThreadData.connections) {
+    pointcut myPointcut() : if(ENABLED) && set(* io.undertow.server.handlers.proxy.ProxyConnectionPool.HostThreadData.connections);
 
+    after() : myPointcut() {
         threadId = thisJoinPoint.getTarget().toString();
 
         if (thisJoinPoint.getThis() instanceof ProxyConnectionPool) {
