@@ -44,7 +44,7 @@ public class FarmUndertow extends Farm {
 
     private final HttpHandler hostMetricsHandler = new HostMetricsHandler(virtualHostHandler);
 
-    private final HttpHandler rootHandler = new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
+    private final HttpHandler rootHandler = "true".equals(System.getProperty("com.openvraas.router.accesslog")) ? new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
 
         public static final String DEFAULT_CATEGORY = "com.openvraas.accesslog";
 
@@ -55,7 +55,7 @@ public class FarmUndertow extends Farm {
             logger.info(message);
         }
 
-    }, LOGPATTERN, FarmUndertow.class.getClassLoader());
+    }, LOGPATTERN, FarmUndertow.class.getClassLoader()) : hostMetricsHandler;
 
     private final Map<String, CustomLoadBalancingProxyClient> backendPoolsUndertow = new HashMap<>();
 
@@ -187,7 +187,6 @@ public class FarmUndertow extends Farm {
             if (!(ruleHandler instanceof PathHandler)) {
                 ruleHandler = new PathHandler(ResponseCodeHandler.HANDLE_404);
             }
-            ruleHandler = new PathHandler(ResponseCodeHandler.HANDLE_404);
             HttpHandler targetHandler = new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404);
             ((PathHandler) ruleHandler).addPrefixPath(match, targetHandler);
             hosts.put(virtualhostId, ruleHandler);
