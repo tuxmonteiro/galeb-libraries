@@ -1,12 +1,11 @@
-package com.openvraas.undertow.router;
+package io.galeb.undertow.router;
 
+import io.galeb.core.model.Farm;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import com.openvraas.core.model.Farm;
 
 public class RouterApplication {
 

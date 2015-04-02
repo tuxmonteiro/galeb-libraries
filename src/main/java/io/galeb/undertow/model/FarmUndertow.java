@@ -1,5 +1,16 @@
-package com.openvraas.undertow.model;
+package io.galeb.undertow.model;
 
+import io.galeb.core.json.JsonObject;
+import io.galeb.core.loadbalance.LoadBalancePolicy;
+import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
+import io.galeb.core.model.Backend;
+import io.galeb.core.model.BackendPool;
+import io.galeb.core.model.Farm;
+import io.galeb.core.model.Rule;
+import io.galeb.core.model.VirtualHost;
+import io.galeb.core.model.Backend.Health;
+import io.galeb.undertow.handlers.CustomLoadBalancingProxyClient;
+import io.galeb.undertow.handlers.HostMetricsHandler;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.NameVirtualHostHandler;
@@ -20,18 +31,6 @@ import javax.enterprise.inject.Default;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.spi.ExtendedLogger;
-
-import com.openvraas.core.json.JsonObject;
-import com.openvraas.core.loadbalance.LoadBalancePolicy;
-import com.openvraas.core.loadbalance.LoadBalancePolicyLocator;
-import com.openvraas.core.model.Backend;
-import com.openvraas.core.model.Backend.Health;
-import com.openvraas.core.model.BackendPool;
-import com.openvraas.core.model.Farm;
-import com.openvraas.core.model.Rule;
-import com.openvraas.core.model.VirtualHost;
-import com.openvraas.undertow.handlers.CustomLoadBalancingProxyClient;
-import com.openvraas.undertow.handlers.HostMetricsHandler;
 
 @Default
 public class FarmUndertow extends Farm {
@@ -203,7 +202,7 @@ public class FarmUndertow extends Farm {
 
         final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
         HttpHandler ruleHandler = hosts.get(virtualhostId);
-        if (ruleHandler!=null) {
+        if (ruleHandler!=null && ruleHandler instanceof PathHandler) {
             ((PathHandler)ruleHandler).removePrefixPath(match);
         }
         return super.delRule(rule);

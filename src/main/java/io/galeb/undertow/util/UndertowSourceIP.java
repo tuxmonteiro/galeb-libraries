@@ -1,8 +1,7 @@
-package com.openvraas.undertow.util;
+package io.galeb.undertow.util;
 
+import io.galeb.core.util.SourceIP;
 import io.undertow.server.HttpServerExchange;
-
-import com.openvraas.core.util.SourceIP;
 
 public class UndertowSourceIP implements SourceIP {
 

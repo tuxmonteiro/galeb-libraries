@@ -1,8 +1,11 @@
 /*
  *
  */
-package com.openvraas.undertow.handlers;
+package io.galeb.undertow.handlers;
 
+import io.galeb.core.loadbalance.LoadBalancePolicy;
+import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
+import io.galeb.undertow.util.UndertowSourceIP;
 import io.undertow.UndertowLogger;
 import io.undertow.client.ClientConnection;
 import io.undertow.client.UndertowClient;
@@ -22,10 +25,6 @@ import io.undertow.util.HttpString;
 
 import org.xnio.OptionMap;
 import org.xnio.ssl.XnioSsl;
-
-import com.openvraas.core.loadbalance.LoadBalancePolicy;
-import com.openvraas.core.loadbalance.LoadBalancePolicyLocator;
-import com.openvraas.undertow.util.UndertowSourceIP;
 
 import java.net.InetSocketAddress;
 import java.net.URI;

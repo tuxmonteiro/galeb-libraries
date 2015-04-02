@@ -1,4 +1,4 @@
-package com.openvraas.undertow.jaxrs;
+package io.galeb.undertow.jaxrs;
 
 import java.util.Map;
 

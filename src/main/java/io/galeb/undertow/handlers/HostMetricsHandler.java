@@ -2,7 +2,7 @@
  *
  */
 
-package com.openvraas.undertow.handlers;
+package io.galeb.undertow.handlers;
 
 
 import java.util.Collections;
