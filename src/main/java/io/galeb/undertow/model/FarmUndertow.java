@@ -43,9 +43,9 @@ public class FarmUndertow extends Farm {
 
     private final HttpHandler hostMetricsHandler = new HostMetricsHandler(virtualHostHandler);
 
-    private final HttpHandler rootHandler = "true".equals(System.getProperty("com.openvraas.router.accesslog")) ? new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
+    private final HttpHandler rootHandler = "true".equals(System.getProperty("io.galeb.router.accesslog")) ? new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
 
-        public static final String DEFAULT_CATEGORY = "com.openvraas.accesslog";
+        public static final String DEFAULT_CATEGORY = "io.galeb.accesslog";
 
         private final ExtendedLogger logger = LogManager.getContext().getLogger(DEFAULT_CATEGORY);
 
@@ -120,7 +120,7 @@ public class FarmUndertow extends Farm {
     }
 
     private int maxConnPerThread() {
-        String maxConnStr = System.getProperty("com.openvraas.router.maxConn");
+        String maxConnStr = System.getProperty("io.galeb.router.maxConn");
         int maxConn = 100;
         if (maxConnStr!=null) {
             try {
