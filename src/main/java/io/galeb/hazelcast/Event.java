@@ -1,10 +1,11 @@
-package com.openvraas.hazelcast;
+package io.galeb.hazelcast;
+
+import io.galeb.core.json.JsonObject;
+import io.galeb.core.model.Entity;
 
 import java.io.Serializable;
 
 import com.google.gson.annotations.Expose;
-import com.openvraas.core.json.JsonObject;
-import com.openvraas.core.model.Entity;
 
 public class Event implements Serializable {
 

@@ -1,7 +1,7 @@
-package com.openvraas.hazelcast;
+package io.galeb.hazelcast;
 
-import com.openvraas.core.controller.EntityController.Action;
-import com.openvraas.core.model.Entity;
+import io.galeb.core.controller.EntityController.Action;
+import io.galeb.core.model.Entity;
 
 public interface IEventBus {
 

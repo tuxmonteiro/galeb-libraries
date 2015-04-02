@@ -1,4 +1,8 @@
-package com.openvraas.hazelcast;
+package io.galeb.hazelcast;
+
+import io.galeb.core.controller.EntityController.Action;
+import io.galeb.core.logging.Logger;
+import io.galeb.core.model.Entity;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -11,9 +15,6 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
-import com.openvraas.core.controller.EntityController.Action;
-import com.openvraas.core.logging.Logger;
-import com.openvraas.core.model.Entity;
 
 @Default
 public class EventBus implements MessageListener<Event>, IEventBus {

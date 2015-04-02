@@ -1,4 +1,4 @@
-package com.openvraas.hazelcast;
+package io.galeb.hazelcast;
 
 public interface EventBusListener {
 
