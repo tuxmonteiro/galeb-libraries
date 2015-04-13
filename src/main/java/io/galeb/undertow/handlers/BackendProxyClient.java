@@ -20,12 +20,10 @@ import org.xnio.ssl.XnioSsl;
 public class BackendProxyClient implements ProxyClient {
 
     private final LoadBalancingProxyClient loadBalanceProxyClient;
-    private final BackendSelector hostSelectorHandler;
-    private final ExclusivityChecker exclusivityChecker;
+    private final BackendSelector hostSelectorHandler = new BackendSelector();
 
     public BackendProxyClient() {
-        hostSelectorHandler = new BackendSelector();
-        exclusivityChecker = new ExclusivityChecker() {
+        final ExclusivityChecker exclusivityChecker = new ExclusivityChecker() {
             @Override
             public boolean isExclusivityRequired(HttpServerExchange exchange) {
                 // we always create a new connection for upgrade requests
@@ -33,8 +31,9 @@ public class BackendProxyClient implements ProxyClient {
             }
         };
         loadBalanceProxyClient = new LoadBalancingProxyClient(
-                UndertowClient.getInstance(), exclusivityChecker,
-                hostSelectorHandler);
+                                        UndertowClient.getInstance(),
+                                        exclusivityChecker,
+                                        hostSelectorHandler);
     }
 
     @Override
