@@ -53,7 +53,7 @@ public class EventBus implements MessageListener<Event>, IEventBus {
         try {
             topic.publish(event);
         } catch (RuntimeException e) {
-            e.printStackTrace();
+            logger.error(e);
         }
 
     }
