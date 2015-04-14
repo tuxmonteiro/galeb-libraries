@@ -6,10 +6,15 @@ import org.xnio.channels.ConnectedChannel;
 
 public class FakeSetter {
 
-	public static final Setter<ConnectedChannel> NULL = new Setter<ConnectedChannel>() {
+    private FakeSetter() {
+        // Utility classes, which are a collection of static members,
+        // are not meant to be instantiated.
+    }
 
-		@Override
-		public void set(ChannelListener<? super ConnectedChannel> listener) {
-		}
-	};
+    public static final Setter<ConnectedChannel> NULL = new Setter<ConnectedChannel>() {
+
+        @Override
+        public void set(ChannelListener<? super ConnectedChannel> listener) {
+        }
+    };
 }

@@ -14,35 +14,40 @@ import org.xnio.SslClientAuthMode;
 
 public class FakeSSLSessionInfo {
 
-	public static final SSLSessionInfo NULL = new SSLSessionInfo() {
+    private FakeSSLSessionInfo() {
+        // Utility classes, which are a collection of static members,
+        // are not meant to be instantiated.
+    }
 
-		@Override
-		public byte[] getSessionId() {
-			return new byte[0];
-		}
+    public static final SSLSessionInfo NULL = new SSLSessionInfo() {
 
-		@Override
-		public String getCipherSuite() {
-			return "";
-		}
+        @Override
+        public byte[] getSessionId() {
+            return new byte[0];
+        }
 
-		@Override
-		public Certificate[] getPeerCertificates()
-				throws SSLPeerUnverifiedException,
-				RenegotiationRequiredException {
-			return new Certificate[0];
-		}
+        @Override
+        public String getCipherSuite() {
+            return "";
+        }
 
-		@Override
-		public X509Certificate[] getPeerCertificateChain()
-				throws SSLPeerUnverifiedException,
-				RenegotiationRequiredException {
-			return new X509Certificate[0];
-		}
+        @Override
+        public Certificate[] getPeerCertificates()
+                throws SSLPeerUnverifiedException,
+                RenegotiationRequiredException {
+            return new Certificate[0];
+        }
 
-		@Override
-		public void renegotiate(HttpServerExchange exchange,
-				SslClientAuthMode sslClientAuthMode) throws IOException {
-		}
-	};
+        @Override
+        public X509Certificate[] getPeerCertificateChain()
+                throws SSLPeerUnverifiedException,
+                RenegotiationRequiredException {
+            return new X509Certificate[0];
+        }
+
+        @Override
+        public void renegotiate(HttpServerExchange exchange,
+                SslClientAuthMode sslClientAuthMode) throws IOException {
+        }
+    };
 }

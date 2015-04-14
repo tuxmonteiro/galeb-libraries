@@ -6,24 +6,29 @@ import org.xnio.Pooled;
 
 public class FakePolled {
 
-	public static final Pooled<ByteBuffer> NULL = new Pooled<ByteBuffer>() {
+    private FakePolled() {
+        // Utility classes, which are a collection of static members,
+        // are not meant to be instantiated.
+    }
 
-		@Override
-		public void discard() {
-		}
+    public static final Pooled<ByteBuffer> NULL = new Pooled<ByteBuffer>() {
 
-		@Override
-		public void free() {
-		}
+        @Override
+        public void discard() {
+        }
 
-		@Override
-		public ByteBuffer getResource()
-				throws IllegalStateException {
-			return ByteBuffer.allocate(0);
-		}
+        @Override
+        public void free() {
+        }
 
-		@Override
-		public void close() {
-		}
-	};
+        @Override
+        public ByteBuffer getResource()
+                throws IllegalStateException {
+            return ByteBuffer.allocate(0);
+        }
+
+        @Override
+        public void close() {
+        }
+    };
 }

@@ -6,32 +6,37 @@ import org.xnio.XnioIoThread;
 
 public class FakeXnioIoThread {
 
-	public static final XnioIoThread NULL = new XnioIoThread(null, 0) {
+    private FakeXnioIoThread() {
+        // Utility classes, which are a collection of static members,
+        // are not meant to be instantiated.
+    }
 
-		@Override
-		public void execute(Runnable command) {
-		}
+    public static final XnioIoThread NULL = new XnioIoThread(null, 0) {
 
-		@Override
-		public Key executeAfter(Runnable command, long time,
-				TimeUnit unit) {
-			return new Key() {
-				@Override
-				public boolean remove() {
-					return false;
-				}
-			};
-		}
+        @Override
+        public void execute(Runnable command) {
+        }
 
-		@Override
-		public Key executeAtInterval(Runnable command,
-				long time, TimeUnit unit) {
-			return new Key() {
-				@Override
-				public boolean remove() {
-					return false;
-				}
-			};
-		}
-	};
+        @Override
+        public Key executeAfter(Runnable command, long time,
+                TimeUnit unit) {
+            return new Key() {
+                @Override
+                public boolean remove() {
+                    return false;
+                }
+            };
+        }
+
+        @Override
+        public Key executeAtInterval(Runnable command,
+                long time, TimeUnit unit) {
+            return new Key() {
+                @Override
+                public boolean remove() {
+                    return false;
+                }
+            };
+        }
+    };
 }
