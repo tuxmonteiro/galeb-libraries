@@ -161,8 +161,8 @@ public class FarmUndertow extends Farm {
     public Farm addRule(JsonObject jsonObject) {
         final Rule rule = (Rule) JsonObject.fromJson(jsonObject.toString(), Rule.class);
         final String virtualhostId = rule.getParentId();
-        final String match = ((String)rule.getProperties().get("match"));
-        final String targetId = ((String)rule.getProperties().get("targetId"));
+        final String match = (String)rule.getProperties().get("match");
+        final String targetId = (String)rule.getProperties().get("targetId");
         final int maxRequestTime = 30000;
 
         final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
@@ -191,7 +191,7 @@ public class FarmUndertow extends Farm {
     public Farm delRule(JsonObject jsonObject) {
         final Rule rule = (Rule) JsonObject.fromJson(jsonObject.toString(), Rule.class);
         final String virtualhostId = rule.getParentId();
-        final String match = ((String)rule.getProperties().get("match"));
+        final String match = (String)rule.getProperties().get("match");
 
         final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
         final HttpHandler ruleHandler = hosts.get(virtualhostId);
