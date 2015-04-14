@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.enterprise.inject.Default;
+import javax.inject.Inject;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
@@ -18,6 +19,9 @@ import com.hazelcast.core.MessageListener;
 
 @Default
 public class EventBus implements MessageListener<Event>, IEventBus {
+
+    @Inject
+    protected Logger logger;
 
     private static final HazelcastInstance HAZELCAST_INSTANCE = Hazelcast.newHazelcastInstance();
 
@@ -30,8 +34,9 @@ public class EventBus implements MessageListener<Event>, IEventBus {
         if (topic==null) {
             topic = HAZELCAST_INSTANCE.getTopic( topicId );
             topic.addMessageListener( this );
-            eventBusListener.onLog(Logger.Level.DEBUG.toString(), String.format("registered at %s", topicId));
             topics.put(topicId, topic);
+
+            logger.debug(String.format("registered at %s", topicId));
         }
         return topic;
     }
