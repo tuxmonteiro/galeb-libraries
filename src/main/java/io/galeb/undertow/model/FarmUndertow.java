@@ -130,7 +130,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm addBackendPool(JsonObject jsonObject) {
+    public Farm addBackendPool(JsonObject jsonObject) throws Exception {
         final BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
         final Map<String, Object> properties = backendPool.getProperties();
         final String loadBalanceAlgorithm = (String) properties.get(LoadBalancePolicy.LOADBALANCE_POLICY_FIELD);
@@ -150,7 +150,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm delBackendPool(JsonObject jsonObject) {
+    public Farm delBackendPool(JsonObject jsonObject) throws Exception {
         final BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
         final String backendPoolId = backendPool.getId();
         backendPoolsUndertow.remove(backendPoolId);
@@ -158,7 +158,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm addRule(JsonObject jsonObject) {
+    public Farm addRule(JsonObject jsonObject) throws Exception {
         final Rule rule = (Rule) JsonObject.fromJson(jsonObject.toString(), Rule.class);
         final String virtualhostId = rule.getParentId();
         final String match = (String)rule.getProperties().get("match");
@@ -188,7 +188,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm delRule(JsonObject jsonObject) {
+    public Farm delRule(JsonObject jsonObject) throws Exception {
         final Rule rule = (Rule) JsonObject.fromJson(jsonObject.toString(), Rule.class);
         final String virtualhostId = rule.getParentId();
         final String match = (String)rule.getProperties().get("match");
@@ -202,7 +202,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm addVirtualHost(JsonObject jsonObject) {
+    public Farm addVirtualHost(JsonObject jsonObject) throws Exception {
         final VirtualHost virtualhost = (VirtualHost) JsonObject.fromJson(jsonObject.toString(), VirtualHost.class);
         final String virtualhostId = virtualhost.getId();
         ((NameVirtualHostHandler) virtualHostHandler).addHost(virtualhostId, ResponseCodeHandler.HANDLE_404);
@@ -210,7 +210,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm delVirtualHost(JsonObject jsonObject) {
+    public Farm delVirtualHost(JsonObject jsonObject) throws Exception {
         final VirtualHost virtualhost = (VirtualHost) JsonObject.fromJson(jsonObject.toString(), VirtualHost.class);
         final String virtualhostId = virtualhost.getId();
         for (final Rule rule: virtualhost.getRules()) {
