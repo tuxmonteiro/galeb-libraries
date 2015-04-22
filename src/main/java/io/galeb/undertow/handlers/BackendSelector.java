@@ -14,6 +14,10 @@ import java.util.Map;
 
 public class BackendSelector implements HostSelector {
 
+    // Usefull Custom HTTP Headers
+    public static final String X_START_TIME = "X-Start-Time";
+    public static final String X_PROXY_HOST = "X-Proxy-Host";
+
     private HttpServerExchange exchange = FakeHttpServerExchange.NULL;
 
     private final Map<String, Object> params = new CopyOnWriteMap<>();
@@ -31,17 +35,19 @@ public class BackendSelector implements HostSelector {
                                             .setCriteria(new UndertowSourceIP(), exchange)
                                             .mapOfHosts(availableHosts).getChoice();
 
-        final Host host = availableHosts[hostID];
-        if (host != null) {
-            makeTraceable(host);
+        try {
+            trace(availableHosts[hostID]);
+        } catch (final IndexOutOfBoundsException e) {
+            e.printStackTrace();
+            return 0;
         }
 
         return hostID;
     }
 
-    private void makeTraceable(final Host host) {
-        final HttpString xproxyhost = new HttpString("X-Proxy-Host");
-        final HttpString xstarttime = new HttpString("X-Start-Time");
+    private void trace(final Host host) {
+        final HttpString xproxyhost = new HttpString(X_PROXY_HOST);
+        final HttpString xstarttime = new HttpString(X_START_TIME);
 
         exchange.getRequestHeaders().put(
                 xproxyhost,
