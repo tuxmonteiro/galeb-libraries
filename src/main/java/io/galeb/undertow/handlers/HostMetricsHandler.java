@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.inject.Inject;
+
+import io.galeb.core.logging.Logger;
 import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HandlerWrapper;
 import io.undertow.server.HttpHandler;
@@ -23,6 +26,9 @@ public class HostMetricsHandler implements HttpHandler {
     private final ExchangeCompletionListener exchangeCompletionListener = new MetricCompletionListener();
 
     private final AtomicBoolean enabled = new AtomicBoolean(true);
+
+    @Inject
+    private Logger logger;
 
     public HostMetricsHandler(final HttpHandler next) {
         this.next = next;
@@ -40,14 +46,14 @@ public class HostMetricsHandler implements HttpHandler {
             try {
                 if (enabled.get()) {
 
-                    HeaderValues host = exchange.getRequestHeaders().get("X-Proxy-Host");
+                    final HeaderValues host = exchange.getRequestHeaders().get("X-Proxy-Host");
                     if (host==null) {
                         return;
                     }
                     showMetric("Virtual Host", exchange.getHostName());
                     showMetric("Real Host", host.getFirst());
                     showMetric("Http Status", exchange.getResponseCode());
-                    HeaderValues startTime = exchange.getRequestHeaders().get("X-Start-Time");
+                    final HeaderValues startTime = exchange.getRequestHeaders().get("X-Start-Time");
                     if (startTime!=null) {
                         showMetric("Request Time", System.nanoTime()/1000000 - Long.valueOf(startTime.getFirst())/1000000);
                     }
@@ -59,20 +65,20 @@ public class HostMetricsHandler implements HttpHandler {
     }
 
     private void showMetric(String metric, String dataMetric) {
-        System.out.println(String.format("%s: %s", metric, dataMetric));
+        logger.debug(String.format("[%s] %s: %s", this, metric, dataMetric));
     }
 
     private void showMetric(String metric, int dataMetric) {
-        System.out.println(String.format("%s: %d", metric, dataMetric));
+        logger.debug(String.format("[%s] %s: %d", this, metric, dataMetric));
     }
 
     private void showMetric(String metric, long dataMetric) {
-        System.out.println(String.format("%s: %d", metric, dataMetric));
+        logger.debug(String.format("[%s] %s: %d", this, metric, dataMetric));
     }
 
     @SuppressWarnings("unused")
     private void showMetric(String metric, double dataMetric) {
-        System.out.println(String.format("%s: %f", metric, dataMetric));
+        logger.debug(String.format("[%s] %s: %f", this, metric, dataMetric));
     }
 
     public synchronized HttpHandler enabled(boolean flag) {
@@ -82,9 +88,8 @@ public class HostMetricsHandler implements HttpHandler {
 
     @Override
     public String toString() {
-        return "HostMetricsHandler{}";
+        return this.getClass().getSimpleName();
     }
-
 
 
     public static class Builder implements HandlerBuilder {
