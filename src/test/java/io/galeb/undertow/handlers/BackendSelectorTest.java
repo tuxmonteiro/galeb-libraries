@@ -51,10 +51,28 @@ public class BackendSelectorTest {
     }
 
     @Test
+    public void traceWithHostNullTest() {
+        final HttpServerExchange fakeExchange = new HttpServerExchange(null);
+        backendSelector.setExchange(fakeExchange).selectHost(hosts);
+        assertThat(fakeExchange.getRequestHeaders().getFirst(BackendSelector.X_PROXY_HOST)).containsIgnoringCase("UNDEF");
+    }
+
+    @Test
     public void traceAddHeaderXStartTimeTest() {
         final HttpServerExchange fakeExchange = new HttpServerExchange(null);
         backendSelector.setExchange(fakeExchange).selectHost(hosts);
         assertThat(fakeExchange.getRequestHeaders().getFirst(BackendSelector.X_START_TIME)).isNotEmpty();
+    }
+
+    @Test
+    public void newParamsIsCopyThenIsNotSameInstanceTest() {
+        final Map<String, Object> paramsOld = new HashMap<>();
+        final Map<String, Object> paramsNew = new HashMap<>();
+
+        backendSelector.setParams(paramsOld);
+        backendSelector.setParams(paramsNew);
+
+        assertThat(paramsOld).isNotSameAs(paramsNew);
     }
 
 }

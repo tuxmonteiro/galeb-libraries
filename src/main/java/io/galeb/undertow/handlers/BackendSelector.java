@@ -2,6 +2,7 @@ package io.galeb.undertow.handlers;
 
 import io.galeb.core.loadbalance.LoadBalancePolicy;
 import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
+import io.galeb.core.logging.Logger;
 import io.galeb.undertow.nullable.FakeHttpServerExchange;
 import io.galeb.undertow.util.UndertowSourceIP;
 import io.undertow.server.HttpServerExchange;
@@ -11,6 +12,8 @@ import io.undertow.util.CopyOnWriteMap;
 import io.undertow.util.HttpString;
 
 import java.util.Map;
+
+import javax.inject.Inject;
 
 public class BackendSelector implements HostSelector {
 
@@ -23,6 +26,9 @@ public class BackendSelector implements HostSelector {
     private final Map<String, Object> params = new CopyOnWriteMap<>();
     private volatile LoadBalancePolicy loadBalancePolicy = LoadBalancePolicy.NULL;
     private final LoadBalancePolicyLocator loadBalancePolicyLocator = new LoadBalancePolicyLocator();
+
+    @Inject
+    private Logger logger;
 
     @Override
     public int selectHost(final Host[] availableHosts) {
@@ -38,7 +44,7 @@ public class BackendSelector implements HostSelector {
         try {
             trace(availableHosts[hostID]);
         } catch (final IndexOutOfBoundsException e) {
-            e.printStackTrace();
+            logger.error(e);
             return 0;
         }
 
@@ -59,8 +65,19 @@ public class BackendSelector implements HostSelector {
 
     public HostSelector setParams(final Map<String, Object> myParams) {
         if (myParams != null) {
+            params.clear();
             params.putAll(myParams);
         }
+        return this;
+    }
+
+    public HostSelector addParam(String paramId, Object param) {
+        params.put(paramId, param);
+        return this;
+    }
+
+    public HostSelector removeParam(String paramId, Object param) {
+        params.remove(paramId);
         return this;
     }
 
