@@ -15,6 +15,7 @@ public class FakeSetter {
 
         @Override
         public void set(ChannelListener<? super ConnectedChannel> listener) {
+            // NULL
         }
     };
 }

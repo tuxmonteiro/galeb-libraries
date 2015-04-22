@@ -5,7 +5,6 @@ import io.undertow.server.HttpUpgradeListener;
 import io.undertow.server.SSLSessionInfo;
 import io.undertow.server.ServerConnection;
 
-import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 
@@ -69,6 +68,7 @@ public class FakeHttpServerExchange {
 
         @Override
         public void terminateRequestChannel(HttpServerExchange exchange) {
+            // NULL
         }
 
         @Override
@@ -82,18 +82,18 @@ public class FakeHttpServerExchange {
         }
 
         @Override
-        public <T> T getOption(Option<T> option) throws IOException {
-            throw new IOException();
+        public <T> T getOption(Option<T> option) {
+            return null;
         }
 
         @Override
-        public <T> T setOption(Option<T> option, T value)
-                throws IllegalArgumentException, IOException {
-            throw new IllegalArgumentException();
+        public <T> T setOption(Option<T> option, T value) {
+            return null;
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
+            // NULL
         }
 
         @SuppressWarnings("serial")
@@ -141,10 +141,12 @@ public class FakeHttpServerExchange {
 
         @Override
         public void setSslSessionInfo(SSLSessionInfo sessionInfo) {
+            // NULL
         }
 
         @Override
         public void addCloseListener(CloseListener listener) {
+            // NULL
         }
 
         @Override
@@ -180,18 +182,22 @@ public class FakeHttpServerExchange {
 
         @Override
         protected void exchangeComplete(HttpServerExchange exchange) {
+            // NULL
         }
 
         @Override
         protected void setUpgradeListener(HttpUpgradeListener upgradeListener) {
+            // NULL
         }
 
         @Override
         protected void setConnectListener(HttpUpgradeListener connectListener) {
+            // NULL
         }
 
         @Override
         protected void maxEntitySizeUpdated(HttpServerExchange exchange) {
+            // NULL
         }
 
         @Override

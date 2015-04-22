@@ -15,20 +15,22 @@ public class FakePolled {
 
         @Override
         public void discard() {
+            // NULL
         }
 
         @Override
         public void free() {
+            // NULL
         }
 
         @Override
-        public ByteBuffer getResource()
-                throws IllegalStateException {
+        public ByteBuffer getResource() {
             return ByteBuffer.allocate(0);
         }
 
         @Override
         public void close() {
+            // NULL
         }
     };
 }

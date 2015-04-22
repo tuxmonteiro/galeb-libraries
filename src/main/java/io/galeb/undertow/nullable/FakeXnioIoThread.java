@@ -15,11 +15,15 @@ public class FakeXnioIoThread {
 
         @Override
         public void execute(Runnable command) {
+            // NULL
         }
 
         @Override
-        public Key executeAfter(Runnable command, long time,
+        public Key executeAfter(
+                Runnable command,
+                long time,
                 TimeUnit unit) {
+
             return new Key() {
                 @Override
                 public boolean remove() {
@@ -29,8 +33,11 @@ public class FakeXnioIoThread {
         }
 
         @Override
-        public Key executeAtInterval(Runnable command,
-                long time, TimeUnit unit) {
+        public Key executeAtInterval(
+                Runnable command,
+                long time,
+                TimeUnit unit) {
+
             return new Key() {
                 @Override
                 public boolean remove() {

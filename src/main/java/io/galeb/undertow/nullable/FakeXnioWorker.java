@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.xnio.OptionMap;
 import org.xnio.XnioIoThread;
 import org.xnio.XnioWorker;
 
@@ -14,10 +15,11 @@ public class FakeXnioWorker {
         // are not meant to be instantiated.
     }
 
-    public static final XnioWorker NULL = new XnioWorker(null, null, null, null) {
+    public static final XnioWorker NULL = new XnioWorker(null, null, OptionMap.EMPTY, null) {
 
         @Override
         public void shutdown() {
+            // NULL
         }
 
         @Override
@@ -36,13 +38,13 @@ public class FakeXnioWorker {
         }
 
         @Override
-        public boolean awaitTermination(long timeout, TimeUnit unit)
-                throws InterruptedException {
+        public boolean awaitTermination(long timeout, TimeUnit unit) {
             return false;
         }
 
         @Override
-        public void awaitTermination() throws InterruptedException {
+        public void awaitTermination() {
+            // NULL
         }
 
         @Override

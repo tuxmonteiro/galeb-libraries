@@ -1,13 +1,10 @@
 package io.galeb.undertow.nullable;
 
 import io.undertow.server.HttpServerExchange;
-import io.undertow.server.RenegotiationRequiredException;
 import io.undertow.server.SSLSessionInfo;
 
-import java.io.IOException;
 import java.security.cert.Certificate;
 
-import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.security.cert.X509Certificate;
 
 import org.xnio.SslClientAuthMode;
@@ -32,22 +29,19 @@ public class FakeSSLSessionInfo {
         }
 
         @Override
-        public Certificate[] getPeerCertificates()
-                throws SSLPeerUnverifiedException,
-                RenegotiationRequiredException {
+        public Certificate[] getPeerCertificates() {
             return new Certificate[0];
         }
 
         @Override
-        public X509Certificate[] getPeerCertificateChain()
-                throws SSLPeerUnverifiedException,
-                RenegotiationRequiredException {
+        public X509Certificate[] getPeerCertificateChain() {
             return new X509Certificate[0];
         }
 
         @Override
         public void renegotiate(HttpServerExchange exchange,
-                SslClientAuthMode sslClientAuthMode) throws IOException {
+                SslClientAuthMode sslClientAuthMode) {
+            // NULL
         }
     };
 }

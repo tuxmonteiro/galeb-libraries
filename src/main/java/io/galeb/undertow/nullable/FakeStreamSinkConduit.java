@@ -22,6 +22,7 @@ public class FakeStreamSinkConduit {
 
         @Override
         public void terminateWrites() throws IOException {
+            // NULL
         }
 
         @Override
@@ -31,14 +32,17 @@ public class FakeStreamSinkConduit {
 
         @Override
         public void resumeWrites() {
+            // NULL
         }
 
         @Override
         public void suspendWrites() {
+            // NULL
         }
 
         @Override
         public void wakeupWrites() {
+            // NULL
         }
 
         @Override
@@ -47,11 +51,13 @@ public class FakeStreamSinkConduit {
         }
 
         @Override
-        public void awaitWritable() throws IOException {
+        public void awaitWritable() {
+            // NULL
         }
 
         @Override
-        public void awaitWritable(long time, TimeUnit timeUnit) throws IOException {
+        public void awaitWritable(long time, TimeUnit timeUnit) {
+            // NULL
         }
 
         @Override
@@ -61,10 +67,12 @@ public class FakeStreamSinkConduit {
 
         @Override
         public void setWriteReadyHandler(WriteReadyHandler handler) {
+            // NULL
         }
 
         @Override
         public void truncateWrites() throws IOException {
+            // NULL
         }
 
         @Override
@@ -78,35 +86,35 @@ public class FakeStreamSinkConduit {
         }
 
         @Override
-        public long transferFrom(FileChannel src, long position, long count)
-                throws IOException {
+        public long transferFrom(FileChannel src, long position, long count) {
             return 0L;
         }
 
         @Override
-        public long transferFrom(StreamSourceChannel source, long count,
-                ByteBuffer throughBuffer) throws IOException {
+        public long transferFrom(
+                StreamSourceChannel source,
+                long count,
+                ByteBuffer throughBuffer) {
             return 0L;
         }
 
         @Override
-        public int write(ByteBuffer src) throws IOException {
+        public int write(ByteBuffer src) {
             return 0;
         }
 
         @Override
-        public long write(ByteBuffer[] srcs, int offs, int len) throws IOException {
+        public long write(ByteBuffer[] srcs, int offs, int len) {
             return 0L;
         }
 
         @Override
-        public int writeFinal(ByteBuffer src) throws IOException {
+        public int writeFinal(ByteBuffer src) {
             return 0;
         }
 
         @Override
-        public long writeFinal(ByteBuffer[] srcs, int offset, int length)
-                throws IOException {
+        public long writeFinal(ByteBuffer[] srcs, int offset, int length) {
             return 0L;
         }
     };
