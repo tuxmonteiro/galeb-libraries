@@ -7,18 +7,12 @@ public class UndertowSourceIP implements SourceIP {
 
     private HttpServerExchange exchange;
 
-
-    private String getDefaultSourceIP() {
-        // Sorry. I'm schizophrenic
-        return "127.0.0.1";
-    }
-
     @Override
-    public String get() {
+    public String getRealSourceIP() {
         // Morpheus: What is real? How do you define 'real'?
 
         if (exchange == null) {
-            return getDefaultSourceIP();
+            return DEFAULT_SOURCE_IP;
         }
 
         String sourceIP = exchange.getRequestHeaders().getFirst(HTTP_HEADER_XREAL_IP);
@@ -36,7 +30,7 @@ public class UndertowSourceIP implements SourceIP {
             return sourceIP;
         }
 
-        return getDefaultSourceIP();
+        return DEFAULT_SOURCE_IP;
     }
 
     @Override
