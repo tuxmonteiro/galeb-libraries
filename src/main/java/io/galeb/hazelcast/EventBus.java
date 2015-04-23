@@ -1,6 +1,10 @@
 package io.galeb.hazelcast;
 
 import io.galeb.core.controller.EntityController.Action;
+import io.galeb.core.eventbus.Event;
+import io.galeb.core.eventbus.EventBusListener;
+import io.galeb.core.eventbus.EventBusSingletoneProducer;
+import io.galeb.core.eventbus.IEventBus;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Entity;
 
@@ -9,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.enterprise.inject.Default;
+import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 
 import com.hazelcast.core.Hazelcast;
@@ -25,9 +30,20 @@ public class EventBus implements MessageListener<Event>, IEventBus {
 
     private static final HazelcastInstance HAZELCAST_INSTANCE = Hazelcast.newHazelcastInstance();
 
+    private static final EventBus INSTANCE = new EventBus();
+
     private final Map<String, ITopic<Event>> topics = new HashMap<>();
 
     private EventBusListener eventBusListener = EventBusListener.NULL;
+
+    private EventBus() {
+        // singleton
+    }
+
+    @Produces @EventBusSingletoneProducer
+    public EventBus getInstance() {
+        return INSTANCE;
+    }
 
     private ITopic<Event> putAndGetTopic(String topicId) {
         ITopic<Event> topic = topics.get(topicId);
@@ -46,13 +62,13 @@ public class EventBus implements MessageListener<Event>, IEventBus {
 
         entity.setEntityType(entityType);
 
-        Event event = new Event(action, entity);
+        final Event event = new Event(action, entity);
 
-        ITopic<Event> topic = putAndGetTopic(action.toString());
+        final ITopic<Event> topic = putAndGetTopic(action.toString());
 
         try {
             topic.publish(event);
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
             logger.error(e);
         }
 
@@ -72,7 +88,7 @@ public class EventBus implements MessageListener<Event>, IEventBus {
     @Override
     public void start() {
         if (eventBusListener!=EventBusListener.NULL) {
-            for (Action action: EnumSet.allOf(Action.class)) {
+            for (final Action action: EnumSet.allOf(Action.class)) {
                 putAndGetTopic(action.toString());
             }
         }
