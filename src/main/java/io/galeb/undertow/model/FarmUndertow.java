@@ -3,6 +3,7 @@ package io.galeb.undertow.model;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.loadbalance.LoadBalancePolicy;
 import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
+import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
 import io.galeb.core.model.Backend.Health;
 import io.galeb.core.model.BackendPool;
@@ -25,12 +26,16 @@ import java.net.URISyntaxException;
 import java.util.Map;
 
 import javax.enterprise.inject.Default;
+import javax.inject.Inject;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.spi.ExtendedLogger;
 
 @Default
 public class FarmUndertow extends Farm {
+
+    @Inject
+    private Logger log;
 
     private static final long serialVersionUID = 1L;
 
@@ -65,7 +70,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm addBackend(JsonObject jsonObject) throws Exception {
+    public Farm addBackend(JsonObject jsonObject) {
         final Backend backend = (Backend) JsonObject.fromJson(jsonObject.toString(), Backend.class);
         final String parentId = backend.getParentId();
         final String backendId = backend.getId();
@@ -77,13 +82,13 @@ public class FarmUndertow extends Farm {
                 try {
                     backendPool.addHost(new URI(backendId));
                 } catch (final URISyntaxException e) {
-                    throw e;
+                    log.error(e);
                 }
             } else {
                 try {
                     backendPool.removeHost(new URI(backendId));
                 } catch (final URISyntaxException e) {
-                    throw e;
+                    log.error(e);
                 }
             }
 
@@ -95,7 +100,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm delBackend(JsonObject jsonObject) throws Exception {
+    public Farm delBackend(JsonObject jsonObject) {
         final Backend backend = (Backend) JsonObject.fromJson(jsonObject.toString(), Backend.class);
         final String parentId = backend.getParentId();
         final String backendId = backend.getId();
@@ -104,7 +109,7 @@ public class FarmUndertow extends Farm {
             try {
                 backendPool.removeHost(new URI(backendId));
             } catch (final URISyntaxException e) {
-                throw e;
+                log.error(e);
             }
         }
         return super.delBackend(backend);
@@ -124,7 +129,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm addBackendPool(JsonObject jsonObject) throws Exception {
+    public Farm addBackendPool(JsonObject jsonObject) {
         final BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
         final Map<String, Object> properties = backendPool.getProperties();
         final String loadBalanceAlgorithm = (String) properties.get(LoadBalancePolicy.LOADBALANCE_POLICY_FIELD);
@@ -144,7 +149,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm delBackendPool(JsonObject jsonObject) throws Exception {
+    public Farm delBackendPool(JsonObject jsonObject) {
         final BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
         final String backendPoolId = backendPool.getId();
         backendPoolsUndertow.remove(backendPoolId);
@@ -152,7 +157,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm addRule(JsonObject jsonObject) throws Exception {
+    public Farm addRule(JsonObject jsonObject) {
         final Rule rule = (Rule) JsonObject.fromJson(jsonObject.toString(), Rule.class);
         final String virtualhostId = rule.getParentId();
         final String match = (String)rule.getProperties().get("match");
@@ -182,7 +187,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm delRule(JsonObject jsonObject) throws Exception {
+    public Farm delRule(JsonObject jsonObject) {
         final Rule rule = (Rule) JsonObject.fromJson(jsonObject.toString(), Rule.class);
         final String virtualhostId = rule.getParentId();
         final String match = (String)rule.getProperties().get("match");
@@ -196,7 +201,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm addVirtualHost(JsonObject jsonObject) throws Exception {
+    public Farm addVirtualHost(JsonObject jsonObject) {
         final VirtualHost virtualhost = (VirtualHost) JsonObject.fromJson(jsonObject.toString(), VirtualHost.class);
         final String virtualhostId = virtualhost.getId();
         ((NameVirtualHostHandler) virtualHostHandler).addHost(virtualhostId, ResponseCodeHandler.HANDLE_404);
@@ -204,7 +209,7 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm delVirtualHost(JsonObject jsonObject) throws Exception {
+    public Farm delVirtualHost(JsonObject jsonObject) {
         final VirtualHost virtualhost = (VirtualHost) JsonObject.fromJson(jsonObject.toString(), VirtualHost.class);
         final String virtualhostId = virtualhost.getId();
         for (final Rule rule: virtualhost.getRules()) {
