@@ -60,12 +60,6 @@ public class FarmUndertow extends Farm {
     }
 
     @Override
-    public Farm setOptions(Map<String, String> options) {
-        ((HostMetricsHandler) hostMetricsHandler).enabled("true".equals(options.get("EnableMetrics")));
-        return super.setOptions(options);
-    }
-
-    @Override
     public HttpHandler getRootHandler() {
         return rootHandler;
     }
