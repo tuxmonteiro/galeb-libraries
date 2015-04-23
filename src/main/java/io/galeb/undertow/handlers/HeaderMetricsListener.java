@@ -7,7 +7,7 @@ import io.undertow.util.HeaderValues;
 
 import javax.inject.Inject;
 
-class MetricCompletionListener implements ExchangeCompletionListener {
+class HeaderMetricsListener implements ExchangeCompletionListener {
 
     @Inject
     private Logger logger;

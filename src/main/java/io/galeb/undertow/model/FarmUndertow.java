@@ -10,7 +10,7 @@ import io.galeb.core.model.Farm;
 import io.galeb.core.model.Rule;
 import io.galeb.core.model.VirtualHost;
 import io.galeb.undertow.handlers.BackendProxyClient;
-import io.galeb.undertow.handlers.HostMetricsHandler;
+import io.galeb.undertow.handlers.MonitorHeadersHandler;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.PathHandler;
@@ -38,7 +38,7 @@ public class FarmUndertow extends Farm {
 
     private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
 
-    private final HttpHandler hostMetricsHandler = new HostMetricsHandler(virtualHostHandler);
+    private final HttpHandler hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler);
 
     private final HttpHandler rootHandler = "true".equals(System.getProperty("io.galeb.router.accesslog")) ? new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
 
