@@ -25,6 +25,14 @@ import com.hazelcast.core.MessageListener;
 @Default
 public class EventBus implements MessageListener<Event>, IEventBus {
 
+    private static final String PROP_HAZELCAST_LOGGING_TYPE = "hazelcast.logging.type";
+
+    static {
+        if (System.getProperty(PROP_HAZELCAST_LOGGING_TYPE)==null) {
+            System.setProperty(PROP_HAZELCAST_LOGGING_TYPE, "log4j2");
+        }
+    }
+
     @Inject
     protected Logger logger;
 
