@@ -14,7 +14,7 @@
   </licenses>
 
   <properties>
-    <undertow.version>1.2.0.Final</undertow.version>
+    <undertow.version>1.2.1.Final</undertow.version>
     <org.jboss.resteasy.version>3.0.10.Final</org.jboss.resteasy.version>
     <org.jboss.weld.version>2.2.8.Final</org.jboss.weld.version>
     <org.jboss.logging.version>3.2.0.Final</org.jboss.logging.version>
