@@ -1,5 +1,7 @@
 package io.galeb.undertow.model;
 
+import static io.galeb.core.util.Constants.PROP_ENABLE_ACCESSLOG;
+import static io.galeb.core.util.Constants.TRUE;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.loadbalance.LoadBalancePolicy;
 import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
@@ -45,11 +47,9 @@ public class FarmUndertow extends Farm {
 
     private final HttpHandler hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler);
 
-    private final HttpHandler rootHandler = "true".equals(System.getProperty("io.galeb.router.accesslog")) ? new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
+    private final HttpHandler rootHandler = TRUE.equals(System.getProperty(PROP_ENABLE_ACCESSLOG)) ? new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
 
-        public static final String DEFAULT_CATEGORY = "io.galeb.accesslog";
-
-        private final ExtendedLogger logger = LogManager.getContext().getLogger(DEFAULT_CATEGORY);
+        private final ExtendedLogger logger = LogManager.getContext().getLogger(PROP_ENABLE_ACCESSLOG);
 
         @Override
         public void logMessage(String message) {
