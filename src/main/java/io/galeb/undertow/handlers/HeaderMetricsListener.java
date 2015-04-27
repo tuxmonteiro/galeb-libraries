@@ -32,11 +32,11 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
             if (headerXStartTime!=null) {
                 metrics.getProperties().put("requestTime", System.nanoTime()/1000000 - Long.valueOf(headerXStartTime.getFirst())/1000000);
             }
-//            try {
-//                eventBus.sendMetrics(metrics);
-//            } catch (RuntimeException sendMetricsFail) {
-//                logger.debug(sendMetricsFail);
-//            }
+            try {
+                eventBus.sendMetrics(metrics);
+            } catch (InterruptedException e) {
+                logger.debug(e);
+            }
         } finally {
             nextListener.proceed();
         }
