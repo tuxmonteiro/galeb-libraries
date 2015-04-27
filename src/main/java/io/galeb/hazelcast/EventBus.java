@@ -4,6 +4,7 @@ import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.eventbus.Event;
 import io.galeb.core.eventbus.EventBusListener;
 import io.galeb.core.eventbus.IEventBus;
+import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Metrics;
@@ -17,7 +18,6 @@ import javax.inject.Inject;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.IQueue;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
@@ -39,8 +39,6 @@ public class EventBus implements MessageListener<Event>, IEventBus {
     private static final HazelcastInstance HAZELCAST_INSTANCE = Hazelcast.newHazelcastInstance();
 
     private final Map<String, ITopic<Event>> topics = new HashMap<>();
-
-    private final IQueue<Metrics> queueMetrics = HAZELCAST_INSTANCE.getQueue(Metrics.METRICS_QUEUE);
 
 
     private EventBusListener eventBusListener = EventBusListener.NULL;
@@ -74,11 +72,8 @@ public class EventBus implements MessageListener<Event>, IEventBus {
 
     @Override
     public void sendMetrics(Metrics metrics) {
-        try {
-            queueMetrics.put(metrics);
-        } catch (InterruptedException e) {
-            logger.debug(e);
-        }
+        // TODO: send to eventBus
+        logger.info(JsonObject.toJsonString(metrics));
     }
 
     @Override
