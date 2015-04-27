@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.aspectj.lang.JoinPoint;
 
+import io.galeb.core.metrics.CounterConnections;
 import io.undertow.server.handlers.proxy.ProxyConnectionPool;
 import io.undertow.util.CopyOnWriteMap;
 
@@ -21,12 +22,12 @@ public aspect HostThreadDataConnectionsAspect {
         threadId = thisJoinPoint.getTarget().toString();
 
         if (thisJoinPoint.getThis() instanceof ProxyConnectionPool) {
-            showTotal(threadId, thisJoinPoint);
+            notify(threadId, thisJoinPoint);
             threadId = "UNDEF";
         }
     }
 
-    private synchronized int showTotal(final String threadId, final JoinPoint joinPoint) {
+    private synchronized void notify(final String threadId, final JoinPoint joinPoint) {
         final ProxyConnectionPool proxyConnectionPool = ((ProxyConnectionPool)joinPoint.getThis());
         final String uri = proxyConnectionPool.getUri().toString();
         final int numConnectionsPerThread = ((Integer)joinPoint.getArgs()[0]);
@@ -34,13 +35,11 @@ public aspect HostThreadDataConnectionsAspect {
         counter.put(threadId, numConnectionsPerThread);
         uris.put(uri, counter);
         int total = 0;
-        for (int numConn: uris.get(uri).values()) {
+        for (final int numConn: uris.get(uri).values()) {
             total += numConn;
         }
 
-        //System.out.println(String.format("%s %d", uri, total));
-
-        return total;
+        CounterConnections.updateMap(uri, total);
     }
 
 }
