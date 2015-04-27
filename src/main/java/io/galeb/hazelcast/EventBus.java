@@ -73,8 +73,12 @@ public class EventBus implements MessageListener<Event>, IEventBus {
     }
 
     @Override
-    public void sendMetrics(Metrics metrics) throws InterruptedException {
-        queueMetrics.put(metrics);
+    public void sendMetrics(Metrics metrics) {
+        try {
+            queueMetrics.put(metrics);
+        } catch (InterruptedException e) {
+            logger.debug(e);
+        }
     }
 
     @Override
