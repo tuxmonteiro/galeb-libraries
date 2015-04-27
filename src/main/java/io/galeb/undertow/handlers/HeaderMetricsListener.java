@@ -14,7 +14,6 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
     @Inject
     private Logger logger;
 
-    @Inject
     private IEventBus eventBus;
 
     @Override
@@ -34,6 +33,8 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
                 metrics.getProperties().put("requestTime", System.nanoTime()/1000000 - Long.valueOf(headerXStartTime.getFirst())/1000000);
             }
             eventBus.sendMetrics(metrics);
+        } catch (RuntimeException e) {
+            logger.error(e);
         } finally {
             nextListener.proceed();
         }

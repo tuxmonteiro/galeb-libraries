@@ -2,6 +2,7 @@ package io.galeb.undertow.model;
 
 import static io.galeb.core.util.Constants.PROP_ENABLE_ACCESSLOG;
 import static io.galeb.core.util.Constants.TRUE;
+import io.galeb.core.eventbus.IEventBus;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.loadbalance.LoadBalancePolicy;
 import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
@@ -31,8 +32,6 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 
-import lombok.NonNull;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.spi.ExtendedLogger;
 
@@ -42,13 +41,18 @@ public class FarmUndertow extends Farm {
     @Inject
     private Logger log;
 
+    @Inject
+    private IEventBus eventBus;
+
     private static final long serialVersionUID = 1L;
 
     private static final String LOGPATTERN = "%h %l %u %t \"%r\" %s %b (%v -> %{i,X-Proxy-Host} [%D]ms \"X-Real-IP: %{i,X-Real-IP}\" \"X-Forwarded-For: %{i,X-Forwarded-For}\")";
 
-    @NonNull private HttpHandler virtualHostHandler;
-    @NonNull private HttpHandler hostMetricsHandler;
-    @NonNull private HttpHandler rootHandler;
+    private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
+
+    private HttpHandler hostMetricsHandler;
+
+    private HttpHandler rootHandler;
 
     private final Map<String, BackendProxyClient> backendPoolsUndertow = new CopyOnWriteMap<>();
 
@@ -58,21 +62,17 @@ public class FarmUndertow extends Farm {
 
     @PostConstruct
     public void init() {
-        virtualHostHandler = new NameVirtualHostHandler();
-        hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler);
-        rootHandler = TRUE.equals(System.getProperty(PROP_ENABLE_ACCESSLOG)) ?
-                new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
+        hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler).setEventBus(eventBus);
+        rootHandler = TRUE.equals(System.getProperty(PROP_ENABLE_ACCESSLOG)) ? new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
 
-                    private final ExtendedLogger logger = LogManager.getContext()
-                            .getLogger(PROP_ENABLE_ACCESSLOG);
+            private final ExtendedLogger logger = LogManager.getContext().getLogger(PROP_ENABLE_ACCESSLOG);
 
-                    @Override
-                    public void logMessage(String message) {
-                        logger.info(message);
-                    }
+            @Override
+            public void logMessage(String message) {
+                logger.info(message);
+            }
 
-                }, LOGPATTERN, FarmUndertow.class.getClassLoader()) :
-                hostMetricsHandler;
+        }, LOGPATTERN, FarmUndertow.class.getClassLoader()) : hostMetricsHandler;
     }
 
     @Override
