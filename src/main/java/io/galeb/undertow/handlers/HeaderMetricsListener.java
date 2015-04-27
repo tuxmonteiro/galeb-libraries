@@ -14,7 +14,8 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
     @Inject
     private Logger logger;
 
-    private IEventBus eventBus = IEventBus.NULL;
+    @Inject
+    private IEventBus eventBus;
 
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
