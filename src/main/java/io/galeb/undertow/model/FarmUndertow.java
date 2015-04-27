@@ -2,6 +2,7 @@ package io.galeb.undertow.model;
 
 import static io.galeb.core.util.Constants.PROP_ENABLE_ACCESSLOG;
 import static io.galeb.core.util.Constants.TRUE;
+import io.galeb.core.eventbus.IEventBus;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.loadbalance.LoadBalancePolicy;
 import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
@@ -39,13 +40,16 @@ public class FarmUndertow extends Farm {
     @Inject
     private Logger log;
 
+    @Inject
+    private IEventBus eventBus;
+
     private static final long serialVersionUID = 1L;
 
     private static final String LOGPATTERN = "%h %l %u %t \"%r\" %s %b (%v -> %{i,X-Proxy-Host} [%D]ms \"X-Real-IP: %{i,X-Real-IP}\" \"X-Forwarded-For: %{i,X-Forwarded-For}\")";
 
     private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
 
-    private final HttpHandler hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler);
+    private final HttpHandler hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler).setEventBus(eventBus);
 
     private final HttpHandler rootHandler = TRUE.equals(System.getProperty(PROP_ENABLE_ACCESSLOG)) ? new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
 
