@@ -33,6 +33,11 @@
       <artifactId>galeb-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.galeb</groupId>
+      <artifactId>galeb-hazelcast</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>io.undertow</groupId>
@@ -146,9 +151,9 @@
         <artifactId>aspectj-maven-plugin</artifactId>
         <version>1.7</version>
         <configuration>
-          <complianceLevel>1.7</complianceLevel>
-          <source>1.7</source>
-          <target>1.7</target>
+          <complianceLevel>1.8</complianceLevel>
+          <source>1.8</source>
+          <target>1.8</target>
           <sources>
             <source>
               <basedir>src/main/aspect</basedir>
@@ -162,10 +167,17 @@
               <groupId>io.undertow</groupId>
               <artifactId>undertow-core</artifactId>
             </weaveDependency>
+            <weaveDependency>
+              <groupId>io.galeb</groupId>
+              <artifactId>galeb-hazelcast</artifactId>
+            </weaveDependency>
           </weaveDependencies>
+          <verbose>true</verbose>
+          <showWeaveInfo>true</showWeaveInfo>
         </configuration>
         <executions>
           <execution>
+            <phase>process-classes</phase>
             <goals>
               <goal>compile</goal>
             </goals>

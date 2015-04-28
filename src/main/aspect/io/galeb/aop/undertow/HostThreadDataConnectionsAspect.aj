@@ -4,19 +4,21 @@ import java.util.Map;
 
 import org.aspectj.lang.JoinPoint;
 
-import io.galeb.core.metrics.CounterConnections;
+import io.galeb.core.cdi.WeldContext;
+import io.galeb.core.model.Metrics;
+import io.galeb.hazelcast.EventBus;
 import io.undertow.server.handlers.proxy.ProxyConnectionPool;
 import io.undertow.util.CopyOnWriteMap;
 
 public aspect HostThreadDataConnectionsAspect {
 
-    private static final boolean ENABLED = false;
+    private static final EventBus EVENTBUS = WeldContext.INSTANCE.getBean(EventBus.class);
 
     private volatile String threadId = "UNDEF";
     private final Map<String, Integer> counter = new CopyOnWriteMap<>();
     private final Map<String, Map<String, Integer>> uris = new CopyOnWriteMap<>();
 
-    pointcut myPointcut() : if(ENABLED) && set(* io.undertow.server.handlers.proxy.ProxyConnectionPool.HostThreadData.connections);
+    pointcut myPointcut() : set(* io.undertow.server.handlers.proxy.ProxyConnectionPool.HostThreadData.connections);
 
     after() : myPointcut() {
         threadId = thisJoinPoint.getTarget().toString();
@@ -39,7 +41,10 @@ public aspect HostThreadDataConnectionsAspect {
             total += numConn;
         }
 
-        CounterConnections.updateMap(uri, total);
+        Metrics metrics = new Metrics();
+        metrics.setId(uri).getProperties().put(Metrics.PROP_METRICS_TOTAL, total);
+
+        EVENTBUS.sendMetrics(metrics);
     }
 
 }
