@@ -12,13 +12,13 @@ import io.undertow.util.CopyOnWriteMap;
 
 public aspect HostThreadDataConnectionsAspect {
 
-    private static final boolean ENABLED = false;
+    private static final EventBus EVENTBUS = WeldContext.INSTANCE.getBean(EventBus.class);
 
     private volatile String threadId = "UNDEF";
     private final Map<String, Integer> counter = new CopyOnWriteMap<>();
     private final Map<String, Map<String, Integer>> uris = new CopyOnWriteMap<>();
 
-    pointcut myPointcut() : if(ENABLED) && set(* io.undertow.server.handlers.proxy.ProxyConnectionPool.HostThreadData.connections);
+    pointcut myPointcut() : set(* io.undertow.server.handlers.proxy.ProxyConnectionPool.HostThreadData.connections);
 
     after() : myPointcut() {
         threadId = thisJoinPoint.getTarget().toString();
@@ -41,11 +41,10 @@ public aspect HostThreadDataConnectionsAspect {
             total += numConn;
         }
 
-        EventBus eventBus = WeldContext.INSTANCE.getBean(EventBus.class);
-        Metrics metrics = (Metrics) new Metrics().setId(uri).getProperties().put(Metrics.PROP_METRICS_TOTAL, total);
+        Metrics metrics = new Metrics();
+        metrics.setId(uri).getProperties().put(Metrics.PROP_METRICS_TOTAL, total);
 
-        System.out.println(eventBus);
-        eventBus.sendMetrics(metrics);
+        EVENTBUS.sendMetrics(metrics);
     }
 
 }
