@@ -41,10 +41,10 @@ public aspect HostThreadDataConnectionsAspect {
             total += numConn;
         }
 
-        Metrics metrics = new Metrics();
+        final Metrics metrics = new Metrics();
         metrics.setId(uri).getProperties().put(Metrics.PROP_METRICS_TOTAL, total);
 
-        EVENTBUS.sendMetrics(metrics);
+        EVENTBUS.onConnectionsMetrics(metrics);
     }
 
 }
