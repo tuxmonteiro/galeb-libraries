@@ -40,6 +40,7 @@ public class EventBus implements MessageListener<Event>, IEventBus {
 
     private final Map<String, ITopic<Event>> topics = new HashMap<>();
 
+    private final MapReduce mapReduce = new MapReduce(HAZELCAST_INSTANCE);
 
     private EventBusListener eventBusListener = EventBusListener.NULL;
 
@@ -71,8 +72,14 @@ public class EventBus implements MessageListener<Event>, IEventBus {
     }
 
     @Override
-    public void sendMetrics(Metrics metrics) {
-        // TODO: send to eventBus
+    public void onRequestMetrics(Metrics metrics) {
+        // TODO: send request metrics to eventBus
+        logger.info(JsonObject.toJsonString(metrics));
+    }
+
+    @Override
+    public void onConnectionsMetrics(Metrics metrics) {
+        // TODO: send connections métrics to eventbus
         logger.info(JsonObject.toJsonString(metrics));
     }
 
@@ -94,6 +101,10 @@ public class EventBus implements MessageListener<Event>, IEventBus {
                 putAndGetTopic(action.toString());
             }
         }
+    }
+
+    public MapReduce getMapReduce() {
+        return mapReduce;
     }
 
 }
