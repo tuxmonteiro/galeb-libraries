@@ -53,6 +53,7 @@ public class MapReduceTest {
 
         final long timeout = 1L; // MILLISECOND (Hint: 0L = TTL Forever)
         mapReduce.setTimeOut(timeout).addMetrics(metrics);
+        Thread.sleep(10L);
         assertThat(mapReduce.contains(metrics.getId())).isFalse();
     }
 
