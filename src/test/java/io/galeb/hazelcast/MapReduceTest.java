@@ -4,8 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+
 import io.galeb.core.model.Metrics;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -16,29 +19,36 @@ import com.hazelcast.core.HazelcastInstance;
 
 public class MapReduceTest {
 
-    static HazelcastInstance hzInstance;
-    //static HazelcastInstance hzInstance2;
+    private static HazelcastInstance hzInstance;
+
+    private MapReduce mapReduce;
+    private Metrics metrics;
 
     @BeforeClass
-    public static void setUp() {
+    public static void setUpStatic() {
         final Config config = new Config();
         config.getGroupConfig().setName(UUID.randomUUID().toString());
         final NetworkConfig networkConfig = config.getNetworkConfig();
         networkConfig.getJoin().getMulticastConfig().setEnabled(false);
         networkConfig.getJoin().getTcpIpConfig().setEnabled(true);
         networkConfig.getJoin().getTcpIpConfig().setMembers(Arrays.asList(new String[]{"127.0.0.1"}));
-
         hzInstance = Hazelcast.newHazelcastInstance(config);
-        //hzInstance2 = Hazelcast.newHazelcastInstance(config);
+    }
 
+    private void initializeMetrics(int numConn) {
+        metrics.setId("TEST").getProperties().put(Metrics.PROP_METRICS_TOTAL, numConn);
+    }
+
+    @Before
+    public void setUp() {
+        mapReduce = new MapReduce(hzInstance);
+        metrics = new Metrics();
     }
 
     @Test
     public void addMetricsTest() {
-        final MapReduce mapReduce = new MapReduce(hzInstance);
+        initializeMetrics(0);
 
-        final Metrics metrics = new Metrics();
-        metrics.setId("TEST").getProperties().put(Metrics.PROP_METRICS_TOTAL, 0);
         mapReduce.addMetrics(metrics);
 
         assertThat(mapReduce.contains(metrics.getId())).isTrue();
@@ -46,36 +56,24 @@ public class MapReduceTest {
 
     @Test
     public void checkBackendWithTimeout() throws InterruptedException {
-        final MapReduce mapReduce = new MapReduce(hzInstance);
-
-        final Metrics metrics = new Metrics();
-        metrics.setId("TEST").getProperties().put(Metrics.PROP_METRICS_TOTAL, 0);
-
+        initializeMetrics(0);
         final long timeout = 1L; // MILLISECOND (Hint: 0L = TTL Forever)
+
         mapReduce.setTimeOut(timeout).addMetrics(metrics);
-        Thread.sleep(10L);
+        Thread.sleep(timeout+1);
+
         assertThat(mapReduce.contains(metrics.getId())).isFalse();
     }
 
-//    @Test
-//    public void checkMap() {
-//        final MapReduce mapReduce1 = new MapReduce(hzInstance);
-//        final MapReduce mapReduce2 = new MapReduce(hzInstance2);
-//
-//        final Metrics metrics1 = new Metrics();
-//        metrics1.setId("TEST1").getProperties().put(Metrics.PROP_METRICS_TOTAL, 0);
-//        final Metrics metrics2 = new Metrics();
-//        metrics2.setId("TEST1").getProperties().put(Metrics.PROP_METRICS_TOTAL, 1);
-//
-//        mapReduce1.addMetrics(metrics1);
-//
-//        assertThat(mapReduce1.contains(metrics1.getId())).isTrue();
-//        mapReduce2.addMetrics(metrics2);
-//
-//        assertThat(mapReduce2.contains(metrics1.getId())).isTrue();
-//        assertThat(mapReduce1.contains(metrics1.getId())).isTrue();
-//    }
+    @Test
+    public void checkLocalMapReduceResult() throws InterruptedException, ExecutionException {
+        final int numConn = 10;
+        initializeMetrics(numConn);
 
+        mapReduce.addMetrics(metrics);
+        final int connections = mapReduce.reduce().get(metrics.getId());
 
+        assertThat(connections).isEqualTo(numConn);
+    }
 
 }

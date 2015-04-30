@@ -79,8 +79,7 @@ public class EventBus implements MessageListener<Event>, IEventBus {
 
     @Override
     public void onConnectionsMetrics(Metrics metrics) {
-        // TODO: send connections métrics to eventbus
-        logger.info(JsonObject.toJsonString(metrics));
+        mapReduce.addMetrics(metrics);
     }
 
     @Override
