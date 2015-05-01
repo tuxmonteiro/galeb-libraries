@@ -1,4 +1,4 @@
-package io.galeb.hazelcast;
+package io.galeb.hazelcast.mapreduce;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import io.galeb.core.model.Metrics;
+import io.galeb.hazelcast.mapreduce.BackendConnectionsMapReduce;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -17,11 +18,11 @@ import com.hazelcast.config.NetworkConfig;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 
-public class MapReduceTest {
+public class BackendConnectionsMapReduceTest {
 
     private static HazelcastInstance hzInstance;
 
-    private MapReduce mapReduce;
+    private BackendConnectionsMapReduce mapReduce;
     private Metrics metrics;
 
     @BeforeClass
@@ -41,7 +42,7 @@ public class MapReduceTest {
 
     @Before
     public void setUp() {
-        mapReduce = new MapReduce(hzInstance);
+        mapReduce = new BackendConnectionsMapReduce(hzInstance);
         metrics = new Metrics();
     }
 

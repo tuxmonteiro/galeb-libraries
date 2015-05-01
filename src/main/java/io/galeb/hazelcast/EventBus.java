@@ -8,6 +8,7 @@ import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Metrics;
+import io.galeb.hazelcast.mapreduce.BackendConnectionsMapReduce;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -40,7 +41,7 @@ public class EventBus implements MessageListener<Event>, IEventBus {
 
     private final Map<String, ITopic<Event>> topics = new HashMap<>();
 
-    private final MapReduce mapReduce = new MapReduce(HAZELCAST_INSTANCE);
+    private final BackendConnectionsMapReduce mapReduce = new BackendConnectionsMapReduce(HAZELCAST_INSTANCE);
 
     private EventBusListener eventBusListener = EventBusListener.NULL;
 
@@ -102,7 +103,7 @@ public class EventBus implements MessageListener<Event>, IEventBus {
         }
     }
 
-    public MapReduce getMapReduce() {
+    public BackendConnectionsMapReduce getMapReduce() {
         return mapReduce;
     }
 
