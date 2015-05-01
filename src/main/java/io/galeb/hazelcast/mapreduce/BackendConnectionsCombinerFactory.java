@@ -3,7 +3,7 @@ package io.galeb.hazelcast.mapreduce;
 import com.hazelcast.mapreduce.Combiner;
 import com.hazelcast.mapreduce.CombinerFactory;
 
-final class BackendConnectionsCombiner implements
+final class BackendConnectionsCombinerFactory implements
         CombinerFactory<String, Integer, Integer> {
     private static final long serialVersionUID = 1L;
 

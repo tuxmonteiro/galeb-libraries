@@ -60,7 +60,7 @@ public class BackendConnectionsMapReduce {
 
         final ICompletableFuture<Map<String, Integer>> future =
                 job.mapper(new BackendConnectionsMapper())
-                   .combiner(new BackendConnectionsCombiner())
+                   .combiner(new BackendConnectionsCombinerFactory())
                    .reducer(new BackendConnectionsReducerFactory())
                    .submit();
 
