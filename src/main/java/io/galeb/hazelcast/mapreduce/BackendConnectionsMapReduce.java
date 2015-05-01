@@ -13,9 +13,9 @@ import com.hazelcast.mapreduce.Job;
 import com.hazelcast.mapreduce.JobTracker;
 import com.hazelcast.mapreduce.KeyValueSource;
 
-public class MapReduce {
+public class BackendConnectionsMapReduce {
 
-    public static final String MAP_ID = MapReduce.class.getSimpleName();
+    public static final String MAP_ID = BackendConnectionsMapReduce.class.getSimpleName();
 
     private final HazelcastInstance hazelcastInstance;
 
@@ -23,12 +23,12 @@ public class MapReduce {
 
     private Long timeOut = 10000L;
 
-    public MapReduce(final HazelcastInstance hazelcastInstance) {
+    public BackendConnectionsMapReduce(final HazelcastInstance hazelcastInstance) {
         this.hazelcastInstance = hazelcastInstance;
         mapBackendConn = hazelcastInstance.getMap(MAP_ID);
     }
 
-    public MapReduce setTimeOut(Long timeOut) {
+    public BackendConnectionsMapReduce setTimeOut(Long timeOut) {
         this.timeOut = timeOut;
         return this;
     }
