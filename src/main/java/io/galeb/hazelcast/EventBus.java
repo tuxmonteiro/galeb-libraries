@@ -8,6 +8,7 @@ import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Metrics;
+import io.galeb.hazelcast.mapreduce.MapReduce;
 
 import java.util.EnumSet;
 import java.util.HashMap;

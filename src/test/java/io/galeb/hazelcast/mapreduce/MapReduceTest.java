@@ -1,4 +1,4 @@
-package io.galeb.hazelcast;
+package io.galeb.hazelcast.mapreduce;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import io.galeb.core.model.Metrics;
+import io.galeb.hazelcast.mapreduce.MapReduce;
 
 import org.junit.Before;
 import org.junit.BeforeClass;

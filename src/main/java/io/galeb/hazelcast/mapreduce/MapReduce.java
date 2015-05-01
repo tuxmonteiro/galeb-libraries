@@ -1,4 +1,4 @@
-package io.galeb.hazelcast;
+package io.galeb.hazelcast.mapreduce;
 
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
