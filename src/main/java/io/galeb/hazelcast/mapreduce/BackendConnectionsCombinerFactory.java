@@ -20,10 +20,10 @@ final class BackendConnectionsCombinerFactory implements
 
             @Override
             public Integer finalizeChunk() {
-                final int sum = this.sum;
+                final int result = this.sum;
                 this.sum = 0;
 
-                return sum;
+                return result;
             }
         };
     }
