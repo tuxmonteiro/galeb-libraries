@@ -41,7 +41,7 @@ public class EventBus implements MessageListener<Event>, IEventBus {
 
     private final Map<String, ITopic<Event>> topics = new HashMap<>();
 
-    private final BackendConnectionsMapReduce mapReduce = new BackendConnectionsMapReduce(HAZELCAST_INSTANCE);
+    private final BackendConnectionsMapReduce mapReduce = new BackendConnectionsMapReduce(HAZELCAST_INSTANCE, logger);
 
     private EventBusListener eventBusListener = EventBusListener.NULL;
 
