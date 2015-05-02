@@ -1,13 +1,15 @@
 package io.galeb.hazelcast.mapreduce;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import io.galeb.core.logging.Logger;
+import io.galeb.core.mapreduce.MapReduce;
+import io.galeb.core.model.Metrics;
 
 import java.util.Arrays;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-
-import io.galeb.core.model.Metrics;
-import io.galeb.hazelcast.mapreduce.BackendConnectionsMapReduce;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -22,7 +24,9 @@ public class BackendConnectionsMapReduceTest {
 
     private static HazelcastInstance hzInstance;
 
-    private BackendConnectionsMapReduce mapReduce;
+    private final Logger log = mock(Logger.class);
+
+    private MapReduce mapReduce;
     private Metrics metrics;
 
     @BeforeClass
@@ -42,7 +46,9 @@ public class BackendConnectionsMapReduceTest {
 
     @Before
     public void setUp() {
-        mapReduce = new BackendConnectionsMapReduce(hzInstance);
+        doNothing().when(log).error(any(Throwable.class));
+        doNothing().when(log).debug(any(Throwable.class));
+        mapReduce = new BackendConnectionsMapReduce(hzInstance, log);
         metrics = new Metrics();
     }
 
@@ -67,7 +73,7 @@ public class BackendConnectionsMapReduceTest {
     }
 
     @Test
-    public void checkLocalMapReduceResult() throws InterruptedException, ExecutionException {
+    public void checkLocalMapReduceResult() {
         final int numConn = 10;
         initializeMetrics(numConn);
 
