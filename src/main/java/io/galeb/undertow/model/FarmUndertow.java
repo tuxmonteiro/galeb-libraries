@@ -24,6 +24,7 @@ import io.undertow.util.CopyOnWriteMap;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -141,7 +142,8 @@ public class FarmUndertow extends Farm {
     public Farm addBackendPool(JsonObject jsonObject) {
         super.addBackendPool(jsonObject);
         final BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
-        final Map<String, Object> properties = backendPool.getProperties();
+        final Map<String, Object> properties = new HashMap<>(backendPool.getProperties());
+        properties.put(BackendPool.class.getSimpleName(), backendPool);
 
         BackendProxyClient backendProxyClient =
                 new BackendProxyClient().setConnectionsPerThread(maxConnPerThread())
