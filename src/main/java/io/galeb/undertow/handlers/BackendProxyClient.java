@@ -160,4 +160,8 @@ public class BackendProxyClient implements ProxyClient {
         hostSelectorHandler.reset();
         return this;
     }
+
+    public void reset() {
+        hostSelectorHandler.reset();
+    }
 }
