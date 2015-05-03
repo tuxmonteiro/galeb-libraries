@@ -148,14 +148,14 @@ public class FarmUndertow extends Farm {
 
         if (!loadBalanceDefined) {
             properties.put(LoadBalancePolicy.LOADBALANCE_POLICY_FIELD, LoadBalancePolicyLocator.DEFAULT_ALGORITHM.toString());
+            properties.put(BackendPool.class.getSimpleName(), backendPool);
         }
 
         final String backendPoolId = backendPool.getId();
-        backendPoolsUndertow.put(
-                                backendPoolId,
-                                new BackendProxyClient().setConnectionsPerThread(maxConnPerThread())
-                                                        .addSessionCookieName("JSESSIONID")
-                                                        .setParams(properties));
+        backendPoolsUndertow.put(backendPoolId,
+                                 new BackendProxyClient().setConnectionsPerThread(maxConnPerThread())
+                                                         .addSessionCookieName("JSESSIONID")
+                                                         .setParams(properties));
         return super.addBackendPool(backendPool);
     }
 
