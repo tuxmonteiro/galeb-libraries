@@ -4,8 +4,6 @@ import static io.galeb.core.util.Constants.PROP_ENABLE_ACCESSLOG;
 import static io.galeb.core.util.Constants.TRUE;
 import io.galeb.core.eventbus.IEventBus;
 import io.galeb.core.json.JsonObject;
-import io.galeb.core.loadbalance.LoadBalancePolicy;
-import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
 import io.galeb.core.model.Backend.Health;
@@ -103,7 +101,7 @@ public class FarmUndertow extends Farm {
                 }
             }
 
-            return super.addBackend(backend);
+            return super.addBackend(jsonObject);
 
         } else {
             throw new RuntimeException("ParentId not found");
@@ -123,7 +121,7 @@ public class FarmUndertow extends Farm {
                 log.error(e);
             }
         }
-        return super.delBackend(backend);
+        return super.delBackend(jsonObject);
     }
 
     private int maxConnPerThread() {
@@ -141,22 +139,32 @@ public class FarmUndertow extends Farm {
 
     @Override
     public Farm addBackendPool(JsonObject jsonObject) {
+        super.addBackendPool(jsonObject);
         final BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
         final Map<String, Object> properties = backendPool.getProperties();
-        final String loadBalanceAlgorithm = (String) properties.get(LoadBalancePolicy.LOADBALANCE_POLICY_FIELD);
-        final boolean loadBalanceDefined = loadBalanceAlgorithm!=null && LoadBalancePolicy.hasLoadBalanceAlgorithm(loadBalanceAlgorithm);
 
-        if (!loadBalanceDefined) {
-            properties.put(LoadBalancePolicy.LOADBALANCE_POLICY_FIELD, LoadBalancePolicyLocator.DEFAULT_ALGORITHM.toString());
-            properties.put(BackendPool.class.getSimpleName(), backendPool);
-        }
+        BackendProxyClient backendProxyClient =
+                new BackendProxyClient().setConnectionsPerThread(maxConnPerThread())
+                                        .addSessionCookieName("JSESSIONID")
+                                        .setParams(properties);
 
         final String backendPoolId = backendPool.getId();
-        backendPoolsUndertow.put(backendPoolId,
-                                 new BackendProxyClient().setConnectionsPerThread(maxConnPerThread())
-                                                         .addSessionCookieName("JSESSIONID")
-                                                         .setParams(properties));
-        return super.addBackendPool(backendPool);
+        backendPoolsUndertow.put(backendPoolId, backendProxyClient);
+
+        return this;
+    }
+
+    @Override
+    public Farm changeBackendPool(JsonObject jsonObject) {
+        final BackendPool backendPool = getBackendPool(jsonObject);
+        if (backendPool!=null) {
+            super.changeBackendPool(jsonObject);
+
+            BackendProxyClient backendProxyClient = backendPoolsUndertow.get(backendPool.getId());
+            backendProxyClient.setParams(backendPool.getProperties());
+            backendProxyClient.reset();
+        }
+        return this;
     }
 
     @Override
@@ -164,7 +172,7 @@ public class FarmUndertow extends Farm {
         final BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
         final String backendPoolId = backendPool.getId();
         backendPoolsUndertow.remove(backendPoolId);
-        return super.delBackendPool(backendPool);
+        return super.delBackendPool(jsonObject);
     }
 
     @Override
@@ -194,7 +202,7 @@ public class FarmUndertow extends Farm {
             hosts.put(virtualhostId, ruleHandler);
         }
 
-        return super.addRule(rule);
+        return super.addRule(jsonObject);
     }
 
     @Override
@@ -208,7 +216,7 @@ public class FarmUndertow extends Farm {
         if (ruleHandler!=null && ruleHandler instanceof PathHandler) {
             ((PathHandler)ruleHandler).removePrefixPath(match);
         }
-        return super.delRule(rule);
+        return super.delRule(jsonObject);
     }
 
     @Override
@@ -216,7 +224,7 @@ public class FarmUndertow extends Farm {
         final VirtualHost virtualhost = (VirtualHost) JsonObject.fromJson(jsonObject.toString(), VirtualHost.class);
         final String virtualhostId = virtualhost.getId();
         ((NameVirtualHostHandler) virtualHostHandler).addHost(virtualhostId, ResponseCodeHandler.HANDLE_404);
-        return super.addVirtualHost(virtualhost);
+        return super.addVirtualHost(jsonObject);
     }
 
     @Override
@@ -224,7 +232,7 @@ public class FarmUndertow extends Farm {
         final VirtualHost virtualhost = (VirtualHost) JsonObject.fromJson(jsonObject.toString(), VirtualHost.class);
         final String virtualhostId = virtualhost.getId();
         for (final Rule rule: virtualhost.getRules()) {
-            delRule(rule.getId());
+            delRule(JsonObject.toJsonObject(rule));
         }
         ((NameVirtualHostHandler) virtualHostHandler).removeHost(virtualhostId);
         return super.delVirtualHost(jsonObject);
