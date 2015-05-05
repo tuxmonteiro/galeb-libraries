@@ -67,7 +67,7 @@ public class BackendConnectionsMapReduce implements MapReduce {
     @Override
     public Map<String, Integer> reduce() {
 
-        final JobTracker jobTracker = hazelcastInstance.getJobTracker("jobTracker1");
+        final JobTracker jobTracker = hazelcastInstance.getJobTracker("jobTracker1"+this);
         final KeyValueSource<String, Integer> source = KeyValueSource.fromMap(mapBackendConn);
 
         final Job<String, Integer> job = jobTracker.newJob(source);
