@@ -11,6 +11,9 @@ import io.undertow.server.handlers.proxy.LoadBalancingProxyClient.HostSelector;
 import io.undertow.util.CopyOnWriteMap;
 import io.undertow.util.HttpString;
 
+import java.net.URI;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -26,6 +29,7 @@ public class BackendSelector implements HostSelector {
     private final Map<String, Object> params = new CopyOnWriteMap<>();
     private volatile LoadBalancePolicy loadBalancePolicy = LoadBalancePolicy.NULL;
     private final LoadBalancePolicyLocator loadBalancePolicyLocator = new LoadBalancePolicyLocator();
+    private final List<URI> uris = new LinkedList<>();
 
     @Inject
     private Logger logger;
@@ -35,11 +39,18 @@ public class BackendSelector implements HostSelector {
         if (loadBalancePolicy == LoadBalancePolicy.NULL) {
             loadBalancePolicy = loadBalancePolicyLocator.setParams(params).get();
             loadBalancePolicy.reset();
+            uris.clear();
+            for (int x=0;x<availableHosts.length;x++) {
+                final Host host = availableHosts[x];
+                if (host!=null) {
+                    uris.add(host.getUri());
+                }
+            }
         }
 
         final int hostID = loadBalancePolicy.setCriteria(params)
                                             .setCriteria(new UndertowSourceIP(), exchange)
-                                            .mapOfHosts(availableHosts).getChoice();
+                                            .mapOfHosts(uris).getChoice();
 
         try {
             trace(availableHosts[hostID]);
