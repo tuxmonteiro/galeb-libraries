@@ -143,9 +143,10 @@ public class FarmUndertow extends Farm {
         super.addBackendPool(jsonObject);
         final BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
         final Map<String, Object> properties = new HashMap<>(backendPool.getProperties());
-        properties.put(BackendPool.class.getSimpleName(), backendPool);
+        properties.put(BackendPool.class.getSimpleName(), backendPool.getId());
+        properties.put(Farm.class.getSimpleName(), this);
 
-        BackendProxyClient backendProxyClient =
+        final BackendProxyClient backendProxyClient =
                 new BackendProxyClient().setConnectionsPerThread(maxConnPerThread())
                                         .addSessionCookieName("JSESSIONID")
                                         .setParams(properties);
@@ -162,7 +163,7 @@ public class FarmUndertow extends Farm {
         if (backendPool!=null) {
             super.changeBackendPool(jsonObject);
 
-            BackendProxyClient backendProxyClient = backendPoolsUndertow.get(backendPool.getId());
+            final BackendProxyClient backendProxyClient = backendPoolsUndertow.get(backendPool.getId());
             backendProxyClient.setParams(backendPool.getProperties());
             backendProxyClient.reset();
         }
