@@ -6,6 +6,7 @@ import io.galeb.core.eventbus.EventBusListener;
 import io.galeb.core.eventbus.IEventBus;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
+import io.galeb.core.mapreduce.MapReduce;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Metrics;
 import io.galeb.hazelcast.mapreduce.BackendConnectionsMapReduce;
@@ -103,7 +104,8 @@ public class EventBus implements MessageListener<Event>, IEventBus {
         }
     }
 
-    public BackendConnectionsMapReduce getMapReduce() {
+    @Override
+    public MapReduce getMapReduce() {
         return mapReduce;
     }
 
