@@ -17,15 +17,23 @@ public aspect HostThreadDataConnectionsAspect {
     private volatile String threadId = "UNDEF";
     private final Map<String, Integer> counter = new CopyOnWriteMap<>();
     private final Map<String, Map<String, Integer>> uris = new CopyOnWriteMap<>();
+    private long lastClear = System.currentTimeMillis();
+
+    private static final long TTL = 10000L; // milliseconds
 
     pointcut myPointcut() : set(* io.undertow.server.handlers.proxy.ProxyConnectionPool.HostThreadData.connections);
 
     after() : myPointcut() {
+        final long now = System.currentTimeMillis();
         threadId = thisJoinPoint.getTarget().toString();
+
+        if (lastClear<now-TTL) {
+            counter.clear();
+            lastClear = now;
+        }
 
         if (thisJoinPoint.getThis() instanceof ProxyConnectionPool) {
             notify(threadId, thisJoinPoint);
-            threadId = "UNDEF";
         }
     }
 
