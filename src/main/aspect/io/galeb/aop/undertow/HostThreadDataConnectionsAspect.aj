@@ -7,8 +7,8 @@ import org.aspectj.lang.JoinPoint;
 
 import io.galeb.core.cdi.WeldContext;
 import io.galeb.core.model.Metrics;
-import io.galeb.core.util.map.HashMapExpirable;
 import io.galeb.hazelcast.EventBus;
+import io.galeb.undertow.util.map.CopyOnWriteMapExpirable;
 import io.undertow.server.handlers.proxy.ProxyConnectionPool;
 
 public aspect HostThreadDataConnectionsAspect {
@@ -19,8 +19,8 @@ public aspect HostThreadDataConnectionsAspect {
     private static final long TTL_URI = 1L; // hour
 
     private volatile String threadId = "UNDEF";
-    private final Map<String, Integer> counter = new HashMapExpirable<>(TTL_THREAD_ID);
-    private final Map<String, Map<String, Integer>> uris = new HashMapExpirable<>(TTL_URI, TimeUnit.HOURS);
+    private final Map<String, Integer> counter = new CopyOnWriteMapExpirable<>(TTL_THREAD_ID);
+    private final Map<String, Map<String, Integer>> uris = new CopyOnWriteMapExpirable<>(TTL_URI, TimeUnit.HOURS);
 
     pointcut myPointcut() : set(* io.undertow.server.handlers.proxy.ProxyConnectionPool.HostThreadData.connections);
 
