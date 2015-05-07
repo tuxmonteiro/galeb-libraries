@@ -15,11 +15,11 @@ public aspect HostThreadDataConnectionsAspect {
 
     private static final EventBus EVENTBUS = WeldContext.INSTANCE.getBean(EventBus.class);
 
-    private static final long TTL_THREAD_ID = 5000L; // milliseconds
+    private static final long TTL_THREAD_ID = 1000L; // milliseconds
     private static final long TTL_URI = 1L; // hour
 
     private volatile String threadId = "UNDEF";
-    private final Map<String, Integer> counter = new CopyOnWriteMapExpirable<>(TTL_THREAD_ID);
+    private final Map<String, Integer> counter = new CopyOnWriteMapExpirable<>(TTL_THREAD_ID, TimeUnit.MILLISECONDS);
     private final Map<String, Map<String, Integer>> uris = new CopyOnWriteMapExpirable<>(TTL_URI, TimeUnit.HOURS);
 
     pointcut myPointcut() : set(* io.undertow.server.handlers.proxy.ProxyConnectionPool.HostThreadData.connections);
