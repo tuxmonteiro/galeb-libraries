@@ -1,7 +1,10 @@
 package io.galeb.undertow.util.map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -16,7 +19,7 @@ public class CopyOnWriteMapExpirableTest {
 
     @Before
     public void setUp() {
-        copyOnWriteMapExpirable = new CopyOnWriteMapExpirable<>(DEFAULT_TTL);
+        copyOnWriteMapExpirable = new CopyOnWriteMapExpirable<>(DEFAULT_TTL, TimeUnit.MILLISECONDS);
     }
 
     @After
@@ -27,38 +30,38 @@ public class CopyOnWriteMapExpirableTest {
     @Test
     public void putAndGetTest() {
         copyOnWriteMapExpirable.put(toString(), Integer.MIN_VALUE);
-        assert(copyOnWriteMapExpirable.get(toString())).equals(Integer.MIN_VALUE);
+        assertThat(copyOnWriteMapExpirable.get(toString())).isEqualTo(Integer.MIN_VALUE);
     }
 
     @Test
     public void sizeTest() {
         copyOnWriteMapExpirable.put(toString(), Integer.MIN_VALUE);
-        assert(Integer.valueOf(copyOnWriteMapExpirable.size())).equals(1);
+        assertThat(copyOnWriteMapExpirable.size()).isEqualTo(1);
     }
 
     @Test
     public void isEmptyTest() {
-        assert(Boolean.valueOf(copyOnWriteMapExpirable.isEmpty())).equals(true);
+        assertThat(copyOnWriteMapExpirable).isEmpty();
     }
 
     @Test
     public void containsKeyTest() {
         copyOnWriteMapExpirable.put(toString(), Integer.MIN_VALUE);
-        assert(Boolean.valueOf(copyOnWriteMapExpirable.containsKey(toString()))).equals(true);
+        assertThat(copyOnWriteMapExpirable).containsKey(toString());
     }
 
     @Test
     public void containsValueTest() {
         copyOnWriteMapExpirable.put(toString(), Integer.MIN_VALUE);
-        assert(Boolean.valueOf(copyOnWriteMapExpirable.containsValue(Integer.MIN_VALUE))).equals(true);
+        assertThat(copyOnWriteMapExpirable).containsValue(Integer.MIN_VALUE);
     }
 
     @Test
     public void removeTest() {
         copyOnWriteMapExpirable.put(toString(), Integer.MIN_VALUE);
-        assert(copyOnWriteMapExpirable.get(toString())).equals(Integer.MIN_VALUE);
+        assertThat(copyOnWriteMapExpirable).containsValue(Integer.MIN_VALUE);
         copyOnWriteMapExpirable.remove(toString());
-        assert(Boolean.valueOf(copyOnWriteMapExpirable.isEmpty())).equals(true);
+        assertThat(copyOnWriteMapExpirable).isEmpty();
     }
 
     @Test
@@ -69,7 +72,7 @@ public class CopyOnWriteMapExpirableTest {
         }
         copyOnWriteMapExpirable.putAll(mapTemp);
         for (int x=0; x<10; x++) {
-            assert(copyOnWriteMapExpirable.get(Integer.toString(x))).equals(x);
+            assertThat(copyOnWriteMapExpirable.get(Integer.toString(x))).isEqualTo(x);
         }
     }
 
@@ -79,7 +82,7 @@ public class CopyOnWriteMapExpirableTest {
             copyOnWriteMapExpirable.put(Integer.toString(x), x);
         }
         copyOnWriteMapExpirable.clear();
-        assert(Boolean.valueOf(copyOnWriteMapExpirable.isEmpty())).equals(true);
+        assertThat(copyOnWriteMapExpirable).isEmpty();
     }
 
     @Test
@@ -87,7 +90,7 @@ public class CopyOnWriteMapExpirableTest {
         for (int x=0; x<10; x++) {
             copyOnWriteMapExpirable.put(Integer.toString(x), x);
         }
-        assert(Integer.valueOf(copyOnWriteMapExpirable.keySet().size())).equals(10);
+        assertThat(copyOnWriteMapExpirable.keySet()).hasSize(10);
     }
 
     @Test
@@ -95,7 +98,7 @@ public class CopyOnWriteMapExpirableTest {
         for (int x=0; x<10; x++) {
             copyOnWriteMapExpirable.put(Integer.toString(x), x);
         }
-        assert(Integer.valueOf(copyOnWriteMapExpirable.values().size())).equals(10);
+        assertThat(copyOnWriteMapExpirable.values()).hasSize(10);
     }
 
     @Test
@@ -103,7 +106,7 @@ public class CopyOnWriteMapExpirableTest {
         for (int x=0; x<10; x++) {
             copyOnWriteMapExpirable.put(Integer.toString(x), x);
         }
-        assert(Integer.valueOf(copyOnWriteMapExpirable.entrySet().size())).equals(10);
+        assertThat(copyOnWriteMapExpirable.entrySet()).hasSize(10);
     }
 
     @Test
@@ -111,9 +114,9 @@ public class CopyOnWriteMapExpirableTest {
         for (int x=0; x<10; x++) {
             copyOnWriteMapExpirable.put(Integer.toString(x), x);
         }
-        Thread.sleep(DEFAULT_TTL);
+        Thread.sleep(1000L);
         ((CopyOnWriteMapExpirable<String, Integer>) copyOnWriteMapExpirable).clearExpired();
-        assert(Boolean.valueOf(copyOnWriteMapExpirable.isEmpty())).equals(true);
+        assertThat(copyOnWriteMapExpirable).isEmpty();
     }
 
     @Test
@@ -121,10 +124,10 @@ public class CopyOnWriteMapExpirableTest {
         for (int x=0; x<10; x++) {
             copyOnWriteMapExpirable.put(Integer.toString(x), x);
         }
-        Thread.sleep(DEFAULT_TTL);
+        Thread.sleep(1000L);
         ((CopyOnWriteMapExpirable<String, Integer>) copyOnWriteMapExpirable).renewAll();
         ((CopyOnWriteMapExpirable<String, Integer>) copyOnWriteMapExpirable).clearExpired();
-        assert(Integer.valueOf(copyOnWriteMapExpirable.entrySet().size())).equals(10);
+        assertThat(copyOnWriteMapExpirable.entrySet()).hasSize(10);
     }
 
 }
