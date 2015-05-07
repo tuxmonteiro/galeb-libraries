@@ -76,12 +76,13 @@ public class EventBus implements MessageListener<Event>, IEventBus {
     @Override
     public void onRequestMetrics(Metrics metrics) {
         // TODO: send request metrics to eventBus
-        logger.info(JsonObject.toJsonString(metrics));
+        logger.debug(JsonObject.toJsonString(metrics));
     }
 
     @Override
     public void onConnectionsMetrics(Metrics metrics) {
         mapReduce.addMetrics(metrics);
+        logger.debug(JsonObject.toJsonString(metrics));
     }
 
     @Override
