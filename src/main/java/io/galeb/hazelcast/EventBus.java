@@ -9,7 +9,9 @@ import io.galeb.core.logging.Logger;
 import io.galeb.core.mapreduce.MapReduce;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Metrics;
+import io.galeb.core.queue.QueueManager;
 import io.galeb.hazelcast.mapreduce.BackendConnectionsMapReduce;
+import io.galeb.hazelcast.queue.HzQueueManager;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -45,6 +47,8 @@ public class EventBus implements MessageListener<Event>, IEventBus {
     private final BackendConnectionsMapReduce mapReduce = new BackendConnectionsMapReduce(HAZELCAST_INSTANCE, logger);
 
     private EventBusListener eventBusListener = EventBusListener.NULL;
+
+    private QueueManager queueManager;
 
     private ITopic<Event> putAndGetTopic(String topicId) {
         ITopic<Event> topic = topics.get(topicId);
@@ -108,6 +112,13 @@ public class EventBus implements MessageListener<Event>, IEventBus {
     @Override
     public MapReduce getMapReduce() {
         return mapReduce;
+    }
+
+    public QueueManager getQueueManager() {
+        if (queueManager == null) {
+            queueManager = new HzQueueManager(HAZELCAST_INSTANCE);
+        }
+        return queueManager;
     }
 
 }
