@@ -1,0 +1,140 @@
+package io.galeb.statsd;
+
+import javax.enterprise.inject.Default;
+import javax.enterprise.inject.Produces;
+
+import com.timgroup.statsd.NonBlockingStatsDClient;
+import com.timgroup.statsd.StatsDClient;
+
+import io.galeb.core.statsd.StatsdClient;
+import io.galeb.core.statsd.annotation.StatsdClientSingletoneProducer;
+
+@Default
+public class DefaultStatsdClient implements StatsdClient {
+
+    private static final StatsdClient INSTANCE = new DefaultStatsdClient();
+
+    private StatsDClient client = null;
+
+    private String server = "127.0.0.1";
+    private int port = 8125;
+    private String prefix = "";
+
+    private DefaultStatsdClient() {
+        // SINGLETON
+    }
+
+    @Produces @StatsdClientSingletoneProducer
+    public static StatsdClient getInstance() {
+        return INSTANCE;
+    }
+
+    private void prepare() {
+        if (client==null) {
+            client = new NonBlockingStatsDClient(prefix, server, port);
+        }
+    }
+
+    @Override
+    public StatsdClient server(String server) {
+        this.server = server;
+        return this;
+    }
+
+    @Override
+    public StatsdClient port(int port) {
+        this.port = port;
+        return this;
+    }
+
+    @Override
+    public StatsdClient prefix(String prefix) {
+        this.prefix= prefix;
+        return this;
+    }
+
+    @Override
+    public void incr(String metricName, int step, double rate) {
+        count(metricName, step, rate);
+    }
+
+    @Override
+    public void incr(String metricName) {
+        incr(metricName, 1, 1.0);
+    }
+
+    @Override
+    public void incr(String metricName, int step) {
+        incr(metricName, step, 1.0);
+    }
+
+    @Override
+    public void incr(String metricName, double rate) {
+        incr(metricName, 1, rate);
+    }
+
+    @Override
+    public void decr(String metricName, int step, double rate) {
+        prepare();
+        client.count(metricName, -1*step, rate);
+    }
+
+    @Override
+    public void decr(String metricName) {
+        decr(metricName, 1, 1.0);
+    }
+
+    @Override
+    public void decr(String metricName, int step) {
+        decr(metricName, step, 1.0);
+    }
+
+    @Override
+    public void decr(String metricName, double rate) {
+        decr(metricName, 1, rate);
+    }
+
+    @Override
+    public void count(String metricName, int value, double rate) {
+        prepare();
+        client.count(metricName, value, rate);
+    }
+
+    @Override
+    public void count(String metricName, int value) {
+        count(metricName, value, 1.0);
+    }
+
+    @Override
+    public void gauge(String metricName, double value, double rate) {
+        prepare();
+        client.recordGaugeValue(metricName, value);
+    }
+
+    @Override
+    public void gauge(String metricName, double value) {
+        gauge(metricName, value, 1.0);
+    }
+
+    @Override
+    public void set(String metricName, String value, double rate) {
+        prepare();
+        client.recordSetEvent(metricName, value);
+    }
+
+    @Override
+    public void set(String metricName, String value) {
+        set(metricName, value, 1.0);
+    }
+
+    @Override
+    public void timing(String metricName, long value, double rate) {
+        prepare();
+        client.recordExecutionTime(metricName, value, rate);
+    }
+
+    @Override
+    public void timing(String metricName, long value) {
+        timing(metricName, value, 1.0);
+    }
+}
