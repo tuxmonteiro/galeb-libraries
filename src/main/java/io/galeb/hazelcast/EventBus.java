@@ -16,6 +16,7 @@ import io.galeb.hazelcast.queue.HzQueueManager;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
@@ -28,6 +29,8 @@ import com.hazelcast.core.MessageListener;
 
 @Default
 public class EventBus implements MessageListener<Event>, IEventBus {
+
+    private static final long AGGREGATION_TIME = 1000L;
 
     private static final String PROP_HAZELCAST_LOGGING_TYPE = "hazelcast.logging.type";
 
@@ -49,6 +52,9 @@ public class EventBus implements MessageListener<Event>, IEventBus {
     private EventBusListener eventBusListener = EventBusListener.NULL;
 
     private QueueManager queueManager;
+
+    private long lastSendTime = System.currentTimeMillis();
+    private final Map<String, Metrics> mapOfBanckeds = new ConcurrentHashMap<>();
 
     private ITopic<Event> putAndGetTopic(String topicId) {
         ITopic<Event> topic = topics.get(topicId);
@@ -79,8 +85,44 @@ public class EventBus implements MessageListener<Event>, IEventBus {
 
     @Override
     public void onRequestMetrics(Metrics metrics) {
-        // TODO: send request metrics to eventBus
+
+        mapOfBanckeds.put(metrics.getId(), aggregationMetrics(metrics));
+
+        if (lastSendTime<System.currentTimeMillis()-AGGREGATION_TIME) {
+            for (final Metrics newMetrics: mapOfBanckeds.values()) {
+                queueManager.sendEvent(newMetrics);
+            }
+            lastSendTime = System.currentTimeMillis();
+            mapOfBanckeds.clear();
+        }
         logger.debug(JsonObject.toJsonString(metrics));
+    }
+
+    private Metrics aggregationMetrics(Metrics metrics) {
+        Metrics metricsAggregated = mapOfBanckeds.get(metrics.getId());
+
+        if (metricsAggregated==null) {
+            mapOfBanckeds.put(metrics.getId(), metrics);
+            metricsAggregated = new Metrics(metrics);
+        }
+        final int statusCode = (int) metrics.getProperties().get(Metrics.PROP_STATUSCODE);
+        Integer statusCodeCount = (Integer) metricsAggregated.getProperties().get(Metrics.PROP_HTTPCODE_PREFIX+Integer.toString(statusCode));
+        if (statusCodeCount==null) {
+            statusCodeCount = 0;
+        }
+        statusCodeCount += 1;
+        metricsAggregated.getProperties().put("httpCode" + Integer.toString(statusCode), statusCodeCount);
+
+
+        final long requestTime = (long) metrics.getProperties().get(Metrics.PROP_REQUESTTIME);
+        Long requestTimeAvg = (Long) metricsAggregated.getProperties().get(Metrics.PROP_REQUESTTIME_AVG);
+        if (requestTimeAvg==null) {
+            requestTimeAvg = requestTime;
+        }
+        requestTimeAvg = (requestTime+requestTimeAvg)/2;
+        metricsAggregated.getProperties().put(Metrics.PROP_REQUESTTIME_AVG, requestTimeAvg);
+
+        return metricsAggregated;
     }
 
     @Override
@@ -114,11 +156,17 @@ public class EventBus implements MessageListener<Event>, IEventBus {
         return mapReduce;
     }
 
+    @Override
     public QueueManager getQueueManager() {
         if (queueManager == null) {
             queueManager = new HzQueueManager(HAZELCAST_INSTANCE);
         }
         return queueManager;
+    }
+
+    @Override
+    public String getClusterId() {
+        return HAZELCAST_INSTANCE.getConfig().getGroupConfig().getName();
     }
 
 }
