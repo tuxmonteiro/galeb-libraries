@@ -61,7 +61,9 @@ public class FarmUndertow extends Farm {
 
     @PostConstruct
     public void init() {
-        hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler).setEventBus(eventBus);
+        hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler)
+                                                        .setEventBus(eventBus)
+                                                        .setLogger(log);
         rootHandler = TRUE.equals(System.getProperty(PROP_ENABLE_ACCESSLOG)) ? new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
 
             private final ExtendedLogger logger = LogManager.getContext().getLogger(PROP_ENABLE_ACCESSLOG);

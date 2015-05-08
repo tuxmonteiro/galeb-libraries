@@ -7,13 +7,9 @@ import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 
-import javax.inject.Inject;
-
 class HeaderMetricsListener implements ExchangeCompletionListener {
 
-    @Inject
     private Logger logger;
-
     private IEventBus eventBus;
 
     @Override
@@ -40,8 +36,14 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
         }
     }
 
-    public ExchangeCompletionListener setEventBus(IEventBus eventBus) {
+    public HeaderMetricsListener setEventBus(IEventBus eventBus) {
         this.eventBus = eventBus;
+        eventBus.getQueueManager();
+        return this;
+    }
+
+    public HeaderMetricsListener setLogger(Logger logger) {
+        this.logger = logger;
         return this;
     }
 
