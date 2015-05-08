@@ -110,9 +110,7 @@ public class CopyOnWriteMapExpirable<K, V> implements Map<K, V> {
 
     @Override
     public void putAll(Map<? extends K, ? extends V> m) {
-        for (final Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
-            this.put(e.getKey(), e.getValue());
-        }
+        m.forEach(this::put);
     }
 
     @Override
@@ -145,17 +143,11 @@ public class CopyOnWriteMapExpirable<K, V> implements Map<K, V> {
     }
 
     public final void clearExpired() {
-        for (final K k : realMap.keySet()) {
-            this.get(k);
-        }
+        realMap.forEach((k, v) -> get(k));
     }
 
     public final void renewAll() {
-        for (ValueWithTimeStamp valueWithTimeStamp: realMap.values()) {
-            if (valueWithTimeStamp!=null) {
-                valueWithTimeStamp.setTimestamp(System.nanoTime());
-            }
-        }
+        realMap.forEach((k, v) -> v.setTimestamp(System.nanoTime()));
     }
 
 }
