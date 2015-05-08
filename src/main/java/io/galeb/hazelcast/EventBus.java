@@ -103,29 +103,32 @@ public class EventBus implements MessageListener<Event>, IEventBus {
 
         if (metricsAggregated==null) {
             mapOfBanckeds.put(metrics.getId(), metrics);
-            metricsAggregated = new Metrics(metrics);
+            metricsAggregated = new Metrics();
+            metricsAggregated.setId(metrics.getId());
+            metricsAggregated.setParentId(metrics.getParentId());
+            metricsAggregated.setProperties(metrics.getProperties());
         }
         final Object statusCodeObj = metrics.getProperties().get(Metrics.PROP_STATUSCODE);
         int statusCode = 200;
-        if (statusCodeObj!=null) {
+        if (statusCodeObj!=null && statusCodeObj instanceof Integer) {
             statusCode = (int) statusCodeObj;
         }
-        final Object statusCodeCountObj = metricsAggregated.getProperties().get(Metrics.PROP_HTTPCODE_PREFIX+Integer.toString(statusCode));
+        final Object statusCodeCountObj = metricsAggregated.getProperties().get(Metrics.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode));
         int statusCodeCount = 0;
-        if (statusCodeCountObj!=null) {
-            statusCodeCount = (int) statusCodeCountObj;
+        if (statusCodeCountObj!=null && statusCodeCountObj instanceof Integer) {
+            statusCodeCount = (Integer) statusCodeCountObj;
         }
         statusCodeCount += 1;
-        metricsAggregated.getProperties().put("httpCode" + Integer.toString(statusCode), statusCodeCount);
+        metricsAggregated.getProperties().put(Metrics.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode), statusCodeCount);
 
         final Object requestTimeObj = metrics.getProperties().get(Metrics.PROP_REQUESTTIME);
         long requestTime = 0L;
-        if (requestTimeObj!=null) {
+        if (requestTimeObj!=null && requestTimeObj instanceof Long) {
             requestTime = (long) requestTimeObj;
         }
         final Object requestTimeAvgObj = metricsAggregated.getProperties().get(Metrics.PROP_REQUESTTIME_AVG);
         long requestTimeAvg = requestTime;
-        if (requestTimeAvgObj!=null) {
+        if (requestTimeAvgObj!=null && requestTimeAvgObj instanceof Long) {
             requestTimeAvg = (long) requestTimeAvgObj;
         }
         requestTimeAvg = (requestTime+requestTimeAvg)/2;
