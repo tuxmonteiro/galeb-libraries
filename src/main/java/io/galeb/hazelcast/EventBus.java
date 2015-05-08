@@ -106,18 +106,19 @@ public class EventBus implements MessageListener<Event>, IEventBus {
             metricsAggregated = new Metrics(metrics);
         }
         final int statusCode = (int) metrics.getProperties().get(Metrics.PROP_STATUSCODE);
-        Integer statusCodeCount = (Integer) metricsAggregated.getProperties().get(Metrics.PROP_HTTPCODE_PREFIX+Integer.toString(statusCode));
-        if (statusCodeCount==null) {
-            statusCodeCount = 0;
+        final Object statusCodeCountObj = metricsAggregated.getProperties().get(Metrics.PROP_HTTPCODE_PREFIX+Integer.toString(statusCode));
+        int statusCodeCount = 0;
+        if (statusCodeCountObj!=null) {
+            statusCodeCount = (int) statusCodeCountObj;
         }
         statusCodeCount += 1;
         metricsAggregated.getProperties().put("httpCode" + Integer.toString(statusCode), statusCodeCount);
 
-
         final long requestTime = (long) metrics.getProperties().get(Metrics.PROP_REQUESTTIME);
-        Long requestTimeAvg = (Long) metricsAggregated.getProperties().get(Metrics.PROP_REQUESTTIME_AVG);
-        if (requestTimeAvg==null) {
-            requestTimeAvg = requestTime;
+        final Object requestTimeAvgObj = metricsAggregated.getProperties().get(Metrics.PROP_REQUESTTIME_AVG);
+        long requestTimeAvg = requestTime;
+        if (requestTimeAvgObj!=null) {
+            requestTimeAvg = (long) requestTimeAvgObj;
         }
         requestTimeAvg = (requestTime+requestTimeAvg)/2;
         metricsAggregated.getProperties().put(Metrics.PROP_REQUESTTIME_AVG, requestTimeAvg);
