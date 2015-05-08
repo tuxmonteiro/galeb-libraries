@@ -27,13 +27,13 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
             final Metrics metrics = new Metrics();
             metrics.setParentId(exchange.getHostName());
             metrics.setId(headerXProxyHost.getFirst());
-            metrics.getProperties().put("status", exchange.getResponseCode());
+            metrics.getProperties().put(Metrics.PROP_STATUSCODE, exchange.getResponseCode());
             final HeaderValues headerXStartTime = exchange.getRequestHeaders().get("X-Start-Time");
             if (headerXStartTime!=null) {
-                metrics.getProperties().put("requestTime", System.nanoTime()/1000000 - Long.valueOf(headerXStartTime.getFirst())/1000000);
+                metrics.getProperties().put(Metrics.PROP_REQUESTTIME, System.nanoTime()/1000000 - Long.valueOf(headerXStartTime.getFirst())/1000000);
             }
             eventBus.onRequestMetrics(metrics);
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
             logger.error(e);
         } finally {
             nextListener.proceed();
