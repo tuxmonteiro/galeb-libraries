@@ -12,10 +12,9 @@ import org.junit.Test;
 
 public class CopyOnWriteMapExpirableTest {
 
-    private static final long DEFAULT_TTL = 1000L;
+    private static final long DEFAULT_TTL = 100L;
 
     private Map<String, Integer> copyOnWriteMapExpirable;
-
 
     @Before
     public void setUp() {
@@ -114,7 +113,7 @@ public class CopyOnWriteMapExpirableTest {
         for (int x=0; x<10; x++) {
             copyOnWriteMapExpirable.put(Integer.toString(x), x);
         }
-        Thread.sleep(1000L);
+        Thread.sleep(100L);
         ((CopyOnWriteMapExpirable<String, Integer>) copyOnWriteMapExpirable).clearExpired();
         assertThat(copyOnWriteMapExpirable).isEmpty();
     }
@@ -124,7 +123,7 @@ public class CopyOnWriteMapExpirableTest {
         for (int x=0; x<10; x++) {
             copyOnWriteMapExpirable.put(Integer.toString(x), x);
         }
-        Thread.sleep(1000L);
+        Thread.sleep(100L);
         ((CopyOnWriteMapExpirable<String, Integer>) copyOnWriteMapExpirable).renewAll();
         ((CopyOnWriteMapExpirable<String, Integer>) copyOnWriteMapExpirable).clearExpired();
         assertThat(copyOnWriteMapExpirable.entrySet()).hasSize(10);

@@ -5,14 +5,49 @@ import static java.util.Collections.unmodifiableSet;
 import io.undertow.util.CopyOnWriteMap;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class CopyOnWriteMapExpirable<K, V> implements Map<K, V> {
 
-    private final Map<K, V> realMap = new CopyOnWriteMap<>();
-    private final Map<K, Long> timestamps = new CopyOnWriteMap<>();
+    private class ValueWithTimeStamp {
+        private final V value;
+        private long timestamp = System.nanoTime();
+
+        public ValueWithTimeStamp(final V value) {
+            this.value = value;
+        }
+
+        public V getValue() {
+            return value;
+        }
+
+        public ValueWithTimeStamp setTimestamp(long timestamp) {
+            this.timestamp = timestamp;
+            return this;
+        }
+
+        public boolean expired(long ttl) {
+            return (System.nanoTime() - this.timestamp) > ttl;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            boolean result = false;
+            try {
+                @SuppressWarnings("unchecked")
+                ValueWithTimeStamp valueWithTimeStamp = (ValueWithTimeStamp) obj;
+                result = this.value.equals(valueWithTimeStamp.getValue());
+            } finally {
+                //
+            }
+            return result;
+        }
+    }
+
+    private final Map<K, ValueWithTimeStamp> realMap = new CopyOnWriteMap<>();
     private final long ttl;
 
     public CopyOnWriteMapExpirable(long ttl, TimeUnit timeUnit) {
@@ -25,25 +60,24 @@ public class CopyOnWriteMapExpirable<K, V> implements Map<K, V> {
 
     @Override
     public V get(Object key) {
-        final V value = this.realMap.get(key);
+        final ValueWithTimeStamp valueWithTimeStamp = realMap.get(key);
 
-        if (value != null && expired(key, value)) {
+        if (valueWithTimeStamp != null && valueWithTimeStamp.expired(ttl)) {
             realMap.remove(key);
-            timestamps.remove(key);
             return null;
         } else {
-            return value;
+            return valueWithTimeStamp.getValue();
         }
-    }
-
-    private boolean expired(Object key, V value) {
-        return (System.nanoTime() - timestamps.get(key)) > this.ttl;
     }
 
     @Override
     public V put(K key, V value) {
-        timestamps.put(key, System.nanoTime());
-        return realMap.put(key, value);
+        ValueWithTimeStamp valueWithTimeStampStored = realMap.put(key, new ValueWithTimeStamp(value));
+        if (valueWithTimeStampStored!=null) {
+            return valueWithTimeStampStored.value;
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -63,13 +97,15 @@ public class CopyOnWriteMapExpirable<K, V> implements Map<K, V> {
 
     @Override
     public boolean containsValue(Object value) {
-        return realMap.containsValue(value);
+        @SuppressWarnings("unchecked")
+        ValueWithTimeStamp valueWithTimeStamp = new ValueWithTimeStamp((V) value);
+        return realMap.containsValue(valueWithTimeStamp);
     }
 
     @Override
     public V remove(Object key) {
-        timestamps.remove(key);
-        return realMap.remove(key);
+        ValueWithTimeStamp valueWithTimeStampStored = realMap.remove(key);
+        return valueWithTimeStampStored.getValue();
     }
 
     @Override
@@ -81,7 +117,6 @@ public class CopyOnWriteMapExpirable<K, V> implements Map<K, V> {
 
     @Override
     public void clear() {
-        timestamps.clear();
         realMap.clear();
     }
 
@@ -91,16 +126,22 @@ public class CopyOnWriteMapExpirable<K, V> implements Map<K, V> {
         return unmodifiableSet(realMap.keySet());
     }
 
+    private Map<K, V> extractRealMap() {
+        final Map<K, V> mapExtracted = new HashMap<>();
+        realMap.forEach((key, valueWithTimeStamp) -> mapExtracted.put(key, valueWithTimeStamp.getValue()));
+        return mapExtracted;
+    }
+
     @Override
     public Collection<V> values() {
         clearExpired();
-        return unmodifiableCollection(realMap.values());
+        return unmodifiableCollection(extractRealMap().values());
     }
 
     @Override
     public Set<java.util.Map.Entry<K, V>> entrySet() {
         clearExpired();
-        return unmodifiableSet(realMap.entrySet());
+        return unmodifiableSet(extractRealMap().entrySet());
     }
 
     public final void clearExpired() {
@@ -110,8 +151,10 @@ public class CopyOnWriteMapExpirable<K, V> implements Map<K, V> {
     }
 
     public final void renewAll() {
-        for (final K k : realMap.keySet()) {
-            timestamps.put(k, System.nanoTime());
+        for (ValueWithTimeStamp valueWithTimeStamp: realMap.values()) {
+            if (valueWithTimeStamp!=null) {
+                valueWithTimeStamp.setTimestamp(System.nanoTime());
+            }
         }
     }
 
