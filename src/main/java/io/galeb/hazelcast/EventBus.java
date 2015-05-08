@@ -105,7 +105,11 @@ public class EventBus implements MessageListener<Event>, IEventBus {
             mapOfBanckeds.put(metrics.getId(), metrics);
             metricsAggregated = new Metrics(metrics);
         }
-        final int statusCode = (int) metrics.getProperties().get(Metrics.PROP_STATUSCODE);
+        final Object statusCodeObj = metrics.getProperties().get(Metrics.PROP_STATUSCODE);
+        int statusCode = 200;
+        if (statusCodeObj!=null) {
+            statusCode = (int) statusCodeObj;
+        }
         final Object statusCodeCountObj = metricsAggregated.getProperties().get(Metrics.PROP_HTTPCODE_PREFIX+Integer.toString(statusCode));
         int statusCodeCount = 0;
         if (statusCodeCountObj!=null) {
@@ -114,7 +118,11 @@ public class EventBus implements MessageListener<Event>, IEventBus {
         statusCodeCount += 1;
         metricsAggregated.getProperties().put("httpCode" + Integer.toString(statusCode), statusCodeCount);
 
-        final long requestTime = (long) metrics.getProperties().get(Metrics.PROP_REQUESTTIME);
+        final Object requestTimeObj = metrics.getProperties().get(Metrics.PROP_REQUESTTIME);
+        long requestTime = 0L;
+        if (requestTimeObj!=null) {
+            requestTime = (long) requestTimeObj;
+        }
         final Object requestTimeAvgObj = metricsAggregated.getProperties().get(Metrics.PROP_REQUESTTIME_AVG);
         long requestTimeAvg = requestTime;
         if (requestTimeAvgObj!=null) {
