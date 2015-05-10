@@ -54,7 +54,7 @@ public class EventBus implements MessageListener<Event>, IEventBus {
     private QueueManager queueManager;
 
     private long lastSendTime = System.currentTimeMillis();
-    private final Map<String, Metrics> mapOfBanckeds = new ConcurrentHashMap<>();
+    private final Map<String, Metrics> mapOfBanckeds = new ConcurrentHashMap<>(16, 0.9f, 1);
 
     private ITopic<Event> putAndGetTopic(String topicId) {
         ITopic<Event> topic = topics.get(topicId);
@@ -108,31 +108,31 @@ public class EventBus implements MessageListener<Event>, IEventBus {
             metricsAggregated.setParentId(metrics.getParentId());
             metricsAggregated.setProperties(metrics.getProperties());
         }
-        final Object statusCodeObj = metrics.getProperties().get(Metrics.PROP_STATUSCODE);
+        final Object statusCodeObj = metrics.getProperty(Metrics.PROP_STATUSCODE);
         int statusCode = 200;
         if (statusCodeObj!=null && statusCodeObj instanceof Integer) {
             statusCode = (int) statusCodeObj;
         }
-        final Object statusCodeCountObj = metricsAggregated.getProperties().get(Metrics.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode));
+        final Object statusCodeCountObj = metricsAggregated.getProperty(Metrics.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode));
         int statusCodeCount = 0;
         if (statusCodeCountObj!=null && statusCodeCountObj instanceof Integer) {
             statusCodeCount = (Integer) statusCodeCountObj;
         }
         statusCodeCount += 1;
-        metricsAggregated.getProperties().put(Metrics.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode), statusCodeCount);
+        metricsAggregated.putProperty(Metrics.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode), statusCodeCount);
 
-        final Object requestTimeObj = metrics.getProperties().get(Metrics.PROP_REQUESTTIME);
+        final Object requestTimeObj = metrics.getProperty(Metrics.PROP_REQUESTTIME);
         long requestTime = 0L;
         if (requestTimeObj!=null && requestTimeObj instanceof Long) {
             requestTime = (long) requestTimeObj;
         }
-        final Object requestTimeAvgObj = metricsAggregated.getProperties().get(Metrics.PROP_REQUESTTIME_AVG);
+        final Object requestTimeAvgObj = metricsAggregated.getProperty(Metrics.PROP_REQUESTTIME_AVG);
         long requestTimeAvg = requestTime;
         if (requestTimeAvgObj!=null && requestTimeAvgObj instanceof Long) {
             requestTimeAvg = (long) requestTimeAvgObj;
         }
         requestTimeAvg = (requestTime+requestTimeAvg)/2;
-        metricsAggregated.getProperties().put(Metrics.PROP_REQUESTTIME_AVG, requestTimeAvg);
+        metricsAggregated.putProperty(Metrics.PROP_REQUESTTIME_AVG, requestTimeAvg);
 
         return metricsAggregated;
     }

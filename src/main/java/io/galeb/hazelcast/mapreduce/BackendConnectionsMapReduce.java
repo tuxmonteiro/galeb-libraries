@@ -50,8 +50,7 @@ public class BackendConnectionsMapReduce implements MapReduce {
 
     @Override
     public void addMetrics(final Metrics metrics) {
-        final int metricsTotal = (int) metrics.getProperties()
-                                              .get(Metrics.PROP_METRICS_TOTAL);
+        final int metricsTotal = (int) metrics.getProperty(Metrics.PROP_METRICS_TOTAL);
 
         mapBackendConn.put(metrics.getId(),
                            metricsTotal,

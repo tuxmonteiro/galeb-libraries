@@ -41,7 +41,7 @@ public class BackendConnectionsMapReduceTest {
     }
 
     private void initializeMetrics(int numConn) {
-        metrics.setId("TEST").getProperties().put(Metrics.PROP_METRICS_TOTAL, numConn);
+        metrics.setId("TEST").putProperty(Metrics.PROP_METRICS_TOTAL, numConn);
     }
 
     @Before
