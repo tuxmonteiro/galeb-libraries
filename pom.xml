@@ -14,7 +14,7 @@
   </licenses>
 
   <properties>
-    <undertow.version>1.2.5.Final</undertow.version>
+    <undertow.version>1.2.5.Final-SNAPSHOT</undertow.version>
     <org.jboss.resteasy.version>3.0.10.Final</org.jboss.resteasy.version>
     <org.jboss.weld.version>2.2.8.Final</org.jboss.weld.version>
     <org.jboss.logging.version>3.2.0.Final</org.jboss.logging.version>
@@ -40,7 +40,7 @@
     </dependency>
 
     <dependency>
-      <groupId>io.undertow</groupId>
+      <groupId>io.galeb.ext.io.undertow</groupId>
       <artifactId>undertow-core</artifactId>
       <version>${undertow.version}</version>
       <exclusions>
@@ -51,7 +51,7 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>io.undertow</groupId>
+      <groupId>io.galeb.ext.io.undertow</groupId>
       <artifactId>undertow-websockets-jsr</artifactId>
       <version>${undertow.version}</version>
       <exclusions>
@@ -72,7 +72,7 @@
       <version>${org.jboss.resteasy.version}</version>
       <exclusions>
         <exclusion>
-          <groupId>io.undertow</groupId>
+          <groupId>io.galeb.ext.io.undertow</groupId>
           <artifactId>undertow-core</artifactId>
         </exclusion>
       </exclusions>
@@ -135,7 +135,7 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.undertow</groupId>
+      <groupId>io.galeb.ext.io.undertow</groupId>
       <artifactId>undertow-core</artifactId>
       <version>${undertow.version}</version>
       <type>test-jar</type>
@@ -164,7 +164,7 @@
           </sources>
           <weaveDependencies>
             <weaveDependency>
-              <groupId>io.undertow</groupId>
+              <groupId>io.galeb.ext.io.undertow</groupId>
               <artifactId>undertow-core</artifactId>
             </weaveDependency>
             <weaveDependency>
