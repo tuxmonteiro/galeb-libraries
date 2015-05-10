@@ -7,6 +7,8 @@ import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 
+import java.util.NoSuchElementException;
+
 class HeaderMetricsListener implements ExchangeCompletionListener {
 
     private Logger logger;
@@ -15,7 +17,6 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
         try {
-
             final HeaderValues headerXProxyHost = exchange.getRequestHeaders().get("X-Proxy-Host");
             if (headerXProxyHost==null) {
                 return;
@@ -23,14 +24,21 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
             final Metrics metrics = new Metrics();
             metrics.setParentId(exchange.getHostName());
             metrics.setId(headerXProxyHost.getFirst());
-            metrics.getProperties().put(Metrics.PROP_STATUSCODE, exchange.getResponseCode());
+            metrics.putProperty(Metrics.PROP_STATUSCODE, exchange.getResponseCode());
             final HeaderValues headerXStartTime = exchange.getRequestHeaders().get("X-Start-Time");
             if (headerXStartTime!=null) {
-                metrics.getProperties().put(Metrics.PROP_REQUESTTIME, System.nanoTime()/1000000 - Long.valueOf(headerXStartTime.getFirst())/1000000);
+                String headerXStartTimeStr = headerXStartTime.getFirst();
+                if (!"".equals(headerXStartTimeStr)) {
+                    metrics.putProperty(Metrics.PROP_REQUESTTIME, (System.nanoTime() - Long.valueOf(headerXStartTimeStr))/1000000);
+                } else {
+                    metrics.putProperty(Metrics.PROP_REQUESTTIME, 0L);
+                }
             }
             eventBus.onRequestMetrics(metrics);
-        } catch (final RuntimeException e) {
-            logger.error(e);
+        } catch (NoSuchElementException e1) {
+            logger.debug(e1);
+        } catch (final RuntimeException e2) {
+            logger.error(e2);
         } finally {
             nextListener.proceed();
         }

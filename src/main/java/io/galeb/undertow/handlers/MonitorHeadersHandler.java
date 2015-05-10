@@ -1,7 +1,3 @@
-/*
- *
- */
-
 package io.galeb.undertow.handlers;
 
 

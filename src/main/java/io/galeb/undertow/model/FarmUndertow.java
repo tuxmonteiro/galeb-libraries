@@ -11,6 +11,7 @@ import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.Rule;
 import io.galeb.core.model.VirtualHost;
+import io.galeb.core.util.Constants;
 import io.galeb.undertow.handlers.BackendProxyClient;
 import io.galeb.undertow.handlers.MonitorHeadersHandler;
 import io.undertow.server.HttpHandler;
@@ -128,7 +129,7 @@ public class FarmUndertow extends Farm {
     }
 
     private int maxConnPerThread() {
-        final String maxConnStr = System.getProperty("io.galeb.router.maxConn");
+        final String maxConnStr = System.getProperty(Constants.PROP_MAXCONN);
         int maxConn = 100;
         if (maxConnStr!=null) {
             try {
@@ -184,8 +185,8 @@ public class FarmUndertow extends Farm {
     public Farm addRule(JsonObject jsonObject) {
         final Rule rule = (Rule) JsonObject.fromJson(jsonObject.toString(), Rule.class);
         final String virtualhostId = rule.getParentId();
-        final String match = (String)rule.getProperties().get("match");
-        final String targetId = (String)rule.getProperties().get("targetId");
+        final String match = (String)rule.getProperty(Rule.PROP_MATCH);
+        final String targetId = (String)rule.getProperty(Rule.PROP_TARGET_ID);
         final int maxRequestTime = 30000;
 
         final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
@@ -214,7 +215,7 @@ public class FarmUndertow extends Farm {
     public Farm delRule(JsonObject jsonObject) {
         final Rule rule = (Rule) JsonObject.fromJson(jsonObject.toString(), Rule.class);
         final String virtualhostId = rule.getParentId();
-        final String match = (String)rule.getProperties().get("match");
+        final String match = (String)rule.getProperty(Rule.PROP_MATCH);
 
         final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
         final HttpHandler ruleHandler = hosts.get(virtualhostId);

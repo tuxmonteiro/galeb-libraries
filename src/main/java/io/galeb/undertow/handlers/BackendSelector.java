@@ -96,7 +96,7 @@ public class BackendSelector implements HostSelector {
         loadBalancePolicy = LoadBalancePolicy.NULL;
     }
 
-    public HostSelector setExchange(final HttpServerExchange exchange) {
+    public synchronized HostSelector setExchange(final HttpServerExchange exchange) {
         this.exchange = exchange;
         return this;
     }

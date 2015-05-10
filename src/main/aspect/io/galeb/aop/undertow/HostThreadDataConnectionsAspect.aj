@@ -1,15 +1,15 @@
 package io.galeb.aop.undertow;
 
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import org.aspectj.lang.JoinPoint;
-
 import io.galeb.core.cdi.WeldContext;
 import io.galeb.core.model.Metrics;
 import io.galeb.hazelcast.EventBus;
 import io.galeb.undertow.util.map.CopyOnWriteMapExpirable;
 import io.undertow.server.handlers.proxy.ProxyConnectionPool;
+
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.aspectj.lang.JoinPoint;
 
 public aspect HostThreadDataConnectionsAspect {
 
@@ -45,7 +45,7 @@ public aspect HostThreadDataConnectionsAspect {
         }
 
         final Metrics metrics = new Metrics();
-        metrics.setId(uri).getProperties().put(Metrics.PROP_METRICS_TOTAL, total);
+        metrics.setId(uri).putProperty(Metrics.PROP_METRICS_TOTAL, total);
 
         EVENTBUS.onConnectionsMetrics(metrics);
     }
