@@ -118,11 +118,11 @@ public class EventBus implements MessageListener<Event>, IEventBus {
         Metrics metricsAggregated = mapOfBanckeds.get(metrics.getId());
 
         if (metricsAggregated==null) {
-            mapOfBanckeds.put(metrics.getId(), metrics);
             metricsAggregated = new Metrics();
             metricsAggregated.setId(metrics.getId());
             metricsAggregated.setParentId(metrics.getParentId());
             metricsAggregated.setProperties(metrics.getProperties());
+            mapOfBanckeds.put(metrics.getId(), metricsAggregated);
         }
         final Object statusCodeObj = metrics.getProperty(Metrics.PROP_STATUSCODE);
         int statusCode = 200;
