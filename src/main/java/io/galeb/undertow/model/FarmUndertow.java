@@ -183,7 +183,12 @@ public class FarmUndertow extends Farm {
             super.changeBackendPool(jsonObject);
 
             final BackendProxyClient backendProxyClient = backendPoolsUndertow.get(backendPool.getId());
-            backendProxyClient.setParams(backendPool.getProperties());
+
+            final Map<String, Object> params = new HashMap<>(backendPool.getProperties());
+            params.put(BackendPool.class.getSimpleName(), backendPool.getId());
+            params.put(Farm.class.getSimpleName(), this);
+
+            backendProxyClient.setParams(params);
             backendProxyClient.reset();
         }
         return this;
