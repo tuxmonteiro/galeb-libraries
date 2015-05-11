@@ -1,6 +1,21 @@
+/*
+ * Copyright (c) 2014-2015 Globo.com - ATeam
+ * All rights reserved.
+ *
+ * This source is subject to the Apache License, Version 2.0.
+ * Please see the LICENSE file for more information.
+ *
+ * Authors: See AUTHORS file
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.galeb.undertow.model;
 
-import static io.galeb.core.util.Constants.PROP_ENABLE_ACCESSLOG;
 import static io.galeb.core.util.Constants.TRUE;
 import io.galeb.core.eventbus.IEventBus;
 import io.galeb.core.json.JsonObject;
@@ -11,7 +26,7 @@ import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.Rule;
 import io.galeb.core.model.VirtualHost;
-import io.galeb.core.util.Constants;
+import io.galeb.core.util.Constants.SysProp;
 import io.galeb.undertow.handlers.BackendProxyClient;
 import io.galeb.undertow.handlers.MonitorHeadersHandler;
 import io.undertow.server.HttpHandler;
@@ -65,9 +80,10 @@ public class FarmUndertow extends Farm {
         hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler)
                                                         .setEventBus(eventBus)
                                                         .setLogger(log);
-        rootHandler = TRUE.equals(System.getProperty(PROP_ENABLE_ACCESSLOG)) ? new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
+        rootHandler = TRUE.equals(System.getProperty(SysProp.PROP_ENABLE_ACCESSLOG.toString(), SysProp.PROP_ENABLE_ACCESSLOG.def())) ?
+                new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
 
-            private final ExtendedLogger logger = LogManager.getContext().getLogger(PROP_ENABLE_ACCESSLOG);
+            private final ExtendedLogger logger = LogManager.getContext().getLogger(SysProp.PROP_ENABLE_ACCESSLOG.toString());
 
             @Override
             public void logMessage(String message) {
@@ -129,7 +145,7 @@ public class FarmUndertow extends Farm {
     }
 
     private int maxConnPerThread() {
-        final String maxConnStr = System.getProperty(Constants.PROP_MAXCONN);
+        final String maxConnStr = System.getProperty(SysProp.PROP_MAXCONN.toString(), SysProp.PROP_MAXCONN.def());
         int maxConn = 100;
         if (maxConnStr!=null) {
             try {
