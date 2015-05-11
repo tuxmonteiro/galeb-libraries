@@ -25,6 +25,7 @@ import io.galeb.core.logging.Logger;
 import io.galeb.core.mapreduce.MapReduce;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Metrics;
+import io.galeb.core.model.Metrics.Operation;
 import io.galeb.core.queue.QueueManager;
 import io.galeb.hazelcast.mapreduce.BackendConnectionsMapReduce;
 import io.galeb.hazelcast.queue.HzQueueManager;
@@ -102,7 +103,17 @@ public class EventBus implements MessageListener<Event>, IEventBus {
     @Override
     public void onRequestMetrics(Metrics metrics) {
 
-        mapOfBanckeds.put(metrics.getId(), aggregationMetrics(metrics));
+        final Metrics metricsInstance = mapOfBanckeds.getOrDefault(metrics.getId(), metrics);
+        final Object statusCodeObj = metrics.getProperty(Metrics.PROP_STATUSCODE);
+        int statusCode = 200;
+        if (statusCodeObj!=null && statusCodeObj instanceof Integer) {
+            statusCode = (int) statusCodeObj;
+        }
+        metricsInstance.aggregationProperty(metrics,
+                Metrics.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode), Operation.SUM);
+        metricsInstance.aggregationProperty(metrics, Metrics.PROP_REQUESTTIME, Operation.AVG);
+
+        mapOfBanckeds.put(metrics.getId(), metricsInstance);
 
         if (lastSendTime<System.currentTimeMillis()-AGGREGATION_TIME) {
             for (final Metrics newMetrics: mapOfBanckeds.values()) {
@@ -111,46 +122,8 @@ public class EventBus implements MessageListener<Event>, IEventBus {
             lastSendTime = System.currentTimeMillis();
             mapOfBanckeds.clear();
         }
+
         logger.debug(JsonObject.toJsonString(metrics));
-    }
-
-    private Metrics aggregationMetrics(Metrics metrics) {
-        Metrics metricsAggregated = mapOfBanckeds.get(metrics.getId());
-
-        if (metricsAggregated==null) {
-            metricsAggregated = new Metrics();
-            metricsAggregated.setId(metrics.getId());
-            metricsAggregated.setParentId(metrics.getParentId());
-            metricsAggregated.setProperties(metrics.getProperties());
-            mapOfBanckeds.put(metrics.getId(), metricsAggregated);
-        }
-        final Object statusCodeObj = metrics.getProperty(Metrics.PROP_STATUSCODE);
-        int statusCode = 200;
-        if (statusCodeObj!=null && statusCodeObj instanceof Integer) {
-            statusCode = (int) statusCodeObj;
-        }
-        final Object statusCodeCountObj = metricsAggregated.getProperty(Metrics.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode));
-        int statusCodeCount = 0;
-        if (statusCodeCountObj!=null && statusCodeCountObj instanceof Integer) {
-            statusCodeCount = (Integer) statusCodeCountObj;
-        }
-        statusCodeCount += 1;
-        metricsAggregated.putProperty(Metrics.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode), statusCodeCount);
-
-        final Object requestTimeObj = metrics.getProperty(Metrics.PROP_REQUESTTIME);
-        long requestTime = 0L;
-        if (requestTimeObj!=null && requestTimeObj instanceof Long) {
-            requestTime = (long) requestTimeObj;
-        }
-        final Object requestTimeAvgObj = metricsAggregated.getProperty(Metrics.PROP_REQUESTTIME_AVG);
-        long requestTimeAvg = requestTime;
-        if (requestTimeAvgObj!=null && requestTimeAvgObj instanceof Long) {
-            requestTimeAvg = (long) requestTimeAvgObj;
-        }
-        requestTimeAvg = (requestTime+requestTimeAvg)/2;
-        metricsAggregated.putProperty(Metrics.PROP_REQUESTTIME_AVG, requestTimeAvg);
-
-        return metricsAggregated;
     }
 
     @Override
