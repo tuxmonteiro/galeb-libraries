@@ -109,9 +109,16 @@ public class EventBus implements MessageListener<Event>, IEventBus {
         if (statusCodeObj!=null && statusCodeObj instanceof Integer) {
             statusCode = (int) statusCodeObj;
         }
+        final String propHttpCode = Metrics.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode);
+        metrics.putProperty(propHttpCode, 1);
         metricsInstance.aggregationProperty(metrics,
-                Metrics.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode), Operation.SUM);
-        metricsInstance.aggregationProperty(metrics, Metrics.PROP_REQUESTTIME, Operation.AVG);
+                                            propHttpCode,
+                                            propHttpCode,
+                                            Operation.SUM);
+        metricsInstance.aggregationProperty(metrics,
+                                            Metrics.PROP_REQUESTTIME,
+                                            Metrics.PROP_REQUESTTIME_AVG,
+                                            Operation.AVG);
 
         mapOfBanckeds.put(metrics.getId(), metricsInstance);
 
