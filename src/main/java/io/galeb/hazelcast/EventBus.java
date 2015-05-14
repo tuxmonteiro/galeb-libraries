@@ -160,6 +160,11 @@ public class EventBus implements MessageListener<Event>, IEventBus {
     }
 
     @Override
+    public void stop() {
+        HAZELCAST_INSTANCE.shutdown();
+    }
+
+    @Override
     public MapReduce getMapReduce() {
         return mapReduce;
     }
