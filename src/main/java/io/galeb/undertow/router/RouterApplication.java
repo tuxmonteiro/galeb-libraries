@@ -18,6 +18,7 @@ package io.galeb.undertow.router;
 
 import io.galeb.core.model.Farm;
 import io.undertow.Undertow;
+import io.undertow.UndertowOptions;
 import io.undertow.server.HttpHandler;
 
 import java.util.HashMap;
@@ -67,6 +68,7 @@ public class RouterApplication {
         int iothreads = options.containsKey("IoThreads") ? Integer.parseInt(options.get("IoThreads")) : 4;
 
         final Undertow router = Undertow.builder().addHttpListener(port, host)
+                .setServerOption(UndertowOptions.RECORD_REQUEST_START_TIME, true)
                 .setIoThreads(iothreads)
                 .setHandler(rootHandler)
                 .build();

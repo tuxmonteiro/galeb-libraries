@@ -79,13 +79,6 @@ public class BackendSelectorTest {
     }
 
     @Test
-    public void traceAddHeaderXStartTimeTest() {
-        final HttpServerExchange fakeExchange = new HttpServerExchange(null);
-        backendSelector.setExchange(fakeExchange).selectHost((Host[]) hosts.toArray());
-        assertThat(fakeExchange.getRequestHeaders().getFirst(BackendSelector.X_START_TIME)).isNotEmpty();
-    }
-
-    @Test
     public void newParamsIsCopyThenIsNotSameInstanceTest() {
         final Map<String, Object> paramsOld = new HashMap<>();
         final Map<String, Object> paramsNew = new HashMap<>();

@@ -28,6 +28,7 @@ import io.galeb.core.model.Rule;
 import io.galeb.core.model.VirtualHost;
 import io.galeb.core.util.Constants.SysProp;
 import io.galeb.undertow.handlers.BackendProxyClient;
+import io.galeb.undertow.handlers.BackendSelector;
 import io.galeb.undertow.handlers.MonitorHeadersHandler;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
@@ -61,7 +62,7 @@ public class FarmUndertow extends Farm {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String LOGPATTERN = "%h %l %u %t \"%r\" %s %b (%v -> %{i,X-Proxy-Host} [%D]ms \"X-Real-IP: %{i,X-Real-IP}\" \"X-Forwarded-For: %{i,X-Forwarded-For}\")";
+    private static final String LOGPATTERN = "%h %l %u %t \"%r\" %s %b (%v -> %{i,"+BackendSelector.X_PROXY_HOST+"} [%D]ms \"X-Real-IP: %{i,X-Real-IP}\" \"X-Forwarded-For: %{i,X-Forwarded-For}\")";
 
     private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
 

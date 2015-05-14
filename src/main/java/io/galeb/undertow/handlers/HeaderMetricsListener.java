@@ -33,7 +33,7 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
         try {
-            final HeaderValues headerXProxyHost = exchange.getRequestHeaders().get("X-Proxy-Host");
+            final HeaderValues headerXProxyHost = exchange.getRequestHeaders().get(BackendSelector.X_PROXY_HOST);
             if (headerXProxyHost==null) {
                 return;
             }
@@ -41,15 +41,9 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
             metrics.setParentId(exchange.getHostName());
             metrics.setId(headerXProxyHost.getFirst());
             metrics.putProperty(Metrics.PROP_STATUSCODE, exchange.getResponseCode());
-            final HeaderValues headerXStartTime = exchange.getRequestHeaders().get("X-Start-Time");
-            if (headerXStartTime!=null) {
-                String headerXStartTimeStr = headerXStartTime.getFirst();
-                if (!"".equals(headerXStartTimeStr)) {
-                    metrics.putProperty(Metrics.PROP_REQUESTTIME, (System.nanoTime() - Long.valueOf(headerXStartTimeStr))/1000000);
-                } else {
-                    metrics.putProperty(Metrics.PROP_REQUESTTIME, 0L);
-                }
-            }
+            final long requestTimeNano = System.nanoTime() - exchange.getRequestStartTime();
+            metrics.putProperty(Metrics.PROP_REQUESTTIME, requestTimeNano/1000000L);
+
             eventBus.onRequestMetrics(metrics);
         } catch (NoSuchElementException e1) {
             logger.debug(e1);

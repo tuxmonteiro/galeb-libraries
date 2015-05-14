@@ -37,7 +37,6 @@ import javax.inject.Inject;
 public class BackendSelector implements HostSelector {
 
     // Usefull Custom HTTP Headers
-    public static final String X_START_TIME = "X-Start-Time";
     public static final String X_PROXY_HOST = "X-Proxy-Host";
 
     private HttpServerExchange exchange = FakeHttpServerExchange.NULL;
@@ -80,14 +79,10 @@ public class BackendSelector implements HostSelector {
 
     private void trace(final Host host) {
         final HttpString xproxyhost = new HttpString(X_PROXY_HOST);
-        final HttpString xstarttime = new HttpString(X_START_TIME);
 
         exchange.getRequestHeaders().put(
                 xproxyhost,
                 host != null ? host.getUri().toString() : "UNDEF");
-        exchange.getRequestHeaders().put(
-                xstarttime,
-                System.nanoTime());
     }
 
     public HostSelector setParams(final Map<String, Object> myParams) {
