@@ -38,6 +38,7 @@ import io.undertow.server.handlers.accesslog.AccessLogHandler;
 import io.undertow.server.handlers.accesslog.AccessLogReceiver;
 import io.undertow.server.handlers.proxy.ProxyHandler;
 import io.undertow.util.CopyOnWriteMap;
+import io.undertow.util.StatusCodes;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -216,7 +217,7 @@ public class FarmUndertow extends Farm {
             throw new RuntimeException("ParentId not found");
         }
 
-        if (!"404".equals(targetId)) {
+        if (!Integer.toString(StatusCodes.NOT_FOUND).equals(targetId)) {
             final BackendProxyClient backendPool = backendPoolsUndertow.get(targetId);
             if (backendPool==null) {
                 throw new RuntimeException("TargetId not found");
