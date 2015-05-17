@@ -30,6 +30,7 @@ import io.galeb.core.util.Constants.SysProp;
 import io.galeb.undertow.handlers.BackendProxyClient;
 import io.galeb.undertow.handlers.BackendSelector;
 import io.galeb.undertow.handlers.MonitorHeadersHandler;
+import io.galeb.undertow.handlers.PathHolderHandler;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.PathHandler;
@@ -223,11 +224,11 @@ public class FarmUndertow extends Farm {
                 throw new RuntimeException("TargetId not found");
             }
             HttpHandler ruleHandler = hosts.get(virtualhostId);
-            if (!(ruleHandler instanceof PathHandler)) {
-                ruleHandler = new PathHandler(ResponseCodeHandler.HANDLE_404);
+            if (!(ruleHandler instanceof PathHolderHandler)) {
+                ruleHandler = new PathHolderHandler(ResponseCodeHandler.HANDLE_404);
             }
             final HttpHandler targetHandler = new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404);
-            ((PathHandler) ruleHandler).addPrefixPath(match, targetHandler);
+            ((PathHolderHandler) ruleHandler).addPrefixPath(match, targetHandler);
             hosts.put(virtualhostId, ruleHandler);
         }
 
