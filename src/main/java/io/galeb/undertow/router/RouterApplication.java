@@ -57,7 +57,7 @@ public class RouterApplication {
             return;
         }
 
-        Object rootHandlerObj = farm.getRootHandler();
+        final Object rootHandlerObj = farm.getRootHandler();
         HttpHandler rootHandler = null;
 
         if (rootHandlerObj instanceof HttpHandler) {
@@ -65,7 +65,7 @@ public class RouterApplication {
         } else {
             return;
         }
-        int iothreads = options.containsKey("IoThreads") ? Integer.parseInt(options.get("IoThreads")) : 4;
+        final int iothreads = options.containsKey("IoThreads") ? Integer.parseInt(options.get("IoThreads")) : 4;
 
         final Undertow router = Undertow.builder().addHttpListener(port, host)
                 .setServerOption(UndertowOptions.RECORD_REQUEST_START_TIME, true)
