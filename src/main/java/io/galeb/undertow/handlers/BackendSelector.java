@@ -28,6 +28,7 @@ import io.undertow.util.CopyOnWriteMap;
 import io.undertow.util.HttpString;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class BackendSelector implements HostSelector {
     private final Map<String, Object> params = new CopyOnWriteMap<>();
     private volatile LoadBalancePolicy loadBalancePolicy = LoadBalancePolicy.NULL;
     private final LoadBalancePolicyLocator loadBalancePolicyLocator = new LoadBalancePolicyLocator();
-    private final List<URI> uris = new LinkedList<>();
+    private final List<URI> uris = Collections.synchronizedList(new LinkedList<>());
 
     @Inject
     private Logger logger;
@@ -110,6 +111,10 @@ public class BackendSelector implements HostSelector {
     public synchronized HostSelector setExchange(final HttpServerExchange exchange) {
         this.exchange = exchange;
         return this;
+    }
+
+    public boolean hasHost(String uri) {
+        return uris.contains(uri);
     }
 
 }

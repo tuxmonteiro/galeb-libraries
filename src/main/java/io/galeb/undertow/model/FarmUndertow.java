@@ -17,11 +17,11 @@
 package io.galeb.undertow.model;
 
 import static io.galeb.core.util.Constants.TRUE;
+import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.eventbus.IEventBus;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
-import io.galeb.core.model.Backend.Health;
 import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.Rule;
@@ -30,20 +30,17 @@ import io.galeb.core.util.Constants.SysProp;
 import io.galeb.undertow.handlers.BackendProxyClient;
 import io.galeb.undertow.handlers.BackendSelector;
 import io.galeb.undertow.handlers.MonitorHeadersHandler;
-import io.galeb.undertow.handlers.PathHolderHandler;
+import io.galeb.undertow.loaders.BackendLoader;
+import io.galeb.undertow.loaders.BackendPoolLoader;
+import io.galeb.undertow.loaders.Loader;
+import io.galeb.undertow.loaders.RuleLoader;
+import io.galeb.undertow.loaders.VirtualHostLoader;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
-import io.undertow.server.handlers.PathHandler;
-import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.accesslog.AccessLogHandler;
 import io.undertow.server.handlers.accesslog.AccessLogReceiver;
-import io.undertow.server.handlers.proxy.ProxyHandler;
 import io.undertow.util.CopyOnWriteMap;
-import io.undertow.util.StatusCodes;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -64,15 +61,13 @@ public class FarmUndertow extends Farm {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String LOGPATTERN = "%h %l %u %t \"%r\" %s %b (%v -> %{i,"+BackendSelector.X_PROXY_HOST+"} [%D]ms \"X-Real-IP: %{i,X-Real-IP}\" \"X-Forwarded-For: %{i,X-Forwarded-For}\")";
-
+    private HttpHandler rootHandler;
     private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
 
-    private HttpHandler hostMetricsHandler;
-
-    private HttpHandler rootHandler;
-
-    private final Map<String, BackendProxyClient> backendPoolsUndertow = new CopyOnWriteMap<>();
+    private Loader backendLoader;
+    private Loader ruleLoader;
+    private Loader backendPoolLoader;
+    private Loader virtualHostLoader;
 
     public FarmUndertow() {
         super();
@@ -80,20 +75,57 @@ public class FarmUndertow extends Farm {
 
     @PostConstruct
     public void init() {
-        hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler)
-                                                        .setEventBus(eventBus)
-                                                        .setLogger(log);
-        rootHandler = TRUE.equals(System.getProperty(SysProp.PROP_ENABLE_ACCESSLOG.toString(), SysProp.PROP_ENABLE_ACCESSLOG.def())) ?
-                new AccessLogHandler(hostMetricsHandler, new AccessLogReceiver() {
+        setRootHandler();
+        startLoaders();
+    }
 
+    private void setRootHandler() {
+        final HttpHandler hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler)
+                                                            .setEventBus(eventBus)
+                                                            .setLogger(log);
+
+        String enableAccessLogProperty = System.getProperty(SysProp.PROP_ENABLE_ACCESSLOG.toString(),
+                                                            SysProp.PROP_ENABLE_ACCESSLOG.def());
+
+        final String LOGPATTERN = "%h %l %u %t \"%r\" %s %b (%v -> %{i,"+BackendSelector.X_PROXY_HOST+"} [%D]ms \"X-Real-IP: %{i,X-Real-IP}\" \"X-Forwarded-For: %{i,X-Forwarded-For}\")";
+
+        final AccessLogReceiver accessLogReceiver  = new AccessLogReceiver() {
             private final ExtendedLogger logger = LogManager.getContext().getLogger(SysProp.PROP_ENABLE_ACCESSLOG.toString());
 
             @Override
             public void logMessage(String message) {
                 logger.info(message);
             }
+        };
 
-        }, LOGPATTERN, FarmUndertow.class.getClassLoader()) : hostMetricsHandler;
+        rootHandler = TRUE.equals(enableAccessLogProperty) ?
+                new AccessLogHandler(hostMetricsHandler,
+                                     accessLogReceiver, LOGPATTERN,
+                                     FarmUndertow.class.getClassLoader()) :
+                hostMetricsHandler;
+    }
+
+    private void startLoaders() {
+        final Map<String, BackendProxyClient> backendPoolsUndertow = new CopyOnWriteMap<>();
+
+        backendLoader = new BackendLoader(this)
+                                .setBackendPools(backendPoolsUndertow)
+                                .setLogger(log);
+
+        backendPoolLoader = new BackendPoolLoader()
+                                .setBackendPools(backendPoolsUndertow)
+                                .setBackendLoader(backendLoader)
+                                .setLogger(log);
+
+        ruleLoader = new RuleLoader(this)
+                                .setBackendPools(backendPoolsUndertow)
+                                .setVirtualHostHandler(virtualHostHandler)
+                                .setLogger(log);
+
+        virtualHostLoader = new VirtualHostLoader()
+                                .setRuleLoader(ruleLoader)
+                                .setVirtualHostHandler(virtualHostHandler)
+                                .setLogger(log);
     }
 
     @Override
@@ -103,170 +135,80 @@ public class FarmUndertow extends Farm {
 
     @Override
     public Farm addBackend(JsonObject jsonObject) {
-        final Backend backend = (Backend) JsonObject.fromJson(jsonObject.toString(), Backend.class);
-        final String parentId = backend.getParentId();
-        final String backendId = backend.getId();
-        final Backend.Health backendHealth = backend.getHealth();
-
-        final BackendProxyClient backendPool = backendPoolsUndertow.get(parentId);
-        if (backendPool!=null) {
-            if (backendHealth==Health.HEALTHY) {
-                try {
-                    backendPool.addHost(new URI(backendId));
-                } catch (final URISyntaxException e) {
-                    log.error(e);
-                }
-            } else {
-                try {
-                    backendPool.removeHost(new URI(backendId));
-                } catch (final URISyntaxException e) {
-                    log.error(e);
-                }
-            }
-
-            return super.addBackend(jsonObject);
-
-        } else {
-            throw new RuntimeException("ParentId not found");
-        }
+        super.addBackend(jsonObject);
+        processAll();
+        return this;
     }
 
     @Override
     public Farm delBackend(JsonObject jsonObject) {
+        super.delBackend(jsonObject);
         final Backend backend = (Backend) JsonObject.fromJson(jsonObject.toString(), Backend.class);
-        final String parentId = backend.getParentId();
-        final String backendId = backend.getId();
-        final BackendProxyClient backendPool = backendPoolsUndertow.get(parentId);
-        if (backendPool!=null) {
-            try {
-                backendPool.removeHost(new URI(backendId));
-            } catch (final URISyntaxException e) {
-                log.error(e);
-            }
-        }
-        return super.delBackend(jsonObject);
-    }
-
-    private int maxConnPerThread() {
-        final String maxConnStr = System.getProperty(SysProp.PROP_MAXCONN.toString(), SysProp.PROP_MAXCONN.def());
-        int maxConn = 100;
-        if (maxConnStr!=null) {
-            try {
-                maxConn = Integer.parseInt(maxConnStr);
-            } catch (final NumberFormatException ignore) {
-            }
-        }
-        //TODO: get number of IOThreads, instead of the availableProcessors
-        return (int)Math.ceil((1.0*maxConn)/Runtime.getRuntime().availableProcessors());
+        backendLoader.from(backend, Action.DEL);
+        return this;
     }
 
     @Override
     public Farm addBackendPool(JsonObject jsonObject) {
         super.addBackendPool(jsonObject);
-        final BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
-        final Map<String, Object> properties = new HashMap<>(backendPool.getProperties());
-        properties.put(BackendPool.class.getSimpleName(), backendPool.getId());
-        properties.put(Farm.class.getSimpleName(), this);
-
-        final BackendProxyClient backendProxyClient =
-                new BackendProxyClient().setConnectionsPerThread(maxConnPerThread())
-                                        .addSessionCookieName("JSESSIONID")
-                                        .setParams(properties);
-
-        final String backendPoolId = backendPool.getId();
-        backendPoolsUndertow.put(backendPoolId, backendProxyClient);
-
-        return this;
-    }
-
-    @Override
-    public Farm changeBackendPool(JsonObject jsonObject) {
-        final BackendPool backendPool = getBackendPool(jsonObject);
-        if (backendPool!=null) {
-            super.changeBackendPool(jsonObject);
-
-            final BackendProxyClient backendProxyClient = backendPoolsUndertow.get(backendPool.getId());
-
-            final Map<String, Object> params = new HashMap<>(backendPool.getProperties());
-            params.put(BackendPool.class.getSimpleName(), backendPool.getId());
-            params.put(Farm.class.getSimpleName(), this);
-
-            backendProxyClient.setParams(params);
-            backendProxyClient.reset();
-        }
+        processAll();
         return this;
     }
 
     @Override
     public Farm delBackendPool(JsonObject jsonObject) {
+        super.delBackendPool(jsonObject);
         final BackendPool backendPool = (BackendPool) JsonObject.fromJson(jsonObject.toString(), BackendPool.class);
-        final String backendPoolId = backendPool.getId();
-        backendPoolsUndertow.remove(backendPoolId);
-        return super.delBackendPool(jsonObject);
+        backendPoolLoader.from(backendPool, Action.DEL);
+        return this;
+    }
+
+    @Override
+    public Farm changeBackendPool(JsonObject jsonObject) {
+        super.changeBackendPool(jsonObject);
+        final BackendPool backendPool = getBackendPool(jsonObject);
+        backendPoolLoader.from(backendPool, Action.CHANGE);
+        return this;
     }
 
     @Override
     public Farm addRule(JsonObject jsonObject) {
-        final Rule rule = (Rule) JsonObject.fromJson(jsonObject.toString(), Rule.class);
-        final String virtualhostId = rule.getParentId();
-        final String match = (String)rule.getProperty(Rule.PROP_MATCH);
-        final String targetId = (String)rule.getProperty(Rule.PROP_TARGET_ID);
-        final int maxRequestTime = 30000;
-
-        final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
-        if (!hosts.containsKey(virtualhostId)) {
-            throw new RuntimeException("ParentId not found");
-        }
-
-        if (!Integer.toString(StatusCodes.NOT_FOUND).equals(targetId)) {
-            final BackendProxyClient backendPool = backendPoolsUndertow.get(targetId);
-            if (backendPool==null) {
-                throw new RuntimeException("TargetId not found");
-            }
-            HttpHandler ruleHandler = hosts.get(virtualhostId);
-            if (!(ruleHandler instanceof PathHolderHandler)) {
-                ruleHandler = new PathHolderHandler(ResponseCodeHandler.HANDLE_404);
-            }
-            final HttpHandler targetHandler = new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404);
-            ((PathHolderHandler) ruleHandler).addPrefixPath(match, targetHandler);
-            hosts.put(virtualhostId, ruleHandler);
-        }
-
-        return super.addRule(jsonObject);
+        super.addRule(jsonObject);
+        processAll();
+        return this;
     }
 
     @Override
     public Farm delRule(JsonObject jsonObject) {
         final Rule rule = (Rule) JsonObject.fromJson(jsonObject.toString(), Rule.class);
-        final String virtualhostId = rule.getParentId();
-        final String match = (String)rule.getProperty(Rule.PROP_MATCH);
-
-        final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
-        final HttpHandler ruleHandler = hosts.get(virtualhostId);
-        if (ruleHandler!=null && ruleHandler instanceof PathHandler) {
-            ((PathHandler)ruleHandler).removePrefixPath(match);
-        }
+        ruleLoader.from(rule, Action.DEL);
         return super.delRule(jsonObject);
     }
 
     @Override
     public Farm addVirtualHost(JsonObject jsonObject) {
-        final VirtualHost virtualhost = (VirtualHost) JsonObject.fromJson(jsonObject.toString(), VirtualHost.class);
-        final String virtualhostId = virtualhost.getId();
-        ((NameVirtualHostHandler) virtualHostHandler).addHost(virtualhostId, ResponseCodeHandler.HANDLE_404);
-        return super.addVirtualHost(jsonObject);
+        super.addVirtualHost(jsonObject);
+        processAll();
+        return this;
     }
 
     @Override
     public Farm delVirtualHost(JsonObject jsonObject) {
+        super.delVirtualHost(jsonObject);
         final VirtualHost virtualhost = (VirtualHost) JsonObject.fromJson(jsonObject.toString(), VirtualHost.class);
-        final String virtualhostId = virtualhost.getId();
-        for (final Rule rule: virtualhost.getRules()) {
-            delRule(JsonObject.toJsonObject(rule));
-        }
-        ((NameVirtualHostHandler) virtualHostHandler).removeHost(virtualhostId);
-        return super.delVirtualHost(jsonObject);
+        virtualHostLoader.from(virtualhost, Action.DEL);
+        return this;
     }
 
+    private synchronized void processAll() {
+        getBackendPools().forEach(backendPool -> {
+            backendPoolLoader.from(backendPool, Action.ADD);
+            backendPool.getBackends().forEach(backend -> backendLoader.from(backend, Action.ADD));
+        });
+        getVirtualHosts().forEach(virtualhost -> {
+            virtualHostLoader.from(virtualhost, Action.ADD);
+            virtualhost.getRules().forEach(rule -> ruleLoader.from(rule, Action.ADD));
+        });
+    }
 
 }
