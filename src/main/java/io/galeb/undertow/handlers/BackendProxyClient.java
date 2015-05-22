@@ -125,55 +125,71 @@ public class BackendProxyClient implements ProxyClient {
     }
 
     public synchronized BackendProxyClient addHost(final URI host) {
-        loadBalanceProxyClient.addHost(host);
-        hostSelectorHandler.reset();
+        String uri = host.toString();
+        if (!hostSelectorHandler.hasHost(uri)) {
+            loadBalanceProxyClient.addHost(host);
+            hostSelectorHandler.reset();
+        }
         return this;
     }
 
     public synchronized BackendProxyClient addHost(final URI host, XnioSsl ssl) {
-
-        loadBalanceProxyClient.addHost(host, ssl);
-        hostSelectorHandler.reset();
+        String uri = host.toString();
+        if (!hostSelectorHandler.hasHost(uri)) {
+            loadBalanceProxyClient.addHost(host, ssl);
+            hostSelectorHandler.reset();
+        }
         return this;
     }
 
     public synchronized BackendProxyClient addHost(final URI host,
             String jvmRoute) {
-
-        loadBalanceProxyClient.addHost(host, jvmRoute);
-        hostSelectorHandler.reset();
+        String uri = host.toString();
+        if (!hostSelectorHandler.hasHost(uri)) {
+            loadBalanceProxyClient.addHost(host, jvmRoute);
+            hostSelectorHandler.reset();
+        }
         return this;
     }
 
     public synchronized BackendProxyClient addHost(final URI host,
             String jvmRoute, XnioSsl ssl) {
-
-        loadBalanceProxyClient.addHost(host, jvmRoute, ssl);
-        hostSelectorHandler.reset();
+        String uri = host.toString();
+        if (!hostSelectorHandler.hasHost(uri)) {
+            loadBalanceProxyClient.addHost(host, jvmRoute, ssl);
+            hostSelectorHandler.reset();
+        }
         return this;
     }
 
     public synchronized BackendProxyClient addHost(final URI host,
             String jvmRoute, XnioSsl ssl, OptionMap options) {
-
-        loadBalanceProxyClient.addHost(host, jvmRoute, ssl, options);
-        hostSelectorHandler.reset();
+        String uri = host.toString();
+        if (!hostSelectorHandler.hasHost(uri)) {
+            loadBalanceProxyClient.addHost(host, jvmRoute, ssl, options);
+            hostSelectorHandler.reset();
+        }
         return this;
     }
 
     public synchronized BackendProxyClient addHost(
             final InetSocketAddress bindAddress, final URI host,
             String jvmRoute, XnioSsl ssl, OptionMap options) {
-
-        loadBalanceProxyClient.addHost(bindAddress, host, jvmRoute, ssl,
-                options);
-        hostSelectorHandler.reset();
+        String uri = host.toString();
+        if (!hostSelectorHandler.hasHost(uri)) {
+            loadBalanceProxyClient.addHost(bindAddress, host, jvmRoute, ssl,
+                    options);
+            hostSelectorHandler.reset();
+        }
         return this;
     }
 
     public synchronized BackendProxyClient removeHost(final URI host) {
-        loadBalanceProxyClient.removeHost(host);
-        hostSelectorHandler.reset();
+        String uri = host.toString();
+        if (hostSelectorHandler.hasHost(uri)) {
+            loadBalanceProxyClient.removeHost(host);
+            hostSelectorHandler.reset();
+        }
         return this;
     }
 
