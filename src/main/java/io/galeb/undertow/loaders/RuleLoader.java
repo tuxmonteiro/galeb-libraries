@@ -21,6 +21,8 @@ import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.Rule;
+import io.galeb.core.model.collections.BackendPoolCollection;
+import io.galeb.core.model.collections.VirtualHostCollection;
 import io.galeb.undertow.handlers.BackendProxyClient;
 import io.galeb.undertow.handlers.PathHolderHandler;
 import io.undertow.server.HttpHandler;
@@ -102,12 +104,13 @@ public class RuleLoader implements Loader {
     }
 
     private boolean hasParent(Entity entity) {
-        String parentId = entity.getParentId();
-        return farm.getVirtualHost(parentId) != null;
+        final String parentId = entity.getParentId();
+        return !((VirtualHostCollection) farm.getVirtualHosts()).getListByID(parentId).isEmpty();
     }
 
     private boolean hasTarget(Rule rule) {
-        return farm.getBackendPool((String) rule.getProperty(Rule.PROP_TARGET_ID)) != null;
+        final String targetId = (String) rule.getProperty(Rule.PROP_TARGET_ID);
+        return !((BackendPoolCollection)farm.getBackendPools()).getListByID(targetId).isEmpty();
     }
 
 }

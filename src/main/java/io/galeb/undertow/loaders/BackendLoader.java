@@ -22,6 +22,7 @@ import io.galeb.core.model.Backend;
 import io.galeb.core.model.Backend.Health;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
+import io.galeb.core.model.collections.BackendPoolCollection;
 import io.galeb.undertow.handlers.BackendProxyClient;
 
 import java.net.URI;
@@ -82,8 +83,8 @@ public class BackendLoader implements Loader {
     }
 
     private boolean hasParent(Entity entity) {
-        String parentId = entity.getParentId();
-        return farm.getBackendPool(parentId) != null;
+        final String parentId = entity.getParentId();
+        return !((BackendPoolCollection)farm.getBackendPools()).getListByID(parentId).isEmpty();
     }
 
     private URI newURI(String uri) {
