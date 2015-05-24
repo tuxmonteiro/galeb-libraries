@@ -66,6 +66,11 @@ public class RuleLoader implements Loader {
 
     @Override
     public void from(Entity entity, Action action) {
+        if (action.equals(Action.DEL_ALL)) {
+            farm.getCollection(Rule.class).stream().forEach(rule -> from(rule, Action.DEL));
+            return;
+        }
+
         if (hasParent(entity) && hasTarget((Rule) entity)) {
             final String virtualhostId = entity.getParentId();
             final String match = (String)entity.getProperty(Rule.PROP_MATCH);

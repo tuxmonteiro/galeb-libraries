@@ -65,11 +65,6 @@ public class FarmUndertow extends Farm {
     private HttpHandler rootHandler;
     private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
 
-    private Loader backendLoader;
-    private Loader ruleLoader;
-    private Loader backendPoolLoader;
-    private Loader virtualHostLoader;
-
     private Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
 
     public FarmUndertow() {
@@ -111,28 +106,27 @@ public class FarmUndertow extends Farm {
     private void startLoaders() {
         final Map<String, BackendProxyClient> backendPoolsUndertow = new CopyOnWriteMap<>();
 
-        backendLoader = new BackendLoader(this)
-                                .setBackendPools(backendPoolsUndertow)
-                                .setLogger(log);
-        mapOfLoaders.put(Backend.class, backendLoader);
+        Loader backendLoader;
+        Loader ruleLoader;
 
-        backendPoolLoader = new BackendPoolLoader()
-                                .setBackendPools(backendPoolsUndertow)
-                                .setBackendLoader(backendLoader)
-                                .setLogger(log);
-        mapOfLoaders.put(BackendPool.class, backendPoolLoader);
+        mapOfLoaders.put(Backend.class, backendLoader = new BackendLoader(this)
+                                                .setBackendPools(backendPoolsUndertow)
+                                                .setLogger(log));
 
-        ruleLoader = new RuleLoader(this)
-                                .setBackendPools(backendPoolsUndertow)
-                                .setVirtualHostHandler(virtualHostHandler)
-                                .setLogger(log);
-        mapOfLoaders.put(Rule.class, ruleLoader);
+        mapOfLoaders.put(BackendPool.class, new BackendPoolLoader()
+                                                .setBackendPools(backendPoolsUndertow)
+                                                .setBackendLoader(backendLoader)
+                                                .setLogger(log));
 
-        virtualHostLoader = new VirtualHostLoader()
-                                .setRuleLoader(ruleLoader)
-                                .setVirtualHostHandler(virtualHostHandler)
-                                .setLogger(log);
-        mapOfLoaders.put(VirtualHost.class, virtualHostLoader);
+        mapOfLoaders.put(Rule.class, ruleLoader = new RuleLoader(this)
+                                                .setBackendPools(backendPoolsUndertow)
+                                                .setVirtualHostHandler(virtualHostHandler)
+                                                .setLogger(log));
+
+        mapOfLoaders.put(VirtualHost.class, new VirtualHostLoader()
+                                                .setRuleLoader(ruleLoader)
+                                                .setVirtualHostHandler(virtualHostHandler)
+                                                .setLogger(log));
     }
 
     @Override
@@ -143,8 +137,8 @@ public class FarmUndertow extends Farm {
 
     @Override
     public void del(Entity entity) {
-        super.del(entity);
         mapOfLoaders.get(entity.getClass()).from(entity, Action.DEL);
+        super.del(entity);
     }
 
     @Override
@@ -155,6 +149,7 @@ public class FarmUndertow extends Farm {
 
     @Override
     public void clear(Class<? extends Entity> entityClass) {
+        mapOfLoaders.get(entityClass).from(this, Action.DEL_ALL);
         super.clear(entityClass);
     }
 
@@ -164,14 +159,23 @@ public class FarmUndertow extends Farm {
     }
 
     private synchronized void processAll() {
-        getCollection(BackendPool.class).forEach(backendPool -> {
-            backendPoolLoader.from(backendPool, Action.ADD);
-            ((BackendPool) backendPool).getBackends().forEach(backend -> backendLoader.from(backend, Action.ADD));
+        getCollection(BackendPool.class).stream().forEach(backendPool -> {
+            mapOfLoaders.get(BackendPool.class).from(backendPool, Action.ADD);
+            getCollection(Backend.class).stream()
+                .filter(backend -> backend.getParentId().equals(backendPool.getId()))
+                .forEach(backend -> {
+                    ((BackendPool) backendPool).addBackend((Backend)backend);
+                    mapOfLoaders.get(Backend.class).from(backend, Action.ADD);
+                });
         });
-        getCollection(VirtualHost.class).forEach(virtualhost -> {
-            virtualHostLoader.from(virtualhost, Action.ADD);
-            ((VirtualHost) virtualhost).getRules().forEach(rule -> ruleLoader.from(rule, Action.ADD));
+        getCollection(VirtualHost.class).stream().forEach(virtualhost -> {
+            mapOfLoaders.get(VirtualHost.class).from(virtualhost, Action.ADD);
+            getCollection(Rule.class).stream()
+                .filter(rule -> rule.getParentId().equals(virtualhost.getId()))
+                .forEach(rule -> {
+                    ((VirtualHost) virtualhost).addRule((Rule)rule);
+                    mapOfLoaders.get(Rule.class).from(rule, Action.ADD);
+                });
         });
     }
-
 }

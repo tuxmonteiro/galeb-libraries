@@ -54,6 +54,10 @@ public class BackendLoader implements Loader {
 
     @Override
     public void from(Entity entity, Action action) {
+        if (action.equals(Action.DEL_ALL)) {
+            farm.getCollection(Backend.class).stream().forEach(backend -> from(backend, Action.DEL));
+            return;
+        }
         if (hasParent(entity)) {
             final String parentId = entity.getParentId();
             final String backendId = entity.getId();
@@ -76,7 +80,6 @@ public class BackendLoader implements Loader {
                         backendPool.removeHost(newURI(backendId));
                     }
                     break;
-
                 default:
                     break;
             }

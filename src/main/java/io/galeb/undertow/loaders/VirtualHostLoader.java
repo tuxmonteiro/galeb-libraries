@@ -19,6 +19,7 @@ package io.galeb.undertow.loaders;
 import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Entity;
+import io.galeb.core.model.Farm;
 import io.galeb.core.model.VirtualHost;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
@@ -48,6 +49,13 @@ public class VirtualHostLoader implements Loader {
 
     @Override
     public void from(Entity entity, Action action) {
+        if (action.equals(Action.DEL_ALL)) {
+            final Farm farm = (Farm) entity;
+            farm.getCollection(VirtualHost.class).stream()
+                    .forEach(virtualhost -> from(virtualhost, Action.DEL));
+            return;
+        }
+
         final String virtualhostId = entity.getId();
 
         switch (action) {
