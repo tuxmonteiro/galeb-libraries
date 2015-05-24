@@ -18,9 +18,13 @@ package io.galeb.undertow.loaders;
 
 import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.logging.Logger;
+import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.Rule;
+import io.galeb.core.model.VirtualHost;
+import io.galeb.core.model.collections.BackendPoolCollection;
+import io.galeb.core.model.collections.VirtualHostCollection;
 import io.galeb.undertow.handlers.BackendProxyClient;
 import io.galeb.undertow.handlers.PathHolderHandler;
 import io.undertow.server.HttpHandler;
@@ -62,6 +66,11 @@ public class RuleLoader implements Loader {
 
     @Override
     public void from(Entity entity, Action action) {
+        if (action.equals(Action.DEL_ALL)) {
+            farm.getCollection(Rule.class).stream().forEach(rule -> from(rule, Action.DEL));
+            return;
+        }
+
         if (hasParent(entity) && hasTarget((Rule) entity)) {
             final String virtualhostId = entity.getParentId();
             final String match = (String)entity.getProperty(Rule.PROP_MATCH);
@@ -102,12 +111,13 @@ public class RuleLoader implements Loader {
     }
 
     private boolean hasParent(Entity entity) {
-        String parentId = entity.getParentId();
-        return farm.getVirtualHost(parentId) != null;
+        final String parentId = entity.getParentId();
+        return !((VirtualHostCollection) farm.getCollection(VirtualHost.class)).getListByID(parentId).isEmpty();
     }
 
     private boolean hasTarget(Rule rule) {
-        return farm.getBackendPool((String) rule.getProperty(Rule.PROP_TARGET_ID)) != null;
+        final String targetId = (String) rule.getProperty(Rule.PROP_TARGET_ID);
+        return !((BackendPoolCollection)farm.getCollection(BackendPool.class)).getListByID(targetId).isEmpty();
     }
 
 }
