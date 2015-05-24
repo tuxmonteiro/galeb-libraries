@@ -20,6 +20,7 @@ import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
 import io.galeb.core.model.Backend.Health;
+import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.collections.BackendPoolCollection;
@@ -84,7 +85,7 @@ public class BackendLoader implements Loader {
 
     private boolean hasParent(Entity entity) {
         final String parentId = entity.getParentId();
-        return !((BackendPoolCollection)farm.getBackendPools()).getListByID(parentId).isEmpty();
+        return !((BackendPoolCollection)farm.getCollection(BackendPool.class)).getListByID(parentId).isEmpty();
     }
 
     private URI newURI(String uri) {
