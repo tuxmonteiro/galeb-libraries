@@ -18,7 +18,6 @@ package io.galeb.hazelcast.mapreduce;
 
 import io.galeb.core.logging.Logger;
 import io.galeb.core.mapreduce.MapReduce;
-import io.galeb.core.model.Metrics;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -65,13 +64,8 @@ public class BackendConnectionsMapReduce implements MapReduce {
     }
 
     @Override
-    public void addMetrics(final Metrics metrics) {
-        final int metricsTotal = (int) metrics.getProperty(Metrics.PROP_METRICS_TOTAL);
-
-        mapBackendConn.put(metrics.getId(),
-                           metricsTotal,
-                           timeOut,
-                           TimeUnit.MILLISECONDS);
+    public void addMetrics(String key, int value) {
+        mapBackendConn.put(key, value, timeOut, TimeUnit.MILLISECONDS);
     }
 
     @Override

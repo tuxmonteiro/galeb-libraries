@@ -22,7 +22,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.mapreduce.MapReduce;
-import io.galeb.core.model.Metrics;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -43,7 +42,7 @@ public class BackendConnectionsMapReduceTest {
     private final Logger log = mock(Logger.class);
 
     private MapReduce mapReduce;
-    private Metrics metrics;
+    String metricKey = "TEST";
 
     @BeforeClass
     public static void setUpStatic() {
@@ -56,45 +55,37 @@ public class BackendConnectionsMapReduceTest {
         hzInstance = Hazelcast.newHazelcastInstance(config);
     }
 
-    private void initializeMetrics(int numConn) {
-        metrics.setId("TEST").putProperty(Metrics.PROP_METRICS_TOTAL, numConn);
-    }
-
     @Before
     public void setUp() {
         doNothing().when(log).error(any(Throwable.class));
         doNothing().when(log).debug(any(Throwable.class));
         mapReduce = new BackendConnectionsMapReduce(hzInstance, log);
-        metrics = new Metrics();
     }
 
     @Test
     public void addMetricsTest() {
-        initializeMetrics(0);
 
-        mapReduce.addMetrics(metrics);
+        mapReduce.addMetrics(metricKey, 0);
 
-        assertThat(mapReduce.contains(metrics.getId())).isTrue();
+        assertThat(mapReduce.contains(metricKey)).isTrue();
     }
 
     @Test
     public void checkBackendWithTimeout() throws InterruptedException {
-        initializeMetrics(0);
         final long timeout = 1L; // MILLISECOND (Hint: 0L = TTL Forever)
 
-        mapReduce.setTimeOut(timeout).addMetrics(metrics);
+        mapReduce.setTimeOut(timeout).addMetrics(metricKey, 0);
         Thread.sleep(timeout+1);
 
-        assertThat(mapReduce.contains(metrics.getId())).isFalse();
+        assertThat(mapReduce.contains(metricKey)).isFalse();
     }
 
     @Test
     public void checkLocalMapReduceResult() {
         final int numConn = 10;
-        initializeMetrics(numConn);
 
-        mapReduce.addMetrics(metrics);
-        final int connections = mapReduce.reduce().get(metrics.getId());
+        mapReduce.addMetrics(metricKey, numConn);
+        final int connections = mapReduce.reduce().get(metricKey);
 
         assertThat(connections).isEqualTo(numConn);
     }
