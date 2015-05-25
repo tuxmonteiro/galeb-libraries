@@ -26,7 +26,7 @@ import io.undertow.server.handlers.accesslog.AccessLogReceiver;
 
 public class AccessLogExtendedHandler implements HttpHandler {
 
-    public static final String REAL_DEST = "@REAL_DEST";
+    public static final String REAL_DEST = "#REAL_DEST#";
 
     private ExchangeCompletionListener exchangeCompletionListener = new AccessLogCompletionListener();
     private final AccessLogReceiver accessLogReceiver;
@@ -53,9 +53,9 @@ public class AccessLogExtendedHandler implements HttpHandler {
         @Override
         public void exchangeEvent(HttpServerExchange exchange, NextListener nextListener) {
             try {
+                String uri = exchange.getAttachment(BackendSelector.REAL_DEST);
                 String message = tokens.readAttribute(exchange);
-                message.replaceAll(REAL_DEST, exchange.getAttachment(BackendSelector.REAL_DEST));
-                accessLogReceiver.logMessage(message);
+                accessLogReceiver.logMessage(message.replaceAll(REAL_DEST, uri));
             } finally {
                 nextListener.proceed();
             }

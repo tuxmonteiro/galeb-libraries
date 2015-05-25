@@ -21,7 +21,6 @@ import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Metrics;
 import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.util.HeaderValues;
 
 import java.util.NoSuchElementException;
 
@@ -33,13 +32,13 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
         try {
-            final HeaderValues headerXProxyHost = exchange.getRequestHeaders().get(BackendSelector.X_PROXY_HOST);
-            if (headerXProxyHost==null) {
-                return;
+            String real_dest = exchange.getAttachment(BackendSelector.REAL_DEST);
+            if (real_dest.isEmpty()) {
+                real_dest = BackendSelector.HOST_UNDEF;
             }
             final Metrics metrics = new Metrics();
             metrics.setParentId(exchange.getHostName());
-            metrics.setId(headerXProxyHost.getFirst());
+            metrics.setId(real_dest);
             metrics.putProperty(Metrics.PROP_STATUSCODE, exchange.getResponseCode());
             final long requestTimeNano = System.nanoTime() - exchange.getRequestStartTime();
             metrics.putProperty(Metrics.PROP_REQUESTTIME, requestTimeNano/1000000L);

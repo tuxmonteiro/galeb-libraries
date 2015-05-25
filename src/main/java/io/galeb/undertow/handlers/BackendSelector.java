@@ -24,8 +24,8 @@ import io.galeb.undertow.util.UndertowSourceIP;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.proxy.LoadBalancingProxyClient.Host;
 import io.undertow.server.handlers.proxy.LoadBalancingProxyClient.HostSelector;
+import io.undertow.util.AttachmentKey;
 import io.undertow.util.CopyOnWriteMap;
-import io.undertow.util.HttpString;
 
 import java.net.URI;
 import java.util.Collections;
@@ -37,8 +37,9 @@ import javax.inject.Inject;
 
 public class BackendSelector implements HostSelector {
 
-    // Usefull Custom HTTP Headers
-    public static final String X_PROXY_HOST = "X-Proxy-Host";
+    public static final AttachmentKey<String> REAL_DEST  = AttachmentKey.create(String.class);
+
+    public static final String                HOST_UNDEF = "http://UNDEF:0";
 
     private HttpServerExchange exchange = FakeHttpServerExchange.NULL;
 
@@ -79,11 +80,8 @@ public class BackendSelector implements HostSelector {
     }
 
     private void trace(final Host host) {
-        final HttpString xproxyhost = new HttpString(X_PROXY_HOST);
-
-        exchange.getRequestHeaders().put(
-                xproxyhost,
-                host != null ? host.getUri().toString() : "UNDEF");
+        String uri = host != null ? host.getUri().toString() : HOST_UNDEF;
+        exchange.putAttachment(REAL_DEST, uri);
     }
 
     public HostSelector setParams(final Map<String, Object> myParams) {
