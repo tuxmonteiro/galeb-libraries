@@ -54,7 +54,6 @@ public class BackendProxyClient implements ProxyClient {
 
     @Override
     public ProxyTarget findTarget(final HttpServerExchange exchange) {
-        hostSelectorHandler.setExchange(exchange);
         return loadBalanceProxyClient.findTarget(exchange);
     }
 

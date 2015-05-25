@@ -20,8 +20,10 @@ import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
 import io.galeb.core.model.Backend.Health;
+import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
+import io.galeb.core.model.collections.BackendPoolCollection;
 import io.galeb.undertow.handlers.BackendProxyClient;
 
 import java.net.URI;
@@ -52,6 +54,10 @@ public class BackendLoader implements Loader {
 
     @Override
     public void from(Entity entity, Action action) {
+        if (action.equals(Action.DEL_ALL)) {
+            farm.getCollection(Backend.class).stream().forEach(backend -> from(backend, Action.DEL));
+            return;
+        }
         if (hasParent(entity)) {
             final String parentId = entity.getParentId();
             final String backendId = entity.getId();
@@ -74,7 +80,6 @@ public class BackendLoader implements Loader {
                         backendPool.removeHost(newURI(backendId));
                     }
                     break;
-
                 default:
                     break;
             }
@@ -82,8 +87,8 @@ public class BackendLoader implements Loader {
     }
 
     private boolean hasParent(Entity entity) {
-        String parentId = entity.getParentId();
-        return farm.getBackendPool(parentId) != null;
+        final String parentId = entity.getParentId();
+        return !((BackendPoolCollection)farm.getCollection(BackendPool.class)).getListByID(parentId).isEmpty();
     }
 
     private URI newURI(String uri) {

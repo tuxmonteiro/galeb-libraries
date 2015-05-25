@@ -51,6 +51,13 @@ public class BackendPoolLoader implements Loader {
 
     @Override
     public void from(Entity entity, Action action) {
+        if (action.equals(Action.DEL_ALL)) {
+            final Farm farm = (Farm) entity;
+            farm.getCollection(BackendPool.class).stream()
+                    .forEach(backendPool -> from(backendPool, Action.DEL));
+            return;
+        }
+
         final String backendPoolId = entity.getId();
         BackendProxyClient backendProxyClient;
 
