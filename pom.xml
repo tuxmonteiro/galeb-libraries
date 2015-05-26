@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.galeb</groupId>
   <artifactId>galeb-statsd</artifactId>
-  <version>3.0.0.Final</version>
+  <version>3.0.1-SNAPSHOT</version>
 
   <licenses>
     <license>
