@@ -64,7 +64,7 @@ public class FarmUndertow extends Farm {
     private HttpHandler rootHandler;
     private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
 
-    private Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
+    private final Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
 
     public FarmUndertow() {
         super();
@@ -81,8 +81,8 @@ public class FarmUndertow extends Farm {
                                                             .setEventBus(eventBus)
                                                             .setLogger(log);
 
-        String enableAccessLogProperty = System.getProperty(SysProp.PROP_ENABLE_ACCESSLOG.toString(),
-                                                            SysProp.PROP_ENABLE_ACCESSLOG.def());
+        final String enableAccessLogProperty = System.getProperty(SysProp.PROP_ENABLE_ACCESSLOG.toString(),
+                                                                  SysProp.PROP_ENABLE_ACCESSLOG.def());
 
         final String EXTENDED_LOGPATTERN = "(%v -> " + AccessLogExtendedHandler.REAL_DEST
                                            + " [%D]ms \"X-Real-IP: %{i,X-Real-IP}\""
@@ -90,7 +90,8 @@ public class FarmUndertow extends Farm {
         final String LOGPATTERN = "%h %l %u %t \"%r\" %s %b " + EXTENDED_LOGPATTERN;
 
         final AccessLogReceiver accessLogReceiver  = new AccessLogReceiver() {
-            private final ExtendedLogger logger = LogManager.getContext().getLogger(SysProp.PROP_ENABLE_ACCESSLOG.toString());
+            private final ExtendedLogger logger =
+                    LogManager.getContext().getLogger(SysProp.PROP_ENABLE_ACCESSLOG.toString());
 
             @Override
             public void logMessage(String message) {
@@ -116,7 +117,7 @@ public class FarmUndertow extends Farm {
                                                 .setBackendPools(backendPoolsUndertow)
                                                 .setLogger(log));
 
-        mapOfLoaders.put(BackendPool.class, new BackendPoolLoader()
+        mapOfLoaders.put(BackendPool.class, new BackendPoolLoader(this)
                                                 .setBackendPools(backendPoolsUndertow)
                                                 .setBackendLoader(backendLoader)
                                                 .setLogger(log));

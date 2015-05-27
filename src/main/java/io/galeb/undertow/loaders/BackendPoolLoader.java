@@ -32,6 +32,11 @@ public class BackendPoolLoader implements Loader {
     private Logger logger;
     private Map<String, BackendProxyClient> backendPools = new HashMap<>();
     private Loader backendLoader;
+    private final Farm farm;
+
+    public BackendPoolLoader(final Farm farm) {
+        this.farm = farm;
+    }
 
     public BackendPoolLoader setBackendPools(final Map<String, BackendProxyClient> backendPools) {
         this.backendPools = backendPools;
@@ -52,8 +57,8 @@ public class BackendPoolLoader implements Loader {
     @Override
     public void from(Entity entity, Action action) {
         if (action.equals(Action.DEL_ALL)) {
-            final Farm farm = (Farm) entity;
-            farm.getCollection(BackendPool.class).stream()
+            final Farm farmAsEntity = (Farm) entity;
+            farmAsEntity.getCollection(BackendPool.class).stream()
                     .forEach(backendPool -> from(backendPool, Action.DEL));
             return;
         }
@@ -66,7 +71,7 @@ public class BackendPoolLoader implements Loader {
                 if (!backendPools.containsKey(backendPoolId)) {
                     final Map<String, Object> properties = new HashMap<>(entity.getProperties());
                     properties.put(BackendPool.class.getSimpleName(), entity.getId());
-                    properties.put(Farm.class.getSimpleName(), this);
+                    properties.put(Farm.class.getSimpleName(), farm);
                     backendProxyClient = new BackendProxyClient().setConnectionsPerThread(maxConnPerThread())
                                                                  .addSessionCookieName("JSESSIONID")
                                                                  .setParams(properties);

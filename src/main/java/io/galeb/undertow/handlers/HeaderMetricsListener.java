@@ -33,18 +33,15 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
         try {
             final String real_dest = exchange.getAttachment(BackendSelector.REAL_DEST);
-            if (real_dest == null) {
-                nextListener.proceed();
-                return;
+            if (real_dest != null) {
+                final Metrics metrics = new Metrics();
+                metrics.setParentId(exchange.getHostName());
+                metrics.setId(real_dest);
+                metrics.putProperty(Metrics.PROP_STATUSCODE, exchange.getResponseCode());
+                final long requestTimeNano = System.nanoTime() - exchange.getRequestStartTime();
+                metrics.putProperty(Metrics.PROP_REQUESTTIME, requestTimeNano/1000000L);
+                eventBus.onRequestMetrics(metrics);
             }
-            final Metrics metrics = new Metrics();
-            metrics.setParentId(exchange.getHostName());
-            metrics.setId(real_dest);
-            metrics.putProperty(Metrics.PROP_STATUSCODE, exchange.getResponseCode());
-            final long requestTimeNano = System.nanoTime() - exchange.getRequestStartTime();
-            metrics.putProperty(Metrics.PROP_REQUESTTIME, requestTimeNano/1000000L);
-
-            eventBus.onRequestMetrics(metrics);
         } catch (final NoSuchElementException e1) {
             logger.debug(e1);
         } catch (final RuntimeException e2) {

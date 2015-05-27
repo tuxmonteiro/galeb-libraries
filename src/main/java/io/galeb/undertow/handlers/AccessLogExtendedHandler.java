@@ -54,12 +54,10 @@ public class AccessLogExtendedHandler implements HttpHandler {
         public void exchangeEvent(HttpServerExchange exchange, NextListener nextListener) {
             try {
                 final String uri = exchange.getAttachment(BackendSelector.REAL_DEST);
-                if (uri==null) {
-                    nextListener.proceed();
-                    return;
+                if (uri!=null) {
+                    final String message = tokens.readAttribute(exchange);
+                    accessLogReceiver.logMessage(message.replaceAll(REAL_DEST, uri));
                 }
-                final String message = tokens.readAttribute(exchange);
-                accessLogReceiver.logMessage(message.replaceAll(REAL_DEST, uri));
             } finally {
                 nextListener.proceed();
             }
