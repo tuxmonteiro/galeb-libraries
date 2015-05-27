@@ -34,6 +34,7 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
         try {
             final String real_dest = exchange.getAttachment(BackendSelector.REAL_DEST);
             if (real_dest == null) {
+                nextListener.proceed();
                 return;
             }
             final Metrics metrics = new Metrics();
