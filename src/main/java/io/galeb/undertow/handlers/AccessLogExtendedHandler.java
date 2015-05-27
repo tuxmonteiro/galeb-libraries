@@ -28,10 +28,10 @@ public class AccessLogExtendedHandler implements HttpHandler {
 
     public static final String REAL_DEST = "#REAL_DEST#";
 
-    private ExchangeCompletionListener exchangeCompletionListener = new AccessLogCompletionListener();
+    private final ExchangeCompletionListener exchangeCompletionListener = new AccessLogCompletionListener();
     private final AccessLogReceiver accessLogReceiver;
     private final ExchangeAttribute tokens;
-    private HttpHandler next;
+    private final HttpHandler next;
 
     public AccessLogExtendedHandler(HttpHandler next,
                                     AccessLogReceiver accessLogReceiver,
@@ -53,8 +53,12 @@ public class AccessLogExtendedHandler implements HttpHandler {
         @Override
         public void exchangeEvent(HttpServerExchange exchange, NextListener nextListener) {
             try {
-                String uri = exchange.getAttachment(BackendSelector.REAL_DEST);
-                String message = tokens.readAttribute(exchange);
+                final String uri = exchange.getAttachment(BackendSelector.REAL_DEST);
+                if (uri==null) {
+                    nextListener.proceed();
+                    return;
+                }
+                final String message = tokens.readAttribute(exchange);
                 accessLogReceiver.logMessage(message.replaceAll(REAL_DEST, uri));
             } finally {
                 nextListener.proceed();
