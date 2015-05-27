@@ -32,9 +32,9 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
         try {
-            String real_dest = exchange.getAttachment(BackendSelector.REAL_DEST);
-            if (real_dest.isEmpty()) {
-                real_dest = BackendSelector.HOST_UNDEF;
+            final String real_dest = exchange.getAttachment(BackendSelector.REAL_DEST);
+            if (real_dest == null) {
+                return;
             }
             final Metrics metrics = new Metrics();
             metrics.setParentId(exchange.getHostName());
@@ -44,7 +44,7 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
             metrics.putProperty(Metrics.PROP_REQUESTTIME, requestTimeNano/1000000L);
 
             eventBus.onRequestMetrics(metrics);
-        } catch (NoSuchElementException e1) {
+        } catch (final NoSuchElementException e1) {
             logger.debug(e1);
         } catch (final RuntimeException e2) {
             logger.error(e2);
