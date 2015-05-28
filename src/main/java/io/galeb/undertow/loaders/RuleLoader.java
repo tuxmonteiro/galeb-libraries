@@ -79,7 +79,7 @@ public class RuleLoader implements Loader {
             switch (action) {
                 case ADD:
                     final String targetId = (String)entity.getProperty(Rule.PROP_TARGET_ID);
-                    final int maxRequestTime = 30000;
+                    final int maxRequestTime = 0;
 
                     if (!Integer.toString(StatusCodes.NOT_FOUND).equals(targetId)) {
                         final BackendProxyClient backendPool = backendPools.get(targetId);
