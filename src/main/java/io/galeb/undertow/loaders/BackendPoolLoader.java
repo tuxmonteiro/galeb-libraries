@@ -71,7 +71,7 @@ public class BackendPoolLoader implements Loader {
                 if (!backendPools.containsKey(backendPoolId)) {
                     final Map<String, Object> properties = new HashMap<>(entity.getProperties());
                     properties.put(BackendPool.class.getSimpleName(), entity.getId());
-                    properties.put(Farm.class.getSimpleName(), farm);
+                    properties.put(Farm.class.getSimpleName(), this.farm);
                     backendProxyClient = new BackendProxyClient().setConnectionsPerThread(maxConnPerThread())
                                                                  .addSessionCookieName("JSESSIONID")
                                                                  .setParams(properties);
@@ -89,7 +89,7 @@ public class BackendPoolLoader implements Loader {
                     backendProxyClient = backendPools.get(entity.getId());
                     final Map<String, Object> params = new HashMap<>(entity.getProperties());
                     params.put(BackendPool.class.getSimpleName(), entity.getId());
-                    params.put(Farm.class.getSimpleName(), this);
+                    params.put(Farm.class.getSimpleName(), this.farm);
                     backendProxyClient.setParams(params);
                     backendProxyClient.reset();
                 }
