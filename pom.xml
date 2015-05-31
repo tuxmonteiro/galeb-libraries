@@ -161,7 +161,7 @@
           <target>1.8</target>
           <sources>
             <source>
-              <basedir>src/main/aspect</basedir>
+              <basedir>${basedir}/src/main/aspect</basedir>
               <includes>
                 <include>**/*.aj</include>
               </includes>
