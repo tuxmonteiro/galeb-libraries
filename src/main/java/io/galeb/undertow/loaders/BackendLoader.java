@@ -80,6 +80,12 @@ public class BackendLoader implements Loader {
                         backendPool.removeHost(newURI(backendId));
                     }
                     break;
+
+                case CHANGE:
+                    from(entity, Action.DEL);
+                    from(entity, Action.ADD);
+                    break;
+
                 default:
                     break;
             }

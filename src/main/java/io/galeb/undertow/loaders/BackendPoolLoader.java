@@ -94,6 +94,7 @@ public class BackendPoolLoader implements Loader {
                     backendProxyClient.reset();
                 }
                 break;
+
             default:
                 logger.error(action.toString()+" NOT FOUND");
         }

@@ -104,6 +104,11 @@ public class RuleLoader implements Loader {
                     }
                     break;
 
+                case CHANGE:
+                    from(entity, Action.DEL);
+                    from(entity, Action.ADD);
+                    break;
+
                 default:
                     logger.error(action.toString()+" NOT FOUND");
             }

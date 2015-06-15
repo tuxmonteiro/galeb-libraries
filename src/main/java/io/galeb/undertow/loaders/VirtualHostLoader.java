@@ -68,6 +68,11 @@ public class VirtualHostLoader implements Loader {
                 ((NameVirtualHostHandler) virtualHostHandler).removeHost(virtualhostId);
                 break;
 
+            case CHANGE:
+                from(entity, Action.DEL);
+                from(entity, Action.ADD);
+                break;
+
             default:
                 logger.error(action.toString()+" NOT FOUND");
         }
