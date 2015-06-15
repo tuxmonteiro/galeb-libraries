@@ -45,7 +45,7 @@ public class UndertowSourceIP implements SourceIP {
             if (sourceIP!=null) {
                 return sourceIP.split(",")[0];
             }
-
+            sourceIP = exchange.getSourceAddress().getHostString();
         }
         if (sourceIP!=null) {
             return sourceIP;
