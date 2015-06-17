@@ -71,29 +71,31 @@ public class RuleLoader implements Loader {
             return;
         }
 
-        if (hasParent(entity) && hasTarget((Rule) entity)) {
+        if (hasParent(entity)) {
             final String virtualhostId = entity.getParentId();
             final String match = (String)entity.getProperty(Rule.PROP_MATCH);
             final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
 
             switch (action) {
                 case ADD:
-                    final String targetId = (String)entity.getProperty(Rule.PROP_TARGET_ID);
-                    final int maxRequestTime = 0;
+                    if (hasTarget((Rule) entity)) {
+                        final String targetId = (String)entity.getProperty(Rule.PROP_TARGET_ID);
+                        final int maxRequestTime = 0;
 
-                    if (!Integer.toString(StatusCodes.NOT_FOUND).equals(targetId)) {
-                        final BackendProxyClient backendPool = backendPools.get(targetId);
-                        if (backendPool==null) {
-                            logger.error("addRule("+entity.getId()+"): TargetId not found");
-                            return;
+                        if (!Integer.toString(StatusCodes.NOT_FOUND).equals(targetId)) {
+                            final BackendProxyClient backendPool = backendPools.get(targetId);
+                            if (backendPool==null) {
+                                logger.error("addRule("+entity.getId()+"): TargetId not found");
+                                return;
+                            }
+                            HttpHandler ruleHandler = hosts.get(virtualhostId);
+                            if (!(ruleHandler instanceof PathHolderHandler)) {
+                                ruleHandler = new PathHolderHandler(ResponseCodeHandler.HANDLE_404);
+                            }
+                            final HttpHandler targetHandler = new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404);
+                            ((PathHolderHandler) ruleHandler).addPrefixPath(match, targetHandler);
+                            hosts.put(virtualhostId, ruleHandler);
                         }
-                        HttpHandler ruleHandler = hosts.get(virtualhostId);
-                        if (!(ruleHandler instanceof PathHolderHandler)) {
-                            ruleHandler = new PathHolderHandler(ResponseCodeHandler.HANDLE_404);
-                        }
-                        final HttpHandler targetHandler = new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404);
-                        ((PathHolderHandler) ruleHandler).addPrefixPath(match, targetHandler);
-                        hosts.put(virtualhostId, ruleHandler);
                     }
                     break;
 
