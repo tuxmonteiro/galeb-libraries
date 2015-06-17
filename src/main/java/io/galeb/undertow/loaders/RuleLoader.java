@@ -29,7 +29,6 @@ import io.galeb.undertow.handlers.BackendProxyClient;
 import io.galeb.undertow.handlers.PathHolderHandler;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
-import io.undertow.server.handlers.PathHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.proxy.ProxyHandler;
 import io.undertow.util.StatusCodes;
@@ -109,7 +108,7 @@ public class RuleLoader implements Loader {
                 case DEL:
                     final HttpHandler ruleHandler = hosts.get(virtualhostId);
                     if (ruleHandler!=null && ruleHandler instanceof PathHolderHandler) {
-                        ((PathHandler)ruleHandler).removePrefixPath(match);
+                        ((PathHolderHandler)ruleHandler).removePrefixPath(match);
                         isOk = true;
                     }
                     break;
