@@ -101,13 +101,14 @@ public class RuleLoader implements Loader {
                         }
                         isOk = true;
                     } else {
-                        optionalLogger.ifPresent(logger -> logger.info("Action ADD not applied: "+targetId+" NOT FOUND"));
+                        final String message = "Action ADD not applied - "+entity.getId()+" ("+entity.getEntityType()+"): "+targetId+" NOT FOUND";
+                        optionalLogger.ifPresent(logger -> logger.info(message));
                     }
                     break;
 
                 case DEL:
                     final HttpHandler ruleHandler = hosts.get(virtualhostId);
-                    if (ruleHandler!=null && ruleHandler instanceof PathHandler) {
+                    if (ruleHandler!=null && ruleHandler instanceof PathHolderHandler) {
                         ((PathHandler)ruleHandler).removePrefixPath(match);
                         isOk = true;
                     }
