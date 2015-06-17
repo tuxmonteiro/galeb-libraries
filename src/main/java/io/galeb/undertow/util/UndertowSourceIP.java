@@ -34,7 +34,9 @@ public class UndertowSourceIP implements SourceIP {
             return DEFAULT_SOURCE_IP;
         }
 
-        if (IGNORE_XFORWARDED_FOR.isPresent() && !IGNORE_XFORWARDED_FOR.get().equalsIgnoreCase(Constants.FALSE)) {
+        if (IGNORE_XFORWARDED_FOR.isPresent() &&
+                (!IGNORE_XFORWARDED_FOR.get().equalsIgnoreCase(Constants.FALSE) ||
+                 !IGNORE_XFORWARDED_FOR.get().equals("0"))) {
             sourceIP = exchange.getSourceAddress().getHostString();
         } else {
             sourceIP = exchange.getRequestHeaders().getFirst(HTTP_HEADER_XREAL_IP);
