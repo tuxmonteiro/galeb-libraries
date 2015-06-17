@@ -76,7 +76,7 @@ public class BackendLoader implements Loader {
                             backendPool.removeHost(newURI(backendId));
                             final String message = "DEL action applied (instead of ADD action) because backend is not "
                                     +Health.HEALTHY.toString()+": "+entity.getId()+" ("+entity.getEntityType()+")";
-                            optionalLogger.ifPresent(logger -> logger.info(message));
+                            optionalLogger.ifPresent(logger -> logger.debug(message));
                         }
                     }
                     break;
@@ -98,7 +98,7 @@ public class BackendLoader implements Loader {
                     break;
             }
             if (isOk) {
-                optionalLogger.ifPresent(logger -> logger.info("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
+                optionalLogger.ifPresent(logger -> logger.debug("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
             }
         }
     }

@@ -104,7 +104,7 @@ public class BackendPoolLoader implements Loader {
                 optionalLogger.ifPresent(logger -> logger.error(action.toString()+" NOT FOUND"));
         }
         if (isOk) {
-            optionalLogger.ifPresent(logger -> logger.info("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
+            optionalLogger.ifPresent(logger -> logger.debug("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
         }
     }
 

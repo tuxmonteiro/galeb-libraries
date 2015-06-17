@@ -101,7 +101,7 @@ public class RuleLoader implements Loader {
                         isOk = true;
                     } else {
                         final String message = "Action ADD not applied - "+entity.getId()+" ("+entity.getEntityType()+"): "+targetId+" NOT FOUND";
-                        optionalLogger.ifPresent(logger -> logger.info(message));
+                        optionalLogger.ifPresent(logger -> logger.debug(message));
                     }
                     break;
 
@@ -122,7 +122,7 @@ public class RuleLoader implements Loader {
                     optionalLogger.ifPresent(logger -> logger.error(action.toString()+" NOT FOUND"));
             }
             if (isOk) {
-                optionalLogger.ifPresent(logger -> logger.info("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
+                optionalLogger.ifPresent(logger -> logger.debug("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
             }
         }
     }
