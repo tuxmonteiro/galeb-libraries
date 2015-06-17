@@ -36,11 +36,12 @@ import io.undertow.util.StatusCodes;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class RuleLoader implements Loader {
 
     private final Farm farm;
-    private Logger logger;
+    private Optional<Logger> optionalLogger = Optional.empty();
     private Map<String, BackendProxyClient> backendPools = new HashMap<>();
     private HttpHandler virtualHostHandler = null;
 
@@ -60,7 +61,7 @@ public class RuleLoader implements Loader {
 
     @Override
     public Loader setLogger(final Logger logger) {
-        this.logger = logger;
+        this.optionalLogger = Optional.ofNullable(logger);
         return this;
     }
 
@@ -75,17 +76,19 @@ public class RuleLoader implements Loader {
             final String virtualhostId = entity.getParentId();
             final String match = (String)entity.getProperty(Rule.PROP_MATCH);
             final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
+            boolean isOk = false;
 
             switch (action) {
                 case ADD:
+                    final String targetId = (String)entity.getProperty(Rule.PROP_TARGET_ID);
+
                     if (hasTarget((Rule) entity)) {
-                        final String targetId = (String)entity.getProperty(Rule.PROP_TARGET_ID);
                         final int maxRequestTime = 0;
 
                         if (!Integer.toString(StatusCodes.NOT_FOUND).equals(targetId)) {
                             final BackendProxyClient backendPool = backendPools.get(targetId);
                             if (backendPool==null) {
-                                logger.error("addRule("+entity.getId()+"): TargetId not found");
+                                optionalLogger.ifPresent(logger -> logger.error("addRule("+entity.getId()+"): TargetId not found"));
                                 return;
                             }
                             HttpHandler ruleHandler = hosts.get(virtualhostId);
@@ -96,6 +99,9 @@ public class RuleLoader implements Loader {
                             ((PathHolderHandler) ruleHandler).addPrefixPath(match, targetHandler);
                             hosts.put(virtualhostId, ruleHandler);
                         }
+                        isOk = true;
+                    } else {
+                        optionalLogger.ifPresent(logger -> logger.info("Action ADD not applied: "+targetId+" NOT FOUND"));
                     }
                     break;
 
@@ -103,6 +109,7 @@ public class RuleLoader implements Loader {
                     final HttpHandler ruleHandler = hosts.get(virtualhostId);
                     if (ruleHandler!=null && ruleHandler instanceof PathHandler) {
                         ((PathHandler)ruleHandler).removePrefixPath(match);
+                        isOk = true;
                     }
                     break;
 
@@ -112,7 +119,10 @@ public class RuleLoader implements Loader {
                     break;
 
                 default:
-                    logger.error(action.toString()+" NOT FOUND");
+                    optionalLogger.ifPresent(logger -> logger.error(action.toString()+" NOT FOUND"));
+            }
+            if (isOk) {
+                optionalLogger.ifPresent(logger -> logger.info("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
             }
         }
     }

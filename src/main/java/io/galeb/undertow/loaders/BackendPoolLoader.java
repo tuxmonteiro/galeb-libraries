@@ -26,10 +26,11 @@ import io.galeb.undertow.handlers.BackendProxyClient;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class BackendPoolLoader implements Loader {
 
-    private Logger logger;
+    private Optional<Logger> optionalLogger = Optional.empty();
     private Map<String, BackendProxyClient> backendPools = new HashMap<>();
     private Loader backendLoader;
     private final Farm farm;
@@ -50,7 +51,7 @@ public class BackendPoolLoader implements Loader {
 
     @Override
     public Loader setLogger(final Logger logger) {
-        this.logger = logger;
+        this.optionalLogger = Optional.ofNullable(logger);
         return this;
     }
 
@@ -65,6 +66,7 @@ public class BackendPoolLoader implements Loader {
 
         final String backendPoolId = entity.getId();
         BackendProxyClient backendProxyClient;
+        boolean isOk = false;
 
         switch (action) {
             case ADD:
@@ -76,12 +78,14 @@ public class BackendPoolLoader implements Loader {
                                                                  .addSessionCookieName("JSESSIONID")
                                                                  .setParams(properties);
                     backendPools.put(backendPoolId, backendProxyClient);
+                    isOk = true;
                 }
                 break;
 
             case DEL:
                 ((BackendPool) entity).getBackends().forEach(b -> backendLoader.from(b, Action.DEL));
                 backendPools.remove(backendPoolId);
+                isOk = true;
                 break;
 
             case CHANGE:
@@ -92,11 +96,15 @@ public class BackendPoolLoader implements Loader {
                     params.put(Farm.class.getSimpleName(), this.farm);
                     backendProxyClient.setParams(params);
                     backendProxyClient.reset();
+                    isOk = true;
                 }
                 break;
 
             default:
-                logger.error(action.toString()+" NOT FOUND");
+                optionalLogger.ifPresent(logger -> logger.error(action.toString()+" NOT FOUND"));
+        }
+        if (isOk) {
+            optionalLogger.ifPresent(logger -> logger.info("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
         }
     }
 

@@ -16,6 +16,8 @@
 
 package io.galeb.undertow.loaders;
 
+import java.util.Optional;
+
 import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Entity;
@@ -28,7 +30,7 @@ import io.undertow.server.handlers.ResponseCodeHandler;
 public class VirtualHostLoader implements Loader {
 
     private HttpHandler virtualHostHandler;
-    private Logger logger;
+    private Optional<Logger> optionalLogger = Optional.empty();
     private Loader ruleLoader;
 
     public VirtualHostLoader setRuleLoader(final Loader ruleLoader) {
@@ -43,7 +45,7 @@ public class VirtualHostLoader implements Loader {
 
     @Override
     public Loader setLogger(Logger logger) {
-        this.logger = logger;
+        this.optionalLogger = Optional.ofNullable(logger);
         return this;
     }
 
@@ -57,24 +59,31 @@ public class VirtualHostLoader implements Loader {
         }
 
         final String virtualhostId = entity.getId();
+        boolean isOk = false;
 
         switch (action) {
             case ADD:
                 ((NameVirtualHostHandler) virtualHostHandler).addHost(virtualhostId, ResponseCodeHandler.HANDLE_404);
+                isOk = true;
                 break;
 
             case DEL:
                 ((VirtualHost)entity).getRules().forEach(r -> ruleLoader.from(r, Action.DEL));
                 ((NameVirtualHostHandler) virtualHostHandler).removeHost(virtualhostId);
+                isOk = true;
                 break;
 
             case CHANGE:
                 from(entity, Action.DEL);
                 from(entity, Action.ADD);
+                isOk = true;
                 break;
 
             default:
-                logger.error(action.toString()+" NOT FOUND");
+                optionalLogger.ifPresent(logger -> logger.error(action.toString()+" NOT FOUND"));
+        }
+        if (isOk) {
+            optionalLogger.ifPresent(logger -> logger.info("Action "+action.toString()+" applied: "+virtualhostId+" ("+entity.getEntityType()+")"));
         }
     }
 

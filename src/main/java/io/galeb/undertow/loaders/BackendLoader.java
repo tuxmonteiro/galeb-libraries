@@ -30,11 +30,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class BackendLoader implements Loader {
 
     private final Farm farm;
-    private Logger logger;
+    private Optional<Logger> optionalLogger = Optional.empty();
     private Map<String, BackendProxyClient> backendPools = new HashMap<>();
 
     public BackendLoader(final Farm farm) {
@@ -48,7 +49,7 @@ public class BackendLoader implements Loader {
 
     @Override
     public Loader setLogger(final Logger logger) {
-        this.logger = logger;
+        this.optionalLogger = Optional.ofNullable(logger);
         return this;
     }
 
@@ -62,6 +63,7 @@ public class BackendLoader implements Loader {
             final String parentId = entity.getParentId();
             final String backendId = entity.getId();
             final BackendProxyClient backendPool = backendPools.get(parentId);
+            boolean isOk = false;
 
             switch (action) {
                 case ADD:
@@ -69,8 +71,12 @@ public class BackendLoader implements Loader {
                     if (backendPool!=null) {
                         if (backendHealth==Health.HEALTHY) {
                             backendPool.addHost(newURI(backendId));
+                            isOk = true;
                         } else {
                             backendPool.removeHost(newURI(backendId));
+                            final String message = "DEL action applied (instead of ADD action) because backend is not "
+                                    +Health.HEALTHY.toString()+": "+entity.getId()+" ("+entity.getEntityType()+")";
+                            optionalLogger.ifPresent(logger -> logger.info(message));
                         }
                     }
                     break;
@@ -78,16 +84,21 @@ public class BackendLoader implements Loader {
                 case DEL:
                     if (backendPool!=null) {
                         backendPool.removeHost(newURI(backendId));
+                        isOk = true;
                     }
                     break;
 
                 case CHANGE:
                     from(entity, Action.DEL);
                     from(entity, Action.ADD);
+                    isOk = true;
                     break;
 
                 default:
                     break;
+            }
+            if (isOk) {
+                optionalLogger.ifPresent(logger -> logger.info("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
             }
         }
     }
@@ -101,7 +112,7 @@ public class BackendLoader implements Loader {
         try {
             return new URI(uri);
         } catch (final URISyntaxException e) {
-            logger.error(e);
+            optionalLogger.ifPresent(logger -> logger.error(e));
         }
         return null;
     }
