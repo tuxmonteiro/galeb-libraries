@@ -38,29 +38,21 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
 import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 
+@Deprecated
 @Default
 public class EventBus implements MessageListener<Event>, IEventBus {
 
     private static final long AGGREGATION_TIME = 1000L;
 
-    private static final String PROP_HAZELCAST_LOGGING_TYPE = "hazelcast.logging.type";
-
-    static {
-        if (System.getProperty(PROP_HAZELCAST_LOGGING_TYPE)==null) {
-            System.setProperty(PROP_HAZELCAST_LOGGING_TYPE, "log4j2");
-        }
-    }
-
     @Inject
     protected Logger logger;
 
-    private static final HazelcastInstance HAZELCAST_INSTANCE = Hazelcast.newHazelcastInstance();
+    private static final HazelcastInstance HAZELCAST_INSTANCE = HzInstance.getInstance();
 
     private final Map<String, ITopic<Event>> topics = new HashMap<>();
 
