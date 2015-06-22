@@ -90,7 +90,11 @@ public class BackendConnectionsMapReduce implements MapReduce {
         try {
             return future.get();
         } catch (InterruptedException|ExecutionException e) {
-            logger.error(e);
+            if (logger!=null) {
+                logger.error(e);
+            } else {
+                e.printStackTrace();
+            }
         }
         return new HashMap<>(mapBackendConn);
     }
