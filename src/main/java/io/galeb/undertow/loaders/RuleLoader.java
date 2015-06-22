@@ -60,7 +60,7 @@ public class RuleLoader implements Loader {
 
     @Override
     public Loader setLogger(final Logger logger) {
-        this.optionalLogger = Optional.ofNullable(logger);
+        optionalLogger = Optional.ofNullable(logger);
         return this;
     }
 
@@ -74,6 +74,9 @@ public class RuleLoader implements Loader {
         if (hasParent(entity)) {
             final String virtualhostId = entity.getParentId();
             final String match = (String)entity.getProperty(Rule.PROP_MATCH);
+            if (virtualhostId == null || match == null) {
+                return;
+            }
             final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
             boolean isOk = false;
 
