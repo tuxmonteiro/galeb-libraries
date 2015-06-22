@@ -15,8 +15,12 @@ public final class HzInstance {
 
     private static final HazelcastInstance HZ = Hazelcast.newHazelcastInstance();
 
+    private HzInstance() {
+        // singleton?
+    }
+
     public static HazelcastInstance getInstance() {
-        return HZ;
+         return HZ;
     }
 
 }
