@@ -17,7 +17,8 @@
 package io.galeb.aop.undertow;
 
 import io.galeb.core.cdi.WeldContext;
-import io.galeb.hazelcast.EventBus;
+import io.galeb.core.mapreduce.MapReduce;
+import io.galeb.hazelcast.mapreduce.BackendConnectionsMapReduce;
 import io.galeb.undertow.util.map.CopyOnWriteMapExpirable;
 import io.undertow.server.handlers.proxy.ProxyConnectionPool;
 
@@ -26,12 +27,12 @@ import java.util.concurrent.TimeUnit;
 
 public aspect HostThreadDataConnectionsAspect {
 
-    private static final EventBus EVENTBUS = WeldContext.INSTANCE.getBean(EventBus.class);
+    private static final MapReduce MAP_REDUCE = WeldContext.INSTANCE.getBean(BackendConnectionsMapReduce.class);
 
-    private static final long TTL_THREAD_ID     = 1000L; // milliseconds
-    private static final long TTL_URI           = 1L;    // hour
+    private static final long TTL_THREAD_ID = 1L; // hour
+    private static final long TTL_URI       = 1L; // hour
 
-    private final Map<String, Integer> counter = new CopyOnWriteMapExpirable<>(TTL_THREAD_ID, TimeUnit.MILLISECONDS);
+    private final Map<String, Integer> counter = new CopyOnWriteMapExpirable<>(TTL_THREAD_ID, TimeUnit.HOURS);
     private final Map<String, Map<String, Integer>> uris = new CopyOnWriteMapExpirable<>(TTL_URI, TimeUnit.HOURS);
 
     pointcut myPointcut() : set(* io.undertow.server.handlers.proxy.ProxyConnectionPool.HostThreadData.connections);
@@ -57,7 +58,7 @@ public aspect HostThreadDataConnectionsAspect {
             total += numConn;
         }
 
-        EVENTBUS.getMapReduce().addMetrics(uri, total);
+        MAP_REDUCE.addMetrics(uri, total);
     }
 
 }
