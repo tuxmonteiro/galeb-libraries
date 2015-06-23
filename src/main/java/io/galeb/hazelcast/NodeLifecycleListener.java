@@ -22,6 +22,10 @@ public class NodeLifecycleListener implements LifecycleListener {
         return ready.get();
     }
 
+    public static void forceReady() {
+        ready.set(true);
+    }
+
     @Override
     public void stateChanged(LifecycleEvent event) {
         switch (event.getState()) {

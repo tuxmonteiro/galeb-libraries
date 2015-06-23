@@ -22,6 +22,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.mapreduce.MapReduce;
+import io.galeb.hazelcast.NodeLifecycleListener;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -59,7 +60,7 @@ public class BackendConnectionsMapReduceTest {
     public void setUp() {
         doNothing().when(log).error(any(Throwable.class));
         doNothing().when(log).debug(any(Throwable.class));
-        mapReduce = new BackendConnectionsMapReduce(hzInstance, log);
+        mapReduce = new BackendConnectionsMapReduce(hzInstance);
     }
 
     @Test
@@ -85,6 +86,7 @@ public class BackendConnectionsMapReduceTest {
         final int numConn = 10;
 
         mapReduce.addMetrics(metricKey, numConn);
+        NodeLifecycleListener.forceReady();
         final int connections = mapReduce.reduce().get(metricKey);
 
         assertThat(connections).isEqualTo(numConn);

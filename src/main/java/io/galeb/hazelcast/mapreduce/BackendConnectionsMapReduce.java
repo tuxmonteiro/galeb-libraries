@@ -18,13 +18,17 @@ package io.galeb.hazelcast.mapreduce;
 
 import io.galeb.core.logging.Logger;
 import io.galeb.core.mapreduce.MapReduce;
+import io.galeb.hazelcast.HzInstance;
+import io.galeb.hazelcast.NodeLifecycleListener;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import javax.enterprise.inject.Default;
+import javax.inject.Inject;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
@@ -40,16 +44,20 @@ public class BackendConnectionsMapReduce implements MapReduce {
 
     private final HazelcastInstance hazelcastInstance;
 
-    private final Logger logger;
+    @Inject
+    private Logger logger;
 
     private final IMap<String, Integer> mapBackendConn;
 
     private Long timeOut = 10000L;
 
-    public BackendConnectionsMapReduce(final HazelcastInstance hazelcastInstance, final Logger logger) {
-        this.hazelcastInstance = hazelcastInstance;
+    public BackendConnectionsMapReduce() {
+        this(HzInstance.getInstance());
+    }
+
+    public BackendConnectionsMapReduce(final HazelcastInstance aHazelcastInstance) {
+        hazelcastInstance = aHazelcastInstance;
         mapBackendConn = hazelcastInstance.getMap(MAP_ID);
-        this.logger = logger;
     }
 
     @Override
@@ -75,7 +83,9 @@ public class BackendConnectionsMapReduce implements MapReduce {
 
     @Override
     public Map<String, Integer> reduce() {
-
+        if (!NodeLifecycleListener.isReady()) {
+            return Collections.emptyMap();
+        }
         final JobTracker jobTracker = hazelcastInstance.getJobTracker("jobTracker1"+this);
         final KeyValueSource<String, Integer> source = KeyValueSource.fromMap(mapBackendConn);
 
