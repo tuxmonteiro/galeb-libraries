@@ -24,49 +24,27 @@ import io.galeb.core.logging.Logger;
 import io.galeb.core.mapreduce.MapReduce;
 import io.galeb.hazelcast.NodeLifecycleListener;
 
-import java.util.Arrays;
-import java.util.UUID;
-
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.config.NetworkConfig;
-import com.hazelcast.core.Hazelcast;
-import com.hazelcast.core.HazelcastInstance;
-
 public class BackendConnectionsMapReduceTest {
-
-    private static HazelcastInstance hzInstance;
 
     private final Logger log = mock(Logger.class);
 
     private MapReduce mapReduce;
     String metricKey = "TEST";
 
-    @BeforeClass
-    public static void setUpStatic() {
-        final Config config = new Config();
-        config.getGroupConfig().setName(UUID.randomUUID().toString());
-        final NetworkConfig networkConfig = config.getNetworkConfig();
-        networkConfig.getJoin().getMulticastConfig().setEnabled(false);
-        networkConfig.getJoin().getTcpIpConfig().setEnabled(true);
-        networkConfig.getJoin().getTcpIpConfig().setMembers(Arrays.asList(new String[]{"127.0.0.1"}));
-        hzInstance = Hazelcast.newHazelcastInstance(config);
-    }
-
     @Before
     public void setUp() {
         doNothing().when(log).error(any(Throwable.class));
         doNothing().when(log).debug(any(Throwable.class));
-        mapReduce = new BackendConnectionsMapReduce(hzInstance);
+        mapReduce = new BackendConnectionsMapReduce();
     }
 
     @Test
     public void addMetricsTest() {
 
-        mapReduce.addMetrics(metricKey, 0);
+        mapReduce.put(metricKey, 0);
 
         assertThat(mapReduce.contains(metricKey)).isTrue();
     }
@@ -75,7 +53,7 @@ public class BackendConnectionsMapReduceTest {
     public void checkBackendWithTimeout() throws InterruptedException {
         final long timeout = 1L; // MILLISECOND (Hint: 0L = TTL Forever)
 
-        mapReduce.setTimeOut(timeout).addMetrics(metricKey, 0);
+        mapReduce.setTimeOut(timeout).put(metricKey, 0);
         Thread.sleep(timeout+1);
 
         assertThat(mapReduce.contains(metricKey)).isFalse();
@@ -85,7 +63,7 @@ public class BackendConnectionsMapReduceTest {
     public void checkLocalMapReduceResult() {
         final int numConn = 10;
 
-        mapReduce.addMetrics(metricKey, numConn);
+        mapReduce.put(metricKey, numConn);
         NodeLifecycleListener.forceReady();
         final int connections = mapReduce.reduce().get(metricKey);
 

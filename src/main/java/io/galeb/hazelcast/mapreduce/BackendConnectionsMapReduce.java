@@ -42,23 +42,14 @@ public class BackendConnectionsMapReduce implements MapReduce {
 
     public static final String MAP_ID = BackendConnectionsMapReduce.class.getSimpleName();
 
-    private final HazelcastInstance hazelcastInstance;
+    private static final HazelcastInstance HZ = HzInstance.getInstance();
 
     @Inject
     private Logger logger;
 
-    private final IMap<String, Integer> mapBackendConn;
+    private final IMap<String, Integer> mapBackendConn = HZ.getMap(MAP_ID);
 
     private Long timeOut = 10000L;
-
-    public BackendConnectionsMapReduce() {
-        this(HzInstance.getInstance());
-    }
-
-    public BackendConnectionsMapReduce(final HazelcastInstance aHazelcastInstance) {
-        hazelcastInstance = aHazelcastInstance;
-        mapBackendConn = hazelcastInstance.getMap(MAP_ID);
-    }
 
     @Override
     public MapReduce setTimeOut(Long timeOut) {
@@ -72,7 +63,7 @@ public class BackendConnectionsMapReduce implements MapReduce {
     }
 
     @Override
-    public void addMetrics(String key, int value) {
+    public void put(String key, int value) {
         mapBackendConn.put(key, value, timeOut, TimeUnit.MILLISECONDS);
     }
 
@@ -86,7 +77,7 @@ public class BackendConnectionsMapReduce implements MapReduce {
         if (!NodeLifecycleListener.isReady()) {
             return Collections.emptyMap();
         }
-        final JobTracker jobTracker = hazelcastInstance.getJobTracker("jobTracker1"+this);
+        final JobTracker jobTracker = HZ.getJobTracker("jobTracker1"+this);
         final KeyValueSource<String, Integer> source = KeyValueSource.fromMap(mapBackendConn);
 
         final Job<String, Integer> job = jobTracker.newJob(source);

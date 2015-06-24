@@ -26,6 +26,7 @@ import io.galeb.core.model.Entity;
 import io.galeb.core.model.Metrics;
 import io.galeb.core.model.Metrics.Operation;
 import io.galeb.core.queue.QueueManager;
+import io.galeb.core.statsd.StatsdClient;
 import io.galeb.hazelcast.queue.HzQueueManager;
 
 import java.util.EnumSet;
@@ -91,20 +92,20 @@ public class EventBus implements MessageListener<Event>, IEventBus {
     public void onRequestMetrics(Metrics metrics) {
 
         final Metrics metricsInstance = mapOfBanckeds.getOrDefault(metrics.getId(), metrics);
-        final Object statusCodeObj = metrics.getProperty(Metrics.PROP_STATUSCODE);
+        final Object statusCodeObj = metrics.getProperty(StatsdClient.PROP_STATUSCODE);
         int statusCode = 200;
         if (statusCodeObj!=null && statusCodeObj instanceof Integer) {
             statusCode = (int) statusCodeObj;
         }
-        final String propHttpCode = Metrics.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode);
+        final String propHttpCode = StatsdClient.PROP_HTTPCODE_PREFIX + Integer.toString(statusCode);
         metrics.putProperty(propHttpCode, 1);
         metricsInstance.aggregationProperty(metrics,
                                             propHttpCode,
                                             propHttpCode,
                                             Operation.SUM);
         metricsInstance.aggregationProperty(metrics,
-                                            Metrics.PROP_REQUESTTIME,
-                                            Metrics.PROP_REQUESTTIME_AVG,
+                                            StatsdClient.PROP_REQUESTTIME,
+                                            StatsdClient.PROP_REQUESTTIME_AVG,
                                             Operation.AVG);
 
         mapOfBanckeds.put(metrics.getId(), metricsInstance);
