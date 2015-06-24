@@ -58,7 +58,7 @@ public aspect HostThreadDataConnectionsAspect {
             total += numConn;
         }
 
-        MAP_REDUCE.addMetrics(uri, total);
+        MAP_REDUCE.put(uri, total);
     }
 
 }

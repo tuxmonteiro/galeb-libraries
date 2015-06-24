@@ -16,50 +16,53 @@
 
 package io.galeb.undertow.handlers;
 
-import io.galeb.core.eventbus.IEventBus;
 import io.galeb.core.logging.Logger;
-import io.galeb.core.model.Metrics;
+import io.galeb.core.statsd.StatsdClient;
 import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpServerExchange;
-
-import java.util.NoSuchElementException;
 
 class HeaderMetricsListener implements ExchangeCompletionListener {
 
     private Logger logger;
-    private IEventBus eventBus;
+    private StatsdClient statsdClient;
 
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
-        try {
-            final String real_dest = exchange.getAttachment(BackendSelector.REAL_DEST);
-            if (real_dest != null) {
-                final Metrics metrics = new Metrics();
-                metrics.setParentId(exchange.getHostName());
-                metrics.setId(real_dest);
-                metrics.putProperty(Metrics.PROP_STATUSCODE, exchange.getResponseCode());
-                final long requestTimeNano = System.nanoTime() - exchange.getRequestStartTime();
-                metrics.putProperty(Metrics.PROP_REQUESTTIME, requestTimeNano/1000000L);
-                eventBus.onRequestMetrics(metrics);
-            }
-        } catch (final NoSuchElementException e1) {
-            logger.debug(e1);
-        } catch (final RuntimeException e2) {
-            logger.error(e2);
-        } finally {
-            nextListener.proceed();
+        final String real_dest = exchange.getAttachment(BackendSelector.REAL_DEST);
+        if (real_dest != null) {
+            String virtualhost = exchange.getHostName();
+            String backend = real_dest;
+            String httpStatus = String.valueOf(exchange.getResponseCode());
+            long requestTime = (System.nanoTime() - exchange.getRequestStartTime())/1000000L;
+            sendHttpStatusCount(virtualhost, backend, httpStatus);
+            sendRequestTime(virtualhost, backend, requestTime);
         }
+        nextListener.proceed();
     }
 
-    public HeaderMetricsListener setEventBus(IEventBus eventBus) {
-        this.eventBus = eventBus;
-        eventBus.getQueueManager();
+    public HeaderMetricsListener setStatsd(StatsdClient statsdClient) {
+        this.statsdClient = statsdClient;
         return this;
     }
 
     public HeaderMetricsListener setLogger(Logger logger) {
         this.logger = logger;
         return this;
+    }
+
+    private void sendHttpStatusCount(String virtualhostId, String backendId, String httpStatus) {
+        final String virtualhost = StatsdClient.cleanUpKey(virtualhostId);
+        final String backend = StatsdClient.cleanUpKey(backendId);
+        final String key = virtualhost + "." + backend + "." + StatsdClient.PROP_HTTPCODE_PREFIX+httpStatus;
+        statsdClient.incr(key);
+    }
+
+
+    private void sendRequestTime(String virtualhostId, String backendId, long requestTime) {
+        final String virtualhost = StatsdClient.cleanUpKey(virtualhostId);
+        final String backend = StatsdClient.cleanUpKey(backendId);
+        final String key = virtualhost + "." + backend + "." + StatsdClient.PROP_REQUESTTIME;
+        statsdClient.timing(key, requestTime);
     }
 
 }

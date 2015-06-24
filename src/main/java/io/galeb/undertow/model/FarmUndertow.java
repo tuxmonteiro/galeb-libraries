@@ -18,7 +18,6 @@ package io.galeb.undertow.model;
 
 import static io.galeb.core.util.Constants.TRUE;
 import io.galeb.core.controller.EntityController.Action;
-import io.galeb.core.eventbus.IEventBus;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
 import io.galeb.core.model.BackendPool;
@@ -26,6 +25,7 @@ import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.Rule;
 import io.galeb.core.model.VirtualHost;
+import io.galeb.core.statsd.StatsdClient;
 import io.galeb.core.util.Constants.SysProp;
 import io.galeb.undertow.handlers.AccessLogExtendedHandler;
 import io.galeb.undertow.handlers.BackendProxyClient;
@@ -57,7 +57,7 @@ public class FarmUndertow extends Farm {
     private Logger log;
 
     @Inject
-    private IEventBus eventBus;
+    private StatsdClient statsdClient;
 
     private static final long serialVersionUID = 1L;
 
@@ -78,8 +78,8 @@ public class FarmUndertow extends Farm {
 
     private void setRootHandler() {
         final HttpHandler hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler)
-                                                            .setEventBus(eventBus)
-                                                            .setLogger(log);
+                                                    .setStatsd(statsdClient)
+                                                    .setLogger(log);
 
         final String enableAccessLogProperty = System.getProperty(SysProp.PROP_ENABLE_ACCESSLOG.toString(),
                                                                   SysProp.PROP_ENABLE_ACCESSLOG.def());
