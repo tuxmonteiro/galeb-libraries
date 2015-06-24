@@ -16,14 +16,14 @@
 
 package io.galeb.statsd;
 
+import io.galeb.core.statsd.StatsdClient;
+import io.galeb.core.statsd.annotation.StatsdClientSingletoneProducer;
+
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Produces;
 
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
-
-import io.galeb.core.statsd.StatsdClient;
-import io.galeb.core.statsd.annotation.StatsdClientSingletoneProducer;
 
 @Default
 public class DefaultStatsdClient implements StatsdClient {
@@ -32,9 +32,9 @@ public class DefaultStatsdClient implements StatsdClient {
 
     private StatsDClient client = null;
 
-    private String server = "127.0.0.1";
-    private int port = 8125;
-    private String prefix = "";
+    private String server = StatsdClient.getHost();
+    private int port = Integer.valueOf(StatsdClient.getPort());
+    private String prefix = StatsdClient.getPrefix();
 
     private DefaultStatsdClient() {
         // SINGLETON
@@ -45,14 +45,14 @@ public class DefaultStatsdClient implements StatsdClient {
         return INSTANCE;
     }
 
-    private void prepare() {
+    private synchronized void prepare() {
         if (client==null) {
             client = new NonBlockingStatsDClient(prefix, server, port);
         }
     }
 
     @Override
-    public StatsdClient server(String server) {
+    public StatsdClient host(String server) {
         this.server = server;
         return this;
     }
