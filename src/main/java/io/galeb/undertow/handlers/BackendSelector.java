@@ -111,8 +111,4 @@ public class BackendSelector implements HostSelector {
         return this;
     }
 
-    public boolean hasHost(String uri) {
-        return uris.contains(uri);
-    }
-
 }

@@ -28,6 +28,8 @@ import io.undertow.util.Headers;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
 
 import org.xnio.OptionMap;
@@ -37,6 +39,7 @@ public class BackendProxyClient implements ProxyClient {
 
     private final LoadBalancingProxyClient loadBalanceProxyClient;
     private final BackendSelector hostSelectorHandler = new BackendSelector();
+    private final Set<URI> hosts = new CopyOnWriteArraySet<>();
 
     public BackendProxyClient() {
         final ExclusivityChecker exclusivityChecker = new ExclusivityChecker() {
@@ -124,18 +127,18 @@ public class BackendProxyClient implements ProxyClient {
     }
 
     public synchronized BackendProxyClient addHost(final URI host) {
-        String uri = host.toString();
-        if (!hostSelectorHandler.hasHost(uri)) {
+        if (!hosts.contains(host)) {
             loadBalanceProxyClient.addHost(host);
+            hosts.add(host);
             hostSelectorHandler.reset();
         }
         return this;
     }
 
     public synchronized BackendProxyClient addHost(final URI host, XnioSsl ssl) {
-        String uri = host.toString();
-        if (!hostSelectorHandler.hasHost(uri)) {
+        if (!hosts.contains(host)) {
             loadBalanceProxyClient.addHost(host, ssl);
+            hosts.add(host);
             hostSelectorHandler.reset();
         }
         return this;
@@ -143,9 +146,9 @@ public class BackendProxyClient implements ProxyClient {
 
     public synchronized BackendProxyClient addHost(final URI host,
             String jvmRoute) {
-        String uri = host.toString();
-        if (!hostSelectorHandler.hasHost(uri)) {
+        if (!hosts.contains(host)) {
             loadBalanceProxyClient.addHost(host, jvmRoute);
+            hosts.add(host);
             hostSelectorHandler.reset();
         }
         return this;
@@ -153,9 +156,9 @@ public class BackendProxyClient implements ProxyClient {
 
     public synchronized BackendProxyClient addHost(final URI host,
             String jvmRoute, XnioSsl ssl) {
-        String uri = host.toString();
-        if (!hostSelectorHandler.hasHost(uri)) {
+        if (!hosts.contains(host)) {
             loadBalanceProxyClient.addHost(host, jvmRoute, ssl);
+            hosts.add(host);
             hostSelectorHandler.reset();
         }
         return this;
@@ -163,9 +166,9 @@ public class BackendProxyClient implements ProxyClient {
 
     public synchronized BackendProxyClient addHost(final URI host,
             String jvmRoute, XnioSsl ssl, OptionMap options) {
-        String uri = host.toString();
-        if (!hostSelectorHandler.hasHost(uri)) {
+        if (!hosts.contains(host)) {
             loadBalanceProxyClient.addHost(host, jvmRoute, ssl, options);
+            hosts.add(host);
             hostSelectorHandler.reset();
         }
         return this;
@@ -174,19 +177,19 @@ public class BackendProxyClient implements ProxyClient {
     public synchronized BackendProxyClient addHost(
             final InetSocketAddress bindAddress, final URI host,
             String jvmRoute, XnioSsl ssl, OptionMap options) {
-        String uri = host.toString();
-        if (!hostSelectorHandler.hasHost(uri)) {
+        if (!hosts.contains(host)) {
             loadBalanceProxyClient.addHost(bindAddress, host, jvmRoute, ssl,
                     options);
+            hosts.add(host);
             hostSelectorHandler.reset();
         }
         return this;
     }
 
     public synchronized BackendProxyClient removeHost(final URI host) {
-        String uri = host.toString();
-        if (hostSelectorHandler.hasHost(uri)) {
+        if (hosts.contains(host)) {
             loadBalanceProxyClient.removeHost(host);
+            hosts.remove(host);
             hostSelectorHandler.reset();
         }
         return this;
