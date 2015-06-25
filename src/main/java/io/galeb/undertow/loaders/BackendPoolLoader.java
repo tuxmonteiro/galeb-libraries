@@ -25,6 +25,7 @@ import io.galeb.core.util.Constants.SysProp;
 import io.galeb.undertow.handlers.BackendProxyClient;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -51,7 +52,7 @@ public class BackendPoolLoader implements Loader {
 
     @Override
     public Loader setLogger(final Logger logger) {
-        this.optionalLogger = Optional.ofNullable(logger);
+        optionalLogger = Optional.ofNullable(logger);
         return this;
     }
 
@@ -73,7 +74,7 @@ public class BackendPoolLoader implements Loader {
                 if (!backendPools.containsKey(backendPoolId)) {
                     final Map<String, Object> properties = new HashMap<>(entity.getProperties());
                     properties.put(BackendPool.class.getSimpleName(), entity.getId());
-                    properties.put(Farm.class.getSimpleName(), this.farm);
+                    properties.put(Farm.class.getSimpleName(), farm);
                     backendProxyClient = new BackendProxyClient().setConnectionsPerThread(maxConnPerThread())
                                                                  .addSessionCookieName("JSESSIONID")
                                                                  .setParams(properties);
@@ -93,7 +94,7 @@ public class BackendPoolLoader implements Loader {
                     backendProxyClient = backendPools.get(entity.getId());
                     final Map<String, Object> params = new HashMap<>(entity.getProperties());
                     params.put(BackendPool.class.getSimpleName(), entity.getId());
-                    params.put(Farm.class.getSimpleName(), this.farm);
+                    params.put(Farm.class.getSimpleName(), farm);
                     backendProxyClient.setParams(params);
                     backendProxyClient.reset();
                     isOk = true;
@@ -106,6 +107,11 @@ public class BackendPoolLoader implements Loader {
         if (isOk) {
             optionalLogger.ifPresent(logger -> logger.debug("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
         }
+    }
+
+    @Override
+    public void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
+        from(entity, Action.CHANGE);
     }
 
     private int maxConnPerThread() {

@@ -16,8 +16,6 @@
 
 package io.galeb.undertow.loaders;
 
-import java.util.Optional;
-
 import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Entity;
@@ -26,6 +24,9 @@ import io.galeb.core.model.VirtualHost;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
+
+import java.util.List;
+import java.util.Optional;
 
 public class VirtualHostLoader implements Loader {
 
@@ -45,7 +46,7 @@ public class VirtualHostLoader implements Loader {
 
     @Override
     public Loader setLogger(Logger logger) {
-        this.optionalLogger = Optional.ofNullable(logger);
+        optionalLogger = Optional.ofNullable(logger);
         return this;
     }
 
@@ -85,6 +86,11 @@ public class VirtualHostLoader implements Loader {
         if (isOk) {
             optionalLogger.ifPresent(logger -> logger.debug("Action "+action.toString()+" applied: "+virtualhostId+" ("+entity.getEntityType()+")"));
         }
+    }
+
+    @Override
+    public void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
+        from(entity, Action.CHANGE);
     }
 
 }

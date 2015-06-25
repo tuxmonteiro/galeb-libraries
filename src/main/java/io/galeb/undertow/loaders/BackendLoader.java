@@ -29,6 +29,7 @@ import io.galeb.undertow.handlers.BackendProxyClient;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -49,7 +50,7 @@ public class BackendLoader implements Loader {
 
     @Override
     public Loader setLogger(final Logger logger) {
-        this.optionalLogger = Optional.ofNullable(logger);
+        optionalLogger = Optional.ofNullable(logger);
         return this;
     }
 
@@ -99,6 +100,18 @@ public class BackendLoader implements Loader {
             }
             if (isOk) {
                 optionalLogger.ifPresent(logger -> logger.debug("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
+            }
+        }
+    }
+
+    @Override
+    public void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
+        if (!oldEntities.isEmpty()) {
+            Backend oldBackend = (Backend) oldEntities.stream().findAny().get();
+            Backend newBackend = (Backend) entity;
+            if (!newBackend.getHealth().equals(oldBackend.getHealth()) ||
+                 newBackend.getConnections() != oldBackend.getConnections()) {
+                from(entity, Action.CHANGE);
             }
         }
     }

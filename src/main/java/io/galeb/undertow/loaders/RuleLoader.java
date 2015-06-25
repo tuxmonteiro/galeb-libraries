@@ -34,6 +34,7 @@ import io.undertow.server.handlers.proxy.ProxyHandler;
 import io.undertow.util.StatusCodes;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -128,6 +129,11 @@ public class RuleLoader implements Loader {
                 optionalLogger.ifPresent(logger -> logger.debug("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
             }
         }
+    }
+
+    @Override
+    public void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
+        from(entity, Action.CHANGE);
     }
 
     private boolean hasParent(Entity entity) {

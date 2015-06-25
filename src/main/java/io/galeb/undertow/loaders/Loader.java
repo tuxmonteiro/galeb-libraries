@@ -20,10 +20,14 @@ import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Entity;
 
+import java.util.List;
+
 public interface Loader {
 
-    public abstract Loader setLogger(Logger logger);
+    public Loader setLogger(Logger logger);
 
-    public abstract void from(Entity entity, Action action);
+    public void from(Entity entity, Action action);
+
+    public void changeIfNecessary(List<Entity> oldEntities, Entity entity);
 
 }

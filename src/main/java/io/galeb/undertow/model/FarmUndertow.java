@@ -41,6 +41,7 @@ import io.undertow.server.handlers.accesslog.AccessLogReceiver;
 import io.undertow.util.CopyOnWriteMap;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -147,8 +148,9 @@ public class FarmUndertow extends Farm {
 
     @Override
     public void change(Entity entity) {
+        List<Entity> oldEntities = getCollection(entity.getClass()).getListByID(entity.getId());
         super.change(entity);
-        mapOfLoaders.get(entity.getClass()).from(entity, Action.CHANGE);
+        mapOfLoaders.get(entity.getClass()).changeIfNecessary(oldEntities, entity);
     }
 
     @Override
