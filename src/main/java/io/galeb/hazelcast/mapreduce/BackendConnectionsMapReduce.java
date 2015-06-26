@@ -22,7 +22,6 @@ import io.galeb.hazelcast.HzInstance;
 import io.galeb.hazelcast.NodeLifecycleListener;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -97,7 +96,7 @@ public class BackendConnectionsMapReduce implements MapReduce {
                 e.printStackTrace();
             }
         }
-        return new HashMap<>(mapBackendConn);
+        return Collections.emptyMap();
     }
 
 }
