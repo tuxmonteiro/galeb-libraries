@@ -77,7 +77,7 @@ public class BackendConnectionsMapReduce implements MapReduce {
         if (!NodeLifecycleListener.isReady()) {
             return Collections.emptyMap();
         }
-        final JobTracker jobTracker = HZ.getJobTracker("jobTracker1"+this);
+        final JobTracker jobTracker = HZ.getJobTracker(this.getClass().getName());
         final KeyValueSource<String, Integer> source = KeyValueSource.fromMap(mapBackendConn);
 
         final Job<String, Integer> job = jobTracker.newJob(source);
