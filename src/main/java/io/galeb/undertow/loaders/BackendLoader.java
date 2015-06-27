@@ -109,8 +109,7 @@ public class BackendLoader implements Loader {
         if (!oldEntities.isEmpty()) {
             Backend oldBackend = (Backend) oldEntities.stream().findAny().get();
             Backend newBackend = (Backend) entity;
-            if (!newBackend.getHealth().equals(oldBackend.getHealth()) ||
-                 newBackend.getConnections() != oldBackend.getConnections()) {
+            if (!newBackend.getHealth().equals(oldBackend.getHealth())) {
                 from(entity, Action.CHANGE);
             }
         }
