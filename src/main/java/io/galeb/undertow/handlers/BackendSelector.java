@@ -27,11 +27,10 @@ import io.undertow.server.handlers.proxy.LoadBalancingProxyClient.HostSelector;
 import io.undertow.util.AttachmentKey;
 import io.undertow.util.CopyOnWriteMap;
 
-import java.net.URI;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -46,7 +45,6 @@ public class BackendSelector implements HostSelector {
     private final Map<String, Object> params = new CopyOnWriteMap<>();
     private volatile LoadBalancePolicy loadBalancePolicy = LoadBalancePolicy.NULL;
     private final LoadBalancePolicyLocator loadBalancePolicyLocator = new LoadBalancePolicyLocator();
-    private final List<URI> uris = Collections.synchronizedList(new LinkedList<>());
 
     @Inject
     private Logger logger;
@@ -56,21 +54,22 @@ public class BackendSelector implements HostSelector {
         if (loadBalancePolicy == LoadBalancePolicy.NULL) {
             loadBalancePolicy = loadBalancePolicyLocator.setParams(params).get();
             loadBalancePolicy.reset();
-            uris.clear();
-            for (int x=0;x<availableHosts.length;x++) {
-                final Host host = availableHosts[x];
-                if (host!=null) {
-                    uris.add(host.getUri());
-                }
-            }
+        }
+        int hostID = loadBalancePolicy.setCriteria(params)
+                                      .setCriteria(new UndertowSourceIP(), exchange)
+                                      .mapOfHosts(Arrays.stream(availableHosts)
+                                              .map(host -> host.getUri().toString())
+                                              .collect(Collectors.toCollection(LinkedList::new)))
+                                      .getChoice();
+        if (hostID < 0) {
+            hostID = 0;
         }
 
-        final int hostID = loadBalancePolicy.setCriteria(params)
-                                            .setCriteria(new UndertowSourceIP(), exchange)
-                                            .mapOfHosts(uris).getChoice();
-
         try {
-            trace(availableHosts[hostID]);
+            final Host host = availableHosts[hostID];
+            if (host!=null) {
+                trace(host.getUri().toString());
+            }
         } catch (final IndexOutOfBoundsException e) {
             logger.error(e);
             return 0;
@@ -79,9 +78,10 @@ public class BackendSelector implements HostSelector {
         return hostID;
     }
 
-    private void trace(final Host host) {
-        String uri = host != null ? host.getUri().toString() : HOST_UNDEF;
-        exchange.putAttachment(REAL_DEST, uri);
+    private void trace(final String uri) {
+        if (uri!=null) {
+            exchange.putAttachment(REAL_DEST, uri);
+        }
     }
 
     public HostSelector setParams(final Map<String, Object> myParams) {
