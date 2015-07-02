@@ -56,7 +56,7 @@ public class BackendSelector implements HostSelector {
             loadBalancePolicy.reset();
         }
         int hostID = loadBalancePolicy.setCriteria(params)
-                                      .setCriteria(new UndertowSourceIP(), exchange)
+                                      .setSourceIP(new UndertowSourceIP(exchange))
                                       .mapOfHosts(Arrays.stream(availableHosts)
                                               .map(host -> host.getUri().toString())
                                               .collect(Collectors.toCollection(LinkedList::new)))

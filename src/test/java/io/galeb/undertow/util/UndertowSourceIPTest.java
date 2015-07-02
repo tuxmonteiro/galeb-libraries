@@ -16,13 +16,13 @@
 
 package io.galeb.undertow.util;
 
+import static io.galeb.core.util.SourceIP.DEFAULT_SOURCE_IP;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import java.net.InetSocketAddress;
-
 import io.galeb.core.util.SourceIP;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HttpString;
+
+import java.net.InetSocketAddress;
 
 import org.junit.After;
 import org.junit.Before;
@@ -39,8 +39,9 @@ public class UndertowSourceIPTest {
 
     @Before
     public void setUp() {
-        undertowSourceIP = new UndertowSourceIP();
         fakeExchange = new HttpServerExchange(null);
+        fakeExchange.setSourceAddress(new InetSocketAddress(DEFAULT_SOURCE_IP, 0));
+        undertowSourceIP = new UndertowSourceIP(fakeExchange);
     }
 
     @After
@@ -61,16 +62,16 @@ public class UndertowSourceIPTest {
         fakeExchange.getRequestHeaders()
             .addFirst(new HttpString(SourceIP.HTTP_HEADER_XREAL_IP), FAKE_IP);
 
-        assertThat(undertowSourceIP.pullFrom(fakeExchange).getRealSourceIP())
+        assertThat(undertowSourceIP.getRealSourceIP())
             .containsIgnoringCase(FAKE_IP);
     }
 
     @Test
     public void withHeaderXForwardedForTest() {
         fakeExchange.getRequestHeaders()
-        .addFirst(new HttpString(SourceIP.HTTP_HEADER_X_FORWARDED_FOR), FAKE_IP);
+            .addFirst(new HttpString(SourceIP.HTTP_HEADER_X_FORWARDED_FOR), FAKE_IP);
 
-        assertThat(undertowSourceIP.pullFrom(fakeExchange).getRealSourceIP())
+        assertThat(undertowSourceIP.getRealSourceIP())
             .containsIgnoringCase(FAKE_IP);
     }
 
@@ -78,17 +79,8 @@ public class UndertowSourceIPTest {
     public void sourceAddressTest() {
         fakeExchange.setSourceAddress(new InetSocketAddress(FAKE_IP, 0));
 
-        assertThat(undertowSourceIP.pullFrom(fakeExchange).getRealSourceIP())
+        assertThat(undertowSourceIP.getRealSourceIP())
             .containsIgnoringCase(FAKE_IP);
     }
-
-    @Test
-    public void defaultSourceIPIfExtractableIsNullTest() {
-        fakeExchange = null;
-
-        assertThat(undertowSourceIP.pullFrom(fakeExchange).getRealSourceIP())
-            .containsIgnoringCase(SourceIP.DEFAULT_SOURCE_IP);
-    }
-
 
 }

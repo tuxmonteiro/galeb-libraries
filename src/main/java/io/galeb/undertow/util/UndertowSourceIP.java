@@ -22,7 +22,11 @@ import io.undertow.server.HttpServerExchange;
 
 public class UndertowSourceIP implements SourceIP {
 
-    private HttpServerExchange exchange;
+    private final HttpServerExchange exchange;
+
+    public UndertowSourceIP(HttpServerExchange exchange) {
+        this.exchange = exchange;
+    }
 
     @Override
     public String getRealSourceIP() {
@@ -54,14 +58,6 @@ public class UndertowSourceIP implements SourceIP {
         }
 
         return DEFAULT_SOURCE_IP;
-    }
-
-    @Override
-    public SourceIP pullFrom(final Object extractable) {
-        if (extractable instanceof HttpServerExchange) {
-            exchange = (HttpServerExchange) extractable;
-        }
-        return this;
     }
 
 }
