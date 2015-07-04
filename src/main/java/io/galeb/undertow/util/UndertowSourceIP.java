@@ -22,17 +22,15 @@ import io.undertow.server.HttpServerExchange;
 
 public class UndertowSourceIP implements SourceIP {
 
-    private final HttpServerExchange exchange;
+    private final String sourceIP;
 
-    public UndertowSourceIP(HttpServerExchange exchange) {
-        this.exchange = exchange;
+    public UndertowSourceIP(final HttpServerExchange exchange) {
+        sourceIP = extractSourceIP(exchange);
     }
 
-    @Override
-    public String getRealSourceIP() {
-        // Morpheus: What is real? How do you define 'real'?
+    private String extractSourceIP(final HttpServerExchange exchange) {
 
-        String sourceIP = null;
+        String aSourceIP = null;
 
         if (exchange == null) {
             return DEFAULT_SOURCE_IP;
@@ -41,23 +39,29 @@ public class UndertowSourceIP implements SourceIP {
         if (IGNORE_XFORWARDED_FOR.isPresent() &&
                 (!IGNORE_XFORWARDED_FOR.get().equalsIgnoreCase(Constants.FALSE) ||
                  !IGNORE_XFORWARDED_FOR.get().equals("0"))) {
-            sourceIP = exchange.getSourceAddress().getHostString();
+            aSourceIP = exchange.getSourceAddress().getHostString();
         } else {
-            sourceIP = exchange.getRequestHeaders().getFirst(HTTP_HEADER_XREAL_IP);
-            if (sourceIP!=null) {
-                return sourceIP;
+            aSourceIP = exchange.getRequestHeaders().getFirst(HTTP_HEADER_XREAL_IP);
+            if (aSourceIP!=null) {
+                return aSourceIP;
             }
-            sourceIP = exchange.getRequestHeaders().getFirst(HTTP_HEADER_X_FORWARDED_FOR);
-            if (sourceIP!=null) {
-                return sourceIP.split(",")[0];
+            aSourceIP = exchange.getRequestHeaders().getFirst(HTTP_HEADER_X_FORWARDED_FOR);
+            if (aSourceIP!=null) {
+                return aSourceIP.split(",")[0];
             }
-            sourceIP = exchange.getSourceAddress().getHostString();
+            aSourceIP = exchange.getSourceAddress().getHostString();
         }
-        if (sourceIP!=null) {
-            return sourceIP;
+        if (aSourceIP!=null) {
+            return aSourceIP;
         }
 
         return DEFAULT_SOURCE_IP;
+    }
+
+    @Override
+    public String getRealSourceIP() {
+        // Morpheus: What is real? How do you define 'real'?
+        return sourceIP;
     }
 
 }
