@@ -41,7 +41,6 @@ public class UndertowSourceIPTest {
     public void setUp() {
         fakeExchange = new HttpServerExchange(null);
         fakeExchange.setSourceAddress(new InetSocketAddress(DEFAULT_SOURCE_IP, 0));
-        undertowSourceIP = new UndertowSourceIP(fakeExchange);
     }
 
     @After
@@ -52,15 +51,16 @@ public class UndertowSourceIPTest {
 
     @Test
     public void defaultSourceIPTest() {
+        undertowSourceIP = new UndertowSourceIP(fakeExchange);
         assertThat(undertowSourceIP.getRealSourceIP())
             .containsIgnoringCase(SourceIP.DEFAULT_SOURCE_IP);
     }
 
     @Test
     public void withHeaderXRealIPTest() {
-
         fakeExchange.getRequestHeaders()
             .addFirst(new HttpString(SourceIP.HTTP_HEADER_XREAL_IP), FAKE_IP);
+        undertowSourceIP = new UndertowSourceIP(fakeExchange);
 
         assertThat(undertowSourceIP.getRealSourceIP())
             .containsIgnoringCase(FAKE_IP);
@@ -70,6 +70,7 @@ public class UndertowSourceIPTest {
     public void withHeaderXForwardedForTest() {
         fakeExchange.getRequestHeaders()
             .addFirst(new HttpString(SourceIP.HTTP_HEADER_X_FORWARDED_FOR), FAKE_IP);
+        undertowSourceIP = new UndertowSourceIP(fakeExchange);
 
         assertThat(undertowSourceIP.getRealSourceIP())
             .containsIgnoringCase(FAKE_IP);
@@ -78,6 +79,7 @@ public class UndertowSourceIPTest {
     @Test
     public void sourceAddressTest() {
         fakeExchange.setSourceAddress(new InetSocketAddress(FAKE_IP, 0));
+        undertowSourceIP = new UndertowSourceIP(fakeExchange);
 
         assertThat(undertowSourceIP.getRealSourceIP())
             .containsIgnoringCase(FAKE_IP);
