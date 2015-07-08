@@ -3,9 +3,7 @@ package io.galeb.hazelcast;
 import io.galeb.core.cluster.DistributedMap;
 import io.galeb.core.cluster.DistributedMapListener;
 import io.galeb.core.cluster.DistributedMapStats;
-import io.galeb.core.mapreduce.MapReduce;
 import io.galeb.core.model.Entity;
-import io.galeb.hazelcast.mapreduce.BackendConnectionsMapReduce;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -43,11 +41,6 @@ public class HzDistributedMap implements DistributedMap<String, Entity> {
     @Override
     public void unregisterListener(DistributedMapListener distributedMapListener) {
         distributedMapListeners.remove(distributedMapListener);
-    }
-
-    @Override
-    public MapReduce getMapReduce() {
-        return new BackendConnectionsMapReduce();
     }
 
     @Override
