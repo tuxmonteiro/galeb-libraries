@@ -32,16 +32,11 @@ public aspect HostThreadDataConnectionsAspect {
         if (thisJoinPoint.getThis() instanceof ProxyConnectionPool) {
             synchronized (this) {
                 final String threadId = thisJoinPoint.getTarget().toString();
-                final ProxyConnectionPool proxyConnectionPool = ((ProxyConnectionPool)thisJoinPoint.getThis());
+                final String uri = ((ProxyConnectionPool)thisJoinPoint.getThis()).getUri().toString();
                 final int numConnectionsPerThread = ((Integer)thisJoinPoint.getArgs()[0]);
-                notify(threadId, proxyConnectionPool, numConnectionsPerThread);
+                connectionMapManager.putOnCounterMap(uri, threadId, numConnectionsPerThread);
             }
         }
-    }
-
-    public void notify(final String threadId, final ProxyConnectionPool proxyConnectionPool, int numConnectionsPerThread) {
-        final String uri = proxyConnectionPool.getUri().toString();
-        connectionMapManager.putOnCounterMap(uri, threadId, numConnectionsPerThread);
     }
 
 }
