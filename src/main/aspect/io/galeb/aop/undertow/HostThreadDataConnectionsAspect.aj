@@ -16,10 +16,7 @@
 
 package io.galeb.aop.undertow;
 
-import io.galeb.core.cdi.WeldContext;
-import io.galeb.core.mapreduce.MapReduce;
-import io.galeb.hazelcast.mapreduce.BackendConnectionsMapReduce;
-import io.galeb.undertow.util.map.CopyOnWriteMapExpirable;
+import io.galeb.core.util.map.ConnectionMapManager;
 import io.undertow.server.handlers.proxy.ProxyConnectionPool;
 
 import java.util.Map;
@@ -27,13 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 public aspect HostThreadDataConnectionsAspect {
 
-    private static final MapReduce MAP_REDUCE = WeldContext.INSTANCE.getBean(BackendConnectionsMapReduce.class);
-
-    private static final long TTL_THREAD_ID = 1L; // hour
-    private static final long TTL_URI       = 1L; // hour
-
-    private final Map<String, Integer> counter = new CopyOnWriteMapExpirable<>(TTL_THREAD_ID, TimeUnit.HOURS);
-    private final Map<String, Map<String, Integer>> uris = new CopyOnWriteMapExpirable<>(TTL_URI, TimeUnit.HOURS);
+    private final ConnectionMapManager connectionMapManager = ConnectionMapManager.INSTANCE;
 
     pointcut myPointcut() : set(* io.undertow.server.handlers.proxy.ProxyConnectionPool.HostThreadData.connections);
 
@@ -41,24 +32,11 @@ public aspect HostThreadDataConnectionsAspect {
         if (thisJoinPoint.getThis() instanceof ProxyConnectionPool) {
             synchronized (this) {
                 final String threadId = thisJoinPoint.getTarget().toString();
-                final ProxyConnectionPool proxyConnectionPool = ((ProxyConnectionPool)thisJoinPoint.getThis());
+                final String uri = ((ProxyConnectionPool)thisJoinPoint.getThis()).getUri().toString();
                 final int numConnectionsPerThread = ((Integer)thisJoinPoint.getArgs()[0]);
-                notify(threadId, proxyConnectionPool, numConnectionsPerThread);
+                connectionMapManager.putOnCounterMap(uri, threadId, numConnectionsPerThread);
             }
         }
-    }
-
-    public void notify(final String threadId, final ProxyConnectionPool proxyConnectionPool, int numConnectionsPerThread) {
-        final String uri = proxyConnectionPool.getUri().toString();
-        int total = 0;
-
-        counter.put(threadId, numConnectionsPerThread);
-        uris.put(uri, counter);
-        for (final int numConn: uris.get(uri).values()) {
-            total += numConn;
-        }
-
-        MAP_REDUCE.put(uri, total);
     }
 
 }

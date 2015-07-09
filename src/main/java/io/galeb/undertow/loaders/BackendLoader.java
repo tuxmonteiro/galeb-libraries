@@ -90,7 +90,6 @@ public class BackendLoader implements Loader {
                     break;
 
                 case CHANGE:
-                    from(entity, Action.DEL);
                     from(entity, Action.ADD);
                     isOk = true;
                     break;
@@ -106,13 +105,7 @@ public class BackendLoader implements Loader {
 
     @Override
     public void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
-        if (!oldEntities.isEmpty()) {
-            Backend oldBackend = (Backend) oldEntities.stream().findAny().get();
-            Backend newBackend = (Backend) entity;
-            if (!newBackend.getHealth().equals(oldBackend.getHealth())) {
-                from(entity, Action.CHANGE);
-            }
-        }
+        from(entity, Action.CHANGE);
     }
 
     private boolean hasParent(Entity entity) {
