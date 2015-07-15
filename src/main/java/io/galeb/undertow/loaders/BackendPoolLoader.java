@@ -31,6 +31,30 @@ import java.util.Optional;
 
 public class BackendPoolLoader implements Loader {
 
+    public enum PoolProp {
+        PROP_POOL_TTL                   ("io.galeb.pool.ttl"                        , String.valueOf(-1)),
+        PROP_POOL_PROBLEM_BACKEND_RETRY ("io.galeb.pool.problemBackendRetry"        , String.valueOf(0)),
+        PROP_POOL_SOFT_MAX_CONN         ("io.galeb.pool.softMaxConnectionsPerThread", String.valueOf(5)),
+        PROP_POOL_MAX_QUEUE_SIZE        ("io.galeb.pool.maxQueueSize"               , String.valueOf(0));
+
+        private final String name;
+        private final String defaultStr;
+
+        PoolProp(String name, String defaultStr) {
+            this.name = name;
+            this.defaultStr = defaultStr;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+
+        public String def() {
+            return defaultStr;
+        }
+    }
+
     private Optional<Logger> optionalLogger = Optional.empty();
     private Map<String, BackendProxyClient> backendPools = new HashMap<>();
     private Loader backendLoader;
@@ -76,6 +100,10 @@ public class BackendPoolLoader implements Loader {
                     properties.put(BackendPool.class.getSimpleName(), entity.getId());
                     properties.put(Farm.class.getSimpleName(), farm);
                     backendProxyClient = new BackendProxyClient().setConnectionsPerThread(maxConnPerThread())
+                                                                 .setMaxQueueSize(maxQueueSize())
+                                                                 .setSoftMaxConnectionsPerThread(softMaxConnectionsPerThread())
+                                                                 .setProblemServerRetry(problemBackendRetry())
+                                                                 .setTtl(poolTTL())
                                                                  .addSessionCookieName("JSESSIONID")
                                                                  .setParams(properties);
                     backendPools.put(backendPoolId, backendProxyClient);
@@ -125,6 +153,30 @@ public class BackendPoolLoader implements Loader {
         }
         //TODO: get number of IOThreads, instead of the availableProcessors
         return (int)Math.ceil((1.0*maxConn)/Runtime.getRuntime().availableProcessors());
+    }
+
+    private int maxQueueSize() {
+        String maxQueueSizeStr = System.getProperty(PoolProp.PROP_POOL_MAX_QUEUE_SIZE.toString(),
+                                    PoolProp.PROP_POOL_MAX_QUEUE_SIZE.def());
+        return Integer.parseInt(maxQueueSizeStr);
+    }
+
+    private int poolTTL() {
+        String ttlStr = System.getProperty(PoolProp.PROP_POOL_TTL.toString(),
+                PoolProp.PROP_POOL_TTL.def());
+        return Integer.parseInt(ttlStr);
+    }
+
+    private int problemBackendRetry() {
+        String problemServerRetryStr = System.getProperty(PoolProp.PROP_POOL_PROBLEM_BACKEND_RETRY.toString(),
+                PoolProp.PROP_POOL_PROBLEM_BACKEND_RETRY.def());
+        return Integer.parseInt(problemServerRetryStr);
+    }
+
+    private int softMaxConnectionsPerThread() {
+        String softMaxConnectionsPerThreadStr = System.getProperty(PoolProp.PROP_POOL_SOFT_MAX_CONN.toString(),
+                PoolProp.PROP_POOL_SOFT_MAX_CONN.def());
+        return Integer.parseInt(softMaxConnectionsPerThreadStr);
     }
 
 }
