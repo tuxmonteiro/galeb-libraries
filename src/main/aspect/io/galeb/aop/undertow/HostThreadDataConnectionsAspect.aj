@@ -19,9 +19,6 @@ package io.galeb.aop.undertow;
 import io.galeb.core.util.map.ConnectionMapManager;
 import io.undertow.server.handlers.proxy.ProxyConnectionPool;
 
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
 public aspect HostThreadDataConnectionsAspect {
 
     private final ConnectionMapManager connectionMapManager = ConnectionMapManager.INSTANCE;
