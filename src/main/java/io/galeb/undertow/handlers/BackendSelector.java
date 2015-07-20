@@ -16,23 +16,23 @@
 
 package io.galeb.undertow.handlers;
 
-import io.galeb.core.loadbalance.LoadBalancePolicy;
-import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
-import io.galeb.core.logging.Logger;
-import io.galeb.undertow.nullable.FakeHttpServerExchange;
-import io.galeb.undertow.util.UndertowSourceIP;
-import io.undertow.server.HttpServerExchange;
-import io.undertow.server.handlers.proxy.LoadBalancingProxyClient.Host;
-import io.undertow.server.handlers.proxy.LoadBalancingProxyClient.HostSelector;
-import io.undertow.util.AttachmentKey;
-import io.undertow.util.CopyOnWriteMap;
-
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+
+import io.galeb.core.loadbalance.LoadBalancePolicy;
+import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
+import io.galeb.core.logging.Logger;
+import io.galeb.undertow.loadbalance.hash.UndertowKeyTypeLocator;
+import io.galeb.undertow.nullable.FakeHttpServerExchange;
+import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.proxy.LoadBalancingProxyClient.Host;
+import io.undertow.server.handlers.proxy.LoadBalancingProxyClient.HostSelector;
+import io.undertow.util.AttachmentKey;
+import io.undertow.util.CopyOnWriteMap;
 
 public class BackendSelector implements HostSelector {
 
@@ -53,10 +53,10 @@ public class BackendSelector implements HostSelector {
     public int selectHost(final Host[] availableHosts) {
         if (loadBalancePolicy == LoadBalancePolicy.NULL) {
             loadBalancePolicy = loadBalancePolicyLocator.setParams(params).get();
-            loadBalancePolicy.reset();
+            loadBalancePolicy.setKeyTypeLocator(UndertowKeyTypeLocator.INSTANCE).reset();
         }
         int hostID = loadBalancePolicy.setCriteria(params)
-                                      .setSourceIP(new UndertowSourceIP(exchange))
+                                      .extractKeyFrom(exchange)
                                       .mapOfHosts(Arrays.stream(availableHosts)
                                               .map(host -> host.getUri().toString())
                                               .collect(Collectors.toCollection(LinkedList::new)))

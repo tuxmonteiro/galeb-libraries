@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-package io.galeb.undertow.util;
+package io.galeb.undertow.extractable;
 
+import io.galeb.core.extractable.SourceIP;
 import io.galeb.core.util.Constants;
-import io.galeb.core.util.SourceIP;
 import io.undertow.server.HttpServerExchange;
 
 public class UndertowSourceIP implements SourceIP {
-
-    private final String sourceIP;
-
-    public UndertowSourceIP(final HttpServerExchange exchange) {
-        sourceIP = extractSourceIP(exchange);
-    }
 
     private String extractSourceIP(final HttpServerExchange exchange) {
 
@@ -59,9 +53,11 @@ public class UndertowSourceIP implements SourceIP {
     }
 
     @Override
-    public String getRealSourceIP() {
-        // Morpheus: What is real? How do you define 'real'?
-        return sourceIP;
+    public String get(Object extractable) {
+        if (extractable instanceof HttpServerExchange) {
+            return extractSourceIP((HttpServerExchange) extractable);
+        }
+        return DEFAULT_SOURCE_IP;
     }
 
 }
