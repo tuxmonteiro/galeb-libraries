@@ -6,14 +6,16 @@ import java.util.Map;
 
 import io.galeb.core.loadbalance.hash.ExtractableKey;
 import io.galeb.core.loadbalance.hash.KeyTypeLocator;
+import io.galeb.undertow.extractable.UndertowCookie;
 import io.galeb.undertow.extractable.UndertowSourceIP;
+import io.galeb.undertow.extractable.UndertowURI;
 
 public class UndertowKeyTypeLocator implements KeyTypeLocator {
 
     private static enum UndertowKeyType {
         SOURCE_IP(KeyType.SOURCE_IP.toString(), new UndertowSourceIP()),
-        COOKIE(KeyType.COOKIE.toString(), null),
-        URI(KeyType.URI.toString(), null);
+        COOKIE(KeyType.COOKIE.toString(),       new UndertowCookie()),
+        URI(KeyType.URI.toString(),             new UndertowURI());
 
         final String simpleName;
         final ExtractableKey extractableKey;
