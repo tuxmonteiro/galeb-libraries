@@ -16,6 +16,14 @@
 
 package io.galeb.undertow.handlers;
 
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.xnio.OptionMap;
+import org.xnio.ssl.XnioSsl;
+
 import io.undertow.client.UndertowClient;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.proxy.ExclusivityChecker;
@@ -25,21 +33,10 @@ import io.undertow.server.handlers.proxy.ProxyClient;
 import io.undertow.server.handlers.proxy.ProxyConnection;
 import io.undertow.util.Headers;
 
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.TimeUnit;
-
-import org.xnio.OptionMap;
-import org.xnio.ssl.XnioSsl;
-
 public class BackendProxyClient implements ProxyClient {
 
     private final LoadBalancingProxyClient loadBalanceProxyClient;
-    private final BackendSelector hostSelectorHandler = new BackendSelector();
-    private final Set<URI> hosts = new CopyOnWriteArraySet<>();
+    private final BackendSelector backendSelector = new BackendSelector();
 
     public BackendProxyClient() {
         final ExclusivityChecker exclusivityChecker = new ExclusivityChecker() {
@@ -52,7 +49,7 @@ public class BackendProxyClient implements ProxyClient {
         loadBalanceProxyClient = new LoadBalancingProxyClient(
                                         UndertowClient.getInstance(),
                                         exclusivityChecker,
-                                        hostSelectorHandler);
+                                        backendSelector);
     }
 
     @Override
@@ -65,7 +62,7 @@ public class BackendProxyClient implements ProxyClient {
             final HttpServerExchange exchange,
             final ProxyCallback<ProxyConnection> callback, long timeout, TimeUnit timeUnit) {
 
-        hostSelectorHandler.setExchange(exchange);
+        backendSelector.setExchange(exchange);
         loadBalanceProxyClient.getConnection(target, exchange, callback, timeout, timeUnit);
     }
 
@@ -122,54 +119,54 @@ public class BackendProxyClient implements ProxyClient {
 
     public synchronized BackendProxyClient setParams(
             final Map<String, Object> myParams) {
-        hostSelectorHandler.setParams(myParams);
+        backendSelector.setParams(myParams);
         return this;
     }
 
     public synchronized BackendProxyClient addHost(final URI host) {
-        if (!hosts.contains(host)) {
+        if (!backendSelector.contains(host)) {
             loadBalanceProxyClient.addHost(host);
-            hosts.add(host);
-            hostSelectorHandler.reset();
+            backendSelector.addHost(host);
+            backendSelector.reset();
         }
         return this;
     }
 
     public synchronized BackendProxyClient addHost(final URI host, XnioSsl ssl) {
-        if (!hosts.contains(host)) {
+        if (!backendSelector.contains(host)) {
             loadBalanceProxyClient.addHost(host, ssl);
-            hosts.add(host);
-            hostSelectorHandler.reset();
+            backendSelector.addHost(host);
+            backendSelector.reset();
         }
         return this;
     }
 
     public synchronized BackendProxyClient addHost(final URI host,
             String jvmRoute) {
-        if (!hosts.contains(host)) {
+        if (!backendSelector.contains(host)) {
             loadBalanceProxyClient.addHost(host, jvmRoute);
-            hosts.add(host);
-            hostSelectorHandler.reset();
+            backendSelector.addHost(host);
+            backendSelector.reset();
         }
         return this;
     }
 
     public synchronized BackendProxyClient addHost(final URI host,
             String jvmRoute, XnioSsl ssl) {
-        if (!hosts.contains(host)) {
+        if (!backendSelector.contains(host)) {
             loadBalanceProxyClient.addHost(host, jvmRoute, ssl);
-            hosts.add(host);
-            hostSelectorHandler.reset();
+            backendSelector.addHost(host);
+            backendSelector.reset();
         }
         return this;
     }
 
     public synchronized BackendProxyClient addHost(final URI host,
             String jvmRoute, XnioSsl ssl, OptionMap options) {
-        if (!hosts.contains(host)) {
+        if (!backendSelector.contains(host)) {
             loadBalanceProxyClient.addHost(host, jvmRoute, ssl, options);
-            hosts.add(host);
-            hostSelectorHandler.reset();
+            backendSelector.addHost(host);
+            backendSelector.reset();
         }
         return this;
     }
@@ -177,25 +174,25 @@ public class BackendProxyClient implements ProxyClient {
     public synchronized BackendProxyClient addHost(
             final InetSocketAddress bindAddress, final URI host,
             String jvmRoute, XnioSsl ssl, OptionMap options) {
-        if (!hosts.contains(host)) {
+        if (!backendSelector.contains(host)) {
             loadBalanceProxyClient.addHost(bindAddress, host, jvmRoute, ssl,
                     options);
-            hosts.add(host);
-            hostSelectorHandler.reset();
+            backendSelector.addHost(host);
+            backendSelector.reset();
         }
         return this;
     }
 
     public synchronized BackendProxyClient removeHost(final URI host) {
-        if (hosts.contains(host)) {
+        if (backendSelector.contains(host)) {
             loadBalanceProxyClient.removeHost(host);
-            hosts.remove(host);
-            hostSelectorHandler.reset();
+            backendSelector.removeHost(host);
+            backendSelector.reset();
         }
         return this;
     }
 
     public void reset() {
-        hostSelectorHandler.reset();
+        backendSelector.reset();
     }
 }
