@@ -25,6 +25,7 @@
     <assertj.version>2.0.0</assertj.version>
     <junit.version>4.12</junit.version>
     <arquillian.junit.version>1.1.7.Final</arquillian.junit.version>
+    <org.jodd.version>3.6.6</org.jodd.version>
   </properties>
 
   <dependencies>
@@ -107,6 +108,11 @@
       <groupId>org.aspectj</groupId>
       <artifactId>aspectjrt</artifactId>
       <version>${org.aspectj.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jodd</groupId>
+      <artifactId>jodd-core</artifactId>
+      <version>${org.jodd.version}</version>
     </dependency>
 
     <!--Test dependencies-->
