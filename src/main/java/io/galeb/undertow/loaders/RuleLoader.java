@@ -16,6 +16,11 @@
 
 package io.galeb.undertow.loaders;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.BackendPool;
@@ -26,17 +31,13 @@ import io.galeb.core.model.VirtualHost;
 import io.galeb.core.model.collections.BackendPoolCollection;
 import io.galeb.core.model.collections.VirtualHostCollection;
 import io.galeb.undertow.handlers.BackendProxyClient;
+import io.galeb.undertow.handlers.PathGlobHandler;
 import io.galeb.undertow.handlers.PathHolderHandler;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.proxy.ProxyHandler;
 import io.undertow.util.StatusCodes;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 public class RuleLoader implements Loader {
 
@@ -94,13 +95,17 @@ public class RuleLoader implements Loader {
                                 optionalLogger.ifPresent(logger -> logger.error("addRule("+entity.getId()+"): TargetId not found"));
                                 return;
                             }
-                            HttpHandler ruleHandler = hosts.get(virtualhostId);
-                            if (!(ruleHandler instanceof PathHolderHandler)) {
-                                ruleHandler = new PathHolderHandler(ResponseCodeHandler.HANDLE_404);
-                            }
+                            HttpHandler pathHandler = hosts.get(virtualhostId);
                             final HttpHandler targetHandler = new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404);
-                            ((PathHolderHandler) ruleHandler).addPrefixPath(match, targetHandler);
-                            hosts.put(virtualhostId, ruleHandler);
+
+                            if (match.indexOf("*")>-1 && pathHandler instanceof PathGlobHandler) {
+                                ((PathGlobHandler)pathHandler).addPattern(match, targetHandler);
+                            } else {
+                                final HttpHandler pathHolderHandler = ((PathGlobHandler)pathHandler).getDefaultHandler();
+                                if (pathHolderHandler instanceof PathHolderHandler) {
+                                    ((PathHolderHandler)pathHolderHandler).addPrefixPath(match, targetHandler);
+                                }
+                            }
                         }
                         isOk = true;
                     } else {
@@ -110,11 +115,16 @@ public class RuleLoader implements Loader {
                     break;
 
                 case DEL:
-                    final HttpHandler ruleHandler = hosts.get(virtualhostId);
-                    if (ruleHandler!=null && ruleHandler instanceof PathHolderHandler) {
-                        ((PathHolderHandler)ruleHandler).removePrefixPath(match);
-                        isOk = true;
+                    final HttpHandler pathHandler = hosts.get(virtualhostId);
+                    if (match.indexOf("*")>-1 && pathHandler instanceof PathGlobHandler) {
+                        ((PathGlobHandler)pathHandler).removePattern(match);
+                    } else {
+                        final HttpHandler pathHolderHandler = ((PathGlobHandler)pathHandler).getDefaultHandler();
+                        if (pathHolderHandler instanceof PathHolderHandler) {
+                            ((PathHolderHandler)pathHolderHandler).removePrefixPath(match);
+                        }
                     }
+                    isOk = true;
                     break;
 
                 case CHANGE:
