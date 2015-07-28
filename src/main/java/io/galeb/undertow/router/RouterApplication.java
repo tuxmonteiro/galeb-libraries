@@ -16,13 +16,15 @@
 
 package io.galeb.undertow.router;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.xnio.Options;
+
 import io.galeb.core.model.Farm;
 import io.undertow.Undertow;
 import io.undertow.UndertowOptions;
 import io.undertow.server.HttpHandler;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class RouterApplication {
 
@@ -66,10 +68,16 @@ public class RouterApplication {
             return;
         }
         final int iothreads = options.containsKey("IoThreads") ? Integer.parseInt(options.get("IoThreads")) : 4;
+        final int works = options.containsKey("workers") ? Integer.parseInt(options.get("workers")) : Runtime.getRuntime().availableProcessors()*8;
+        final int maxWorks = options.containsKey("max_workers") ? Integer.parseInt(options.get("max_workers")) : works;
+        final int backlog = options.containsKey("backlog") ? Integer.parseInt(options.get("backlog")) : 1000;
 
         final Undertow router = Undertow.builder().addHttpListener(port, host)
                 .setServerOption(UndertowOptions.RECORD_REQUEST_START_TIME, true)
                 .setIoThreads(iothreads)
+                .setWorkerThreads(works)
+                .setWorkerOption(Options.WORKER_TASK_MAX_THREADS, maxWorks)
+                .setSocketOption(Options.BACKLOG, backlog)
                 .setHandler(rootHandler)
                 .build();
 
