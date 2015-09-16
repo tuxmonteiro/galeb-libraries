@@ -32,7 +32,6 @@ import io.galeb.core.model.collections.BackendPoolCollection;
 import io.galeb.core.model.collections.VirtualHostCollection;
 import io.galeb.undertow.handlers.BackendProxyClient;
 import io.galeb.undertow.handlers.PathGlobHandler;
-import io.galeb.undertow.handlers.PathHolderHandler;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
@@ -98,13 +97,8 @@ public class RuleLoader implements Loader {
                             HttpHandler pathHandler = hosts.get(virtualhostId);
                             final HttpHandler targetHandler = new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404);
 
-                            if (match.indexOf("*")>-1 && pathHandler instanceof PathGlobHandler) {
+                            if (pathHandler instanceof PathGlobHandler) {
                                 ((PathGlobHandler)pathHandler).addPattern(match, targetHandler);
-                            } else {
-                                final HttpHandler pathHolderHandler = ((PathGlobHandler)pathHandler).getDefaultHandler();
-                                if (pathHolderHandler instanceof PathHolderHandler) {
-                                    ((PathHolderHandler)pathHolderHandler).addPrefixPath(match, targetHandler);
-                                }
                             }
                         }
                         isOk = true;
@@ -116,13 +110,8 @@ public class RuleLoader implements Loader {
 
                 case DEL:
                     final HttpHandler pathHandler = hosts.get(virtualhostId);
-                    if (match.indexOf("*")>-1 && pathHandler instanceof PathGlobHandler) {
+                    if (pathHandler instanceof PathGlobHandler) {
                         ((PathGlobHandler)pathHandler).removePattern(match);
-                    } else {
-                        final HttpHandler pathHolderHandler = ((PathGlobHandler)pathHandler).getDefaultHandler();
-                        if (pathHolderHandler instanceof PathHolderHandler) {
-                            ((PathHolderHandler)pathHolderHandler).removePrefixPath(match);
-                        }
                     }
                     isOk = true;
                     break;

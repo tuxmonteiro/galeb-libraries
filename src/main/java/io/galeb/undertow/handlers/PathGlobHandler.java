@@ -48,7 +48,11 @@ public class PathGlobHandler implements HttpHandler {
 
         AtomicBoolean hit = new AtomicBoolean(false);
         patterns.entrySet().stream().forEach(entry -> {
-            hit.set(Wildcard.match(path, entry.getKey()));
+            String pathKey = entry.getKey();
+            if (pathKey.endsWith("/") && !pathKey.contains("*")) {
+                pathKey = pathKey + "*";
+            }
+            hit.set(Wildcard.match(path, pathKey));
             if (hit.get()) {
                 try {
                     entry.getValue().handleRequest(exchange);
@@ -80,4 +84,5 @@ public class PathGlobHandler implements HttpHandler {
     public HttpHandler getDefaultHandler() {
         return defaultHandler;
     }
+
 }

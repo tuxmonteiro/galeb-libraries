@@ -25,7 +25,6 @@ import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.VirtualHost;
 import io.galeb.undertow.handlers.PathGlobHandler;
-import io.galeb.undertow.handlers.PathHolderHandler;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
@@ -66,7 +65,7 @@ public class VirtualHostLoader implements Loader {
 
         switch (action) {
             case ADD:
-                final HttpHandler pathHandler = new PathGlobHandler(new PathHolderHandler(ResponseCodeHandler.HANDLE_404));
+                final HttpHandler pathHandler = new PathGlobHandler(ResponseCodeHandler.HANDLE_404);
                 ((NameVirtualHostHandler) virtualHostHandler).addHost(virtualhostId, pathHandler);
                 isOk = true;
                 break;

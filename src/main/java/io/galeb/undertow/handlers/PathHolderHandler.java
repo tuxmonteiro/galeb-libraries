@@ -23,6 +23,7 @@ import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.cache.LRUCache;
 import io.undertow.util.PathMatcher;
 
+@Deprecated
 public class PathHolderHandler implements HttpHandler {
 
     private final PathMatcher<HttpHandler> pathMatcher = new PathMatcher<>();
