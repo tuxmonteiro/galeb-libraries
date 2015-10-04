@@ -1,0 +1,109 @@
+/*
+ * Copyright (c) 2014-2015 Globo.com - ATeam
+ * All rights reserved.
+ *
+ * This source is subject to the Apache License, Version 2.0.
+ * Please see the LICENSE file for more information.
+ *
+ * Authors: See AUTHORS file
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.galeb.core.model;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+
+import com.google.gson.annotations.Expose;
+
+import io.galeb.core.json.JsonObject;
+
+public class BackendPool extends Entity {
+
+    private static final long serialVersionUID = 1L;
+
+    public static final String PROP_HEALTHCHECK_RETURN = "hcBody";
+
+    public static final String PROP_HEALTHCHECK_PATH   = "hcPath";
+
+    public static final String PROP_HEALTHCHECK_HOST   = "hcHost";
+
+    public static final String PROP_HEALTHCHECK_CODE   = "hcStatusCode";
+
+    public static final String PROP_LOADBALANCE_POLICY = "loadBalancePolicy";
+
+    @Expose private final Set<Backend> backends = new CopyOnWriteArraySet<>();
+
+    public BackendPool() {
+        super();
+    }
+
+    public BackendPool(BackendPool backendPool) {
+        super(backendPool);
+        setBackends(backendPool.getBackends());
+        updateETag();
+    }
+
+    public Backend getBackend(String backendId) {
+        Backend backend = null;
+        for (final Backend backendTemp : backends) {
+            if (backendId.equals(backendTemp.getId())) {
+                backend = backendTemp;
+                break;
+            }
+        }
+        return backend;
+    }
+
+    public BackendPool addBackend(String json) {
+        final Backend backend = (Backend) JsonObject.fromJson(json, Backend.class);
+        return addBackend(backend);
+    }
+
+    public BackendPool addBackend(Backend backend) {
+        backends.add(backend);
+        return this;
+    }
+
+    public BackendPool delBackend(String backendId) {
+        final Backend backend = getBackend(backendId);
+        return delBackend(backend);
+    }
+
+    public BackendPool delBackend(Backend backend) {
+        if (backend!=null) {
+            backends.remove(backend);
+        }
+        return this;
+    }
+
+    public boolean containBackend(String backendId) {
+        return getBackend(backendId) != null;
+    }
+
+    public void clearBackends() {
+        backends.clear();
+    }
+
+    public Set<Backend> getBackends() {
+        return backends;
+    }
+
+    public void setBackends(final Set<Backend> myBackends) {
+        final Set<Backend> copyBackends = new HashSet<>(myBackends);
+        backends.clear();
+        backends.addAll(copyBackends);
+    }
+
+    @Override
+    public Entity copy() {
+        return new BackendPool(this);
+    }
+
+}
