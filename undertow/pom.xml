@@ -215,6 +215,7 @@
           <instrumentation>
             <ignoreTrivial>true</ignoreTrivial>
           </instrumentation>
+          <check/>
         </configuration>
       </plugin>
     </plugins>
@@ -252,6 +253,7 @@
                 <formats>
                     <format>xml</format>
                 </formats>
+              <check/>
             </configuration>
         </plugin>
     </plugins>

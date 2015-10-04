@@ -71,6 +71,7 @@
             <formats>
                 <format>xml</format>
             </formats>
+            <check/>
         </configuration>
       </plugin>
     </plugins>
@@ -98,6 +99,7 @@
                 <instrumentation>
                     <ignoreTrivial>true</ignoreTrivial>
                 </instrumentation>
+                <check/>
             </configuration>
         </plugin>
     </plugins>
