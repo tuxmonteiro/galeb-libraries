@@ -3,9 +3,10 @@ package io.galeb.hazelcast;
 import io.galeb.core.cluster.DistributedMap;
 import io.galeb.core.cluster.DistributedMapListener;
 import io.galeb.core.cluster.DistributedMapStats;
-import io.galeb.core.model.Entity;
+import io.galeb.core.json.JsonObject;
 
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -18,29 +19,35 @@ import com.hazelcast.map.listener.EntryAddedListener;
 import com.hazelcast.map.listener.EntryEvictedListener;
 import com.hazelcast.map.listener.EntryRemovedListener;
 import com.hazelcast.map.listener.EntryUpdatedListener;
+import io.galeb.core.model.Backend;
+import io.galeb.core.model.BackendPool;
+import io.galeb.core.model.Entity;
+import io.galeb.core.model.Farm;
+import io.galeb.core.model.Rule;
+import io.galeb.core.model.VirtualHost;
 
 @Default
-public class HzDistributedMap implements DistributedMap<String, Entity> {
+public class HzDistributedMap implements DistributedMap<String, String> {
 
     private static final HazelcastInstance HZ = HzInstance.getInstance();
 
-    private final Set<DistributedMapListener> distributedMapListeners = new CopyOnWriteArraySet<>();
+    private static final Set<DistributedMapListener> LISTENERS = new CopyOnWriteArraySet<>();
 
     @Override
-    public ConcurrentMap<String, Entity> getMap(String key) {
-        final IMap<String, Entity> map = HZ.getMap(key);
+    public ConcurrentMap<String, String> getMap(String key) {
+        final IMap<String, String> map = HZ.getMap(key);
         map.addEntryListener(new Listener(), true);
         return map;
     }
 
     @Override
     public void registerListener(DistributedMapListener distributedMapListener) {
-        distributedMapListeners.add(distributedMapListener);
+        LISTENERS.add(distributedMapListener);
     }
 
     @Override
     public void unregisterListener(DistributedMapListener distributedMapListener) {
-        distributedMapListeners.remove(distributedMapListener);
+        LISTENERS.remove(distributedMapListener);
     }
 
     @Override
@@ -48,33 +55,48 @@ public class HzDistributedMap implements DistributedMap<String, Entity> {
         return new HzDistributedMapStats();
     }
 
-    private class Listener implements EntryAddedListener<String, Entity>,
-                                      EntryRemovedListener<String, Entity>,
-                                      EntryUpdatedListener<String, Entity>,
-                                      EntryEvictedListener<String, Entity> {
+    private static class Listener implements EntryAddedListener<String, String>,
+                                      EntryRemovedListener<String, String>,
+                                      EntryUpdatedListener<String, String>,
+                                      EntryEvictedListener<String, String> {
 
-        @Override
-        public void entryEvicted(EntryEvent<String, Entity> entry) {
-            final Entity entity = entry.getOldValue().copy();
-            distributedMapListeners.forEach(distributedMapListener -> distributedMapListener.entryEvicted(entity));
+        private static final Map<String, Class<? extends Entity>> ENTITY_CLASSES = new ConcurrentHashMap<>();
+        static {
+            ENTITY_CLASSES.put(Backend.class.getSimpleName().toLowerCase(), Backend.class);
+            ENTITY_CLASSES.put(BackendPool.class.getSimpleName().toLowerCase(), BackendPool.class);
+            ENTITY_CLASSES.put(Rule.class.getSimpleName().toLowerCase(), Rule.class);
+            ENTITY_CLASSES.put(VirtualHost.class.getSimpleName().toLowerCase(), VirtualHost.class);
+            ENTITY_CLASSES.put(Farm.class.getSimpleName().toLowerCase(), Farm.class);
+        }
+
+        private Entity getEntity(EntryEvent<String, String> entry, boolean oldValue) {
+            String entryStr = oldValue ? entry.getOldValue() : entry.getValue();
+            String entityType = ((Entity) JsonObject.fromJson(entryStr, Entity.class)).getEntityType();
+            return (Entity) JsonObject.fromJson(entryStr, ENTITY_CLASSES.get(entityType));
         }
 
         @Override
-        public void entryUpdated(EntryEvent<String, Entity> entry) {
-            final Entity entity = entry.getValue().copy();
-            distributedMapListeners.forEach(distributedMapListener -> distributedMapListener.entryUpdated(entity));
+        public void entryEvicted(EntryEvent<String, String> entry) {
+            final Entity entity = getEntity(entry, true);
+            LISTENERS.forEach(distributedMapListener -> distributedMapListener.entryEvicted(entity));
         }
 
         @Override
-        public void entryRemoved(EntryEvent<String, Entity> entry) {
-            final Entity entity = entry.getOldValue().copy();
-            distributedMapListeners.forEach(distributedMapListener -> distributedMapListener.entryRemoved(entity));
+        public void entryUpdated(EntryEvent<String, String> entry) {
+            final Entity entity = getEntity(entry, false);
+            LISTENERS.forEach(distributedMapListener -> distributedMapListener.entryUpdated(entity));
         }
 
         @Override
-        public void entryAdded(EntryEvent<String, Entity> entry) {
-            final Entity entity = entry.getValue().copy();
-            distributedMapListeners.forEach(distributedMapListener -> distributedMapListener.entryAdded(entity));
+        public void entryRemoved(EntryEvent<String, String> entry) {
+            final Entity entity = getEntity(entry, true);
+            LISTENERS.forEach(distributedMapListener -> distributedMapListener.entryRemoved(entity));
+        }
+
+        @Override
+        public void entryAdded(EntryEvent<String, String> entry) {
+            final Entity entity = getEntity(entry, false);
+            LISTENERS.forEach(distributedMapListener -> distributedMapListener.entryAdded(entity));
         }
 
     }

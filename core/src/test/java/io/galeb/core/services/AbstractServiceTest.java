@@ -72,11 +72,11 @@ public class AbstractServiceTest {
         }
     }
 
-    static class FakeDistributedMap implements DistributedMap<String, Entity> {
+    static class FakeDistributedMap implements DistributedMap<String, String> {
         // Fake
 
         @Override
-        public ConcurrentMap<String, Entity> getMap(String key) {
+        public ConcurrentMap<String, String> getMap(String key) {
             return new ConcurrentHashMap<>();
         }
 

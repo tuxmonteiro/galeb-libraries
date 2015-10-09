@@ -32,6 +32,7 @@ import io.galeb.core.controller.EntityController;
 import io.galeb.core.controller.FarmController;
 import io.galeb.core.controller.RuleController;
 import io.galeb.core.controller.VirtualHostController;
+import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
 import io.galeb.core.model.BackendPool;
@@ -55,7 +56,7 @@ public abstract class AbstractService implements DistributedMapListener,
     protected Farm farm;
 
     @Inject
-    protected DistributedMap<String, Entity> distributedMap;
+    protected DistributedMap<String, String> distributedMap;
 
     @Inject
     protected Logger logger;
@@ -118,7 +119,7 @@ public abstract class AbstractService implements DistributedMapListener,
         return logger;
     }
 
-    public DistributedMap<String, Entity> getDistributedMap() {
+    public DistributedMap<String, String> getDistributedMap() {
         return distributedMap;
     }
 
@@ -192,8 +193,10 @@ public abstract class AbstractService implements DistributedMapListener,
         distributedMap.registerListener(this);
         Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class).stream()
             .forEach(clazz -> {
-                ConcurrentMap<String, Entity> map = distributedMap.getMap(clazz.getName());
-                map.forEach( (key, entity) -> {
+                ConcurrentMap<String, String> map = distributedMap.getMap(clazz.getName());
+                map.forEach( (key, value) -> {
+                    Entity entity = (Entity) JsonObject.fromJson(value, clazz);
+                    entity.setEntityType(clazz.getSimpleName().toLowerCase());
                     entityAdd(entity);
                 });
             });

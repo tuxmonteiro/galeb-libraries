@@ -5,6 +5,6 @@ import io.galeb.core.model.Entity;
 import javax.enterprise.inject.Alternative;
 
 @Alternative
-public class NullDistributedMap implements DistributedMap<String, Entity> {
+public class NullDistributedMap implements DistributedMap<String, String> {
     // NULL PATTERN
 }
