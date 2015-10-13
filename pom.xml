@@ -11,6 +11,7 @@
   <modules>
     <module>core</module>
     <module>hazelcast</module>
+    <module>infinispan</module>
     <module>undertow</module>
     <module>statsd</module>
   </modules>
