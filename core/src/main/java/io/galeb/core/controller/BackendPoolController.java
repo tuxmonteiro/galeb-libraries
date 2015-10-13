@@ -26,28 +26,10 @@ public class BackendPoolController extends EntityController {
         super(farm);
     }
 
-    @Deprecated @Override
-    public EntityController add(JsonObject json) throws Exception {
-        final BackendPool backendPool = (BackendPool) json.instanceOf(BackendPool.class);
-        return add(backendPool);
-    }
-
-    @Deprecated @Override
-    public EntityController del(JsonObject json) throws Exception {
-        final BackendPool backendPool = (BackendPool) json.instanceOf(BackendPool.class);
-        return del(backendPool);
-    }
-
     @Override
     public EntityController delAll() throws Exception {
         delAll(BackendPool.class);
         return null;
-    }
-
-    @Deprecated @Override
-    public EntityController change(JsonObject json) throws Exception {
-        final BackendPool backendPool = (BackendPool) json.instanceOf(BackendPool.class);
-        return change(backendPool);
     }
 
     @Override

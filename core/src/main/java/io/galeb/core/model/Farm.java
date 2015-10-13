@@ -16,7 +16,12 @@
 
 package io.galeb.core.model;
 
+import io.galeb.core.controller.BackendController;
+import io.galeb.core.controller.BackendPoolController;
 import io.galeb.core.controller.EntityController;
+import io.galeb.core.controller.FarmController;
+import io.galeb.core.controller.RuleController;
+import io.galeb.core.controller.VirtualHostController;
 import io.galeb.core.model.collections.BackendCollection;
 import io.galeb.core.model.collections.BackendPoolCollection;
 import io.galeb.core.model.collections.Collection;
@@ -24,7 +29,6 @@ import io.galeb.core.model.collections.NullEntityCollection;
 import io.galeb.core.model.collections.RuleCollection;
 import io.galeb.core.model.collections.VirtualHostCollection;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,14 +43,24 @@ public class Farm extends Entity {
 
     private static final long serialVersionUID = 1L;
 
+    public static final String CLASS_NAME = "Farm";
+
     @Expose private final Collection<VirtualHost, Rule> virtualHosts = new VirtualHostCollection();
     @Expose private final Collection<BackendPool, Backend> backendPools = new BackendPoolCollection();
     private final Collection<Backend, BackendPool> backends = new BackendCollection();
     private final Collection<Rule, VirtualHost> rules = new RuleCollection();
 
-    private final Map<String, EntityController> entityMap = new ConcurrentHashMap<>(16, 0.9f, 1);
+    private final VirtualHostController virtualHostController = new VirtualHostController(this);
+    private final BackendController backendController = new BackendController(this);
+    private final BackendPoolController backendPoolController = new BackendPoolController(this);
+    private final RuleController ruleController = new RuleController(this);
+    private final FarmController farmController = new FarmController(this)
+                                                    .setVirtualHostController(virtualHostController)
+                                                    .setBackendController(backendController)
+                                                    .setBackendPoolController(backendPoolController)
+                                                    .setRuleController(ruleController);
+
     private final Map<String, String> options = new ConcurrentHashMap<>();
-    private final Map<Class<? extends Entity>, Collection<? extends Entity, ? extends Entity>> mapOfCollection = new HashMap<>();
 
     public Farm() {
         setEntityType(Farm.class.getSimpleName().toLowerCase());
@@ -56,10 +70,6 @@ public class Farm extends Entity {
         backends.defineSetOfRelatives(backendPools);
         rules.defineSetOfRelatives(virtualHosts);
 
-        mapOfCollection.put(VirtualHost.class, virtualHosts);
-        mapOfCollection.put(BackendPool.class, backendPools);
-        mapOfCollection.put(Backend.class, backends);
-        mapOfCollection.put(Rule.class, rules);
     }
 
     public Map<String, String> getOptions() {
@@ -71,15 +81,69 @@ public class Farm extends Entity {
         return this;
     }
 
-    public Map<String, EntityController> getEntityMap() {
-        return entityMap;
+    public static String getClassNameFromEntityType(String entityType) {
+        switch (entityType) {
+            case "virtualhost":
+                return VirtualHost.CLASS_NAME;
+            case "backendpool":
+                return BackendPool.CLASS_NAME;
+            case "backend":
+                return Backend.CLASS_NAME;
+            case "rule":
+                return Rule.CLASS_NAME;
+            case "farm":
+                return Farm.CLASS_NAME;
+            default:
+                return null;
+        }
+    }
+
+    public static Class<?> getClassFromEntityType(String entityType) {
+        switch (entityType) {
+            case "virtualhost":
+                return VirtualHost.class;
+            case "backendpool":
+                return BackendPool.class;
+            case "backend":
+                return Backend.class;
+            case "rule":
+                return Rule.class;
+            case "farm":
+                return Farm.class;
+            default:
+                return null;
+        }
+    }
+
+    public EntityController getController(String className) {
+        switch (className) {
+            case Backend.CLASS_NAME:
+                return backendController;
+            case BackendPool.CLASS_NAME:
+                return backendPoolController;
+            case Rule.CLASS_NAME:
+                return ruleController;
+            case VirtualHost.CLASS_NAME:
+                return virtualHostController;
+            case Farm.CLASS_NAME:
+                return farmController;
+            default:
+                return EntityController.NULL;
+        }
     }
 
     public Collection<? extends Entity, ? extends Entity> getCollection(Class<? extends Entity> entityClass) {
-        if (mapOfCollection.containsKey(entityClass)) {
-            return mapOfCollection.get(entityClass);
-        } else {
-            return new NullEntityCollection();
+        switch (entityClass.getSimpleName()) {
+            case VirtualHost.CLASS_NAME:
+                return virtualHosts;
+            case BackendPool.CLASS_NAME:
+                return backendPools;
+            case Backend.CLASS_NAME:
+                return backends;
+            case Rule.CLASS_NAME:
+                return rules;
+            default:
+                return new NullEntityCollection();
         }
     }
 

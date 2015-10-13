@@ -26,28 +26,10 @@ public class VirtualHostController extends EntityController {
         super(farm);
     }
 
-    @Deprecated @Override
-    public EntityController add(JsonObject json) throws Exception{
-        final VirtualHost virtualHost = (VirtualHost) json.instanceOf(VirtualHost.class);
-        return add(virtualHost);
-    }
-
-    @Deprecated @Override
-    public EntityController del(JsonObject json) throws Exception {
-        final VirtualHost virtualHost = (VirtualHost) json.instanceOf(VirtualHost.class);
-        return del(virtualHost);
-    }
-
     @Override
     public EntityController delAll() throws Exception {
         delAll(VirtualHost.class);
         return this;
-    }
-
-    @Deprecated @Override
-    public EntityController change(JsonObject json) throws Exception {
-        final VirtualHost virtualHost = (VirtualHost) json.instanceOf(VirtualHost.class);
-        return change(virtualHost);
     }
 
     @Override

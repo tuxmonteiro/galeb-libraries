@@ -28,6 +28,8 @@ public class VirtualHost extends Entity {
 
     private static final long serialVersionUID = 1L;
 
+    public static final String CLASS_NAME = "VirtualHost";
+
     @Expose private Set<Rule> rules = new CopyOnWriteArraySet<>();
 
     public VirtualHost() {

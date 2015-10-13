@@ -26,28 +26,10 @@ public class BackendController extends EntityController {
         super(farm);
     }
 
-    @Deprecated @Override
-    public EntityController add(JsonObject json) throws Exception {
-        final Backend backend = (Backend) json.instanceOf(Backend.class);
-        return add(backend);
-    }
-
-    @Deprecated @Override
-    public EntityController del(JsonObject json) throws Exception {
-        final Backend backend = (Backend) json.instanceOf(Backend.class);
-        return del(backend);
-    }
-
     @Override
     public EntityController delAll() throws Exception {
         delAll(Backend.class);
         return null;
-    }
-
-    @Deprecated @Override
-    public EntityController change(JsonObject json) throws Exception {
-        final Backend backendWithChanges = (Backend) json.instanceOf(Backend.class);
-        return change(backendWithChanges);
     }
 
     @Override
