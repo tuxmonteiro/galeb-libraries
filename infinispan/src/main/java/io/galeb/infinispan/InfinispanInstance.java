@@ -27,7 +27,9 @@ public class InfinispanInstance {
         GlobalConfigurationBuilder global = GlobalConfigurationBuilder.defaultClusteredBuilder();
         ConfigurationBuilder builder = new ConfigurationBuilder();
         builder.clustering().cacheMode(CacheMode.DIST_ASYNC);
-        CACHE_MANAGER = new DefaultCacheManager(global.build(), builder.build());
+        CACHE_MANAGER = new DefaultCacheManager(
+                global.transport().addProperty("configurationFile", "jgroups.xml").build(),
+                builder.build());
     }
 
     private InfinispanInstance() {
