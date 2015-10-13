@@ -16,10 +16,12 @@
 
 package io.galeb.undertow.scheduler;
 
-import io.galeb.core.logging.*;
-import io.galeb.core.services.*;
-import io.galeb.undertow.model.*;
-import io.galeb.undertow.scheduler.jobs.*;
+import io.galeb.core.logging.Logger;
+import io.galeb.core.model.Farm;
+import io.galeb.core.services.AbstractService;
+import io.galeb.core.services.ProcessorScheduler;
+import io.galeb.undertow.model.FarmUndertow;
+import io.galeb.undertow.scheduler.jobs.UndertowProcessorJob;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -30,35 +32,28 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.inject.Default;
-import javax.inject.Inject;
 
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
 import static org.quartz.TriggerBuilder.newTrigger;
 
 @Default
-public class UndertowProcessorScheduler implements JobListener {
+public class UndertowProcessorScheduler implements JobListener, ProcessorScheduler {
 
-    private static final String PROP_UNDERTOW_PROCESSOR_INTERVAL = "undertowProcessorInterval";
-
-    @Inject
-    public Logger logger;
-
-    @Inject
+    private Logger logger;
     private FarmUndertow farmUndertow;
-
     private Scheduler scheduler;
 
-    @PostConstruct
-    public void init() {
-        setupScheduler();
-        startUndertowProcessorJob();
-    }
-
-    private void setupScheduler() {
+    @Override
+    public void setupScheduler(final Logger logger, final Farm farm) {
         try {
+            this.logger = logger;
+            if (farm instanceof FarmUndertow) {
+                this.farmUndertow = (FarmUndertow) farm;
+            } else {
+                throw new RuntimeException("Farm isnt instance of FarmUndertow");
+            }
             scheduler = new StdSchedulerFactory().getScheduler();
             scheduler.getListenerManager().addJobListener(this);
             scheduler.start();
@@ -67,11 +62,12 @@ public class UndertowProcessorScheduler implements JobListener {
         }
     }
 
-    public void startUndertowProcessorJob() {
+    @Override
+    public void startProcessorJob() {
         try {
             if (scheduler.isStarted() && farmUndertow != null) {
 
-                int interval = Integer.parseInt(System.getProperty(PROP_UNDERTOW_PROCESSOR_INTERVAL, "10"));
+                int interval = Integer.parseInt(System.getProperty(PROP_PROCESSOR_INTERVAL, "1"));
                 Trigger trigger = newTrigger().withIdentity(this.getName())
                         .startNow()
                         .withSchedule(simpleSchedule().withIntervalInSeconds(interval).repeatForever())

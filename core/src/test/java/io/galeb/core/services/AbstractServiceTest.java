@@ -21,19 +21,13 @@ import io.galeb.core.cluster.ClusterEvents;
 import io.galeb.core.cluster.DistributedMap;
 import io.galeb.core.cluster.DistributedMapListener;
 import io.galeb.core.cluster.DistributedMapStats;
-import io.galeb.core.controller.BackendController;
-import io.galeb.core.controller.BackendPoolController;
-import io.galeb.core.controller.EntityController;
-import io.galeb.core.controller.RuleController;
-import io.galeb.core.controller.VirtualHostController;
+import io.galeb.core.logging.Logger;
 import io.galeb.core.logging.impl.Log4j2Logger;
 import io.galeb.core.model.BackendPool;
-import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.VirtualHost;
 import io.galeb.core.statsd.StatsdClient;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -44,7 +38,6 @@ import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -102,6 +95,18 @@ public class AbstractServiceTest {
         // Fake
     }
 
+    static class FakeProcessorScheduler implements ProcessorScheduler {
+        @Override
+        public void setupScheduler(Logger logger, Farm farm) {
+            // Fake
+        }
+
+        @Override
+        public void startProcessorJob() {
+            // Fake
+        }
+    }
+
     @Inject
     private AbstractService serviceImplemented;
 
@@ -116,7 +121,8 @@ public class AbstractServiceTest {
                                  FakeFarm.class,
                                  FakeDistributedMap.class,
                                  FakeClusterEvents.class,
-                                 FakeStatsdClient.class)
+                                 FakeStatsdClient.class,
+                                 FakeProcessorScheduler.class)
                          .addAsManifestResource(EmptyAsset.INSTANCE, "beans.xml");
     }
 

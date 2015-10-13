@@ -17,6 +17,7 @@
 package io.galeb.undertow.scheduler.jobs;
 
 import io.galeb.core.logging.Logger;
+import io.galeb.core.services.AbstractService;
 import io.galeb.undertow.model.FarmUndertow;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -30,13 +31,18 @@ public class UndertowProcessorJob implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobDataMap jobDetailMap = context.getJobDetail().getJobDataMap();
-        Logger logger = (Logger) jobDetailMap.getOrDefault("", null);
-        FarmUndertow farmUndertow = (FarmUndertow) jobDetailMap.getOrDefault("", null);
+        Logger logger = (Logger) jobDetailMap.getOrDefault(AbstractService.LOGGER, null);
+        FarmUndertow farmUndertow = (FarmUndertow) jobDetailMap.getOrDefault(AbstractService.FARM, null);
 
         try {
             farmUndertow.processAll();
         } catch (Exception e) {
-            logger.error(e);
+            if (logger != null) {
+                logger.error(e);
+            } else {
+                e.printStackTrace();
+            }
         }
     }
+
 }
