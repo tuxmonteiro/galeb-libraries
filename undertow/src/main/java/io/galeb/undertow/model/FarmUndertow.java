@@ -35,6 +35,7 @@ import io.galeb.undertow.loaders.BackendPoolLoader;
 import io.galeb.undertow.loaders.Loader;
 import io.galeb.undertow.loaders.RuleLoader;
 import io.galeb.undertow.loaders.VirtualHostLoader;
+import io.galeb.undertow.scheduler.*;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.accesslog.AccessLogReceiver;
@@ -54,17 +55,16 @@ import org.apache.logging.log4j.spi.ExtendedLogger;
 @Default
 public class FarmUndertow extends Farm {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     private Logger log;
 
     @Inject
     private StatsdClient statsdClient;
 
-    private static final long serialVersionUID = 1L;
-
     private HttpHandler rootHandler;
     private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
-
     private final Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
 
     public FarmUndertow() {
@@ -137,7 +137,6 @@ public class FarmUndertow extends Farm {
     @Override
     public void add(Entity entity) {
         super.add(entity);
-        processAll();
     }
 
     @Override
@@ -164,7 +163,7 @@ public class FarmUndertow extends Farm {
         return rootHandler;
     }
 
-    private synchronized void processAll() {
+    public synchronized void processAll() {
         getCollection(BackendPool.class).stream().forEach(backendPool -> {
             mapOfLoaders.get(BackendPool.class).from(backendPool, Action.ADD);
             getCollection(Backend.class).stream()

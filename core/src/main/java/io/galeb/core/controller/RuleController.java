@@ -26,28 +26,10 @@ public class RuleController extends EntityController {
         super(farm);
     }
 
-    @Deprecated @Override
-    public EntityController add(JsonObject json) throws Exception {
-        final Rule rule = (Rule) json.instanceOf(Rule.class);
-        return add(rule);
-    }
-
-    @Deprecated @Override
-    public EntityController del(JsonObject json) throws Exception {
-        final Rule rule = (Rule) json.instanceOf(Rule.class);
-        return del(rule);
-    }
-
     @Override
     public EntityController delAll() throws Exception {
         delAll(Rule.class);
         return this;
-    }
-
-    @Deprecated @Override
-    public EntityController change(JsonObject json) throws Exception {
-        final Rule rule = (Rule) json.instanceOf(Rule.class);
-        return change(rule);
     }
 
     @Override

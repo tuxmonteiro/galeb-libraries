@@ -31,17 +31,13 @@
     <junit.version>4.12</junit.version>
     <arquillian.junit.version>1.1.7.Final</arquillian.junit.version>
     <org.jodd.version>3.6.6</org.jodd.version>
+    <org.quartz-scheduler.version>2.2.1</org.quartz-scheduler.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>io.galeb</groupId>
       <artifactId>galeb-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.galeb</groupId>
-      <artifactId>galeb-hazelcast</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -119,6 +115,16 @@
       <artifactId>jodd-core</artifactId>
       <version>${org.jodd.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.quartz-scheduler</groupId>
+      <artifactId>quartz</artifactId>
+      <version>${org.quartz-scheduler.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.quartz-scheduler</groupId>
+      <artifactId>quartz-jobs</artifactId>
+      <version>${org.quartz-scheduler.version}</version>
+    </dependency>
 
     <!--Test dependencies-->
     <dependency>
@@ -182,10 +188,6 @@
             <weaveDependency>
               <groupId>io.undertow</groupId>
               <artifactId>undertow-core</artifactId>
-            </weaveDependency>
-            <weaveDependency>
-              <groupId>io.galeb</groupId>
-              <artifactId>galeb-hazelcast</artifactId>
             </weaveDependency>
           </weaveDependencies>
           <verbose>true</verbose>

@@ -28,6 +28,8 @@ public class BackendPool extends Entity {
 
     private static final long serialVersionUID = 1L;
 
+    public static final String CLASS_NAME              = "BackendPool";
+
     public static final String PROP_HEALTHCHECK_RETURN = "hcBody";
 
     public static final String PROP_HEALTHCHECK_PATH   = "hcPath";

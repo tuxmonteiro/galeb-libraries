@@ -127,73 +127,9 @@ public class AbstractServiceTest {
         farm.clear(VirtualHost.class);
     }
 
-    @After
-    public void clearDown() {
-        farm.getEntityMap().clear();
-    }
-
     @Test
-    public void entityMapAtAbstractServiceIsNotNull() {
+    public void farmInjectedIsNotNull() {
         assertThat(serviceImplemented.getFarm()).isNotNull();
-    }
-
-    @Test
-    public void entityMapIsNotEmptyBeforeAbstractServicePreLaunch() {
-        assertThat(serviceImplemented.getFarm().getEntityMap().isEmpty()).isTrue();
-    }
-
-    @Test
-    public void entityMapIsNotEmptyAfterAbstractServicePreLaunch() {
-        serviceImplemented.prelaunch();
-        assertThat(serviceImplemented.getFarm().getEntityMap().isEmpty()).isFalse();
-    }
-
-    @Test
-    public void entityMapHasFiveEntitiesAfterAbstractServicePreLaunch() {
-        serviceImplemented.prelaunch();
-        assertThat(serviceImplemented.getFarm().getEntityMap()).hasSize(5);
-    }
-
-    private String getKeyNameFrom(Class<?> klass) {
-        return klass.getSimpleName().toLowerCase().replaceAll("controller", "");
-    }
-
-    private Map<String, EntityController> getEntityMapAfterPreLaunch() {
-        serviceImplemented.prelaunch();
-        final Map<String, EntityController> entities = serviceImplemented.getFarm().getEntityMap();
-        return entities;
-    }
-
-    @Test
-    public void entityMapHasBackendControllerAfterAbstractServicePreLaunch() {
-        final Map<String, EntityController> entities = getEntityMapAfterPreLaunch();
-
-        final EntityController anEntityInstance = entities.get(getKeyNameFrom(BackendController.class));
-        assertThat(anEntityInstance).isInstanceOf(BackendController.class);
-    }
-
-    @Test
-    public void entityMapHasBackendPoolControllerAfterAbstractServicePreLaunch() {
-        final Map<String, EntityController> entities = getEntityMapAfterPreLaunch();
-
-        final EntityController anEntityInstance = entities.get(getKeyNameFrom(BackendPoolController.class));
-        assertThat(anEntityInstance).isInstanceOf(BackendPoolController.class);
-    }
-
-    @Test
-    public void entityMapHasVirtualHostControllerAfterAbstractServicePreLaunch() {
-        final Map<String, EntityController> entities = getEntityMapAfterPreLaunch();
-
-        final EntityController anEntityInstance = entities.get(getKeyNameFrom(VirtualHostController.class));
-        assertThat(anEntityInstance).isInstanceOf(VirtualHostController.class);
-    }
-
-    @Test
-    public void entityMapHasRuleControllerAfterAbstractServicePreLaunch() {
-        final Map<String, EntityController> entities = getEntityMapAfterPreLaunch();
-
-        final EntityController anEntityInstance = entities.get(getKeyNameFrom(RuleController.class));
-        assertThat(anEntityInstance).isInstanceOf(RuleController.class);
     }
 
 }

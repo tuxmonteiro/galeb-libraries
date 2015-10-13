@@ -34,7 +34,7 @@ public abstract class EntityController {
         UNKNOWN
     }
 
-    private static final String CONTROLLER_NAME_SUFFIX = "controller";
+    private static final String CONTROLLER_NAME_SUFFIX = "Controller";
 
     public static final EntityController NULL = new EntityController(null) {
 
@@ -44,24 +44,10 @@ public abstract class EntityController {
         }
 
         @Override
-        public EntityController del(JsonObject json) {
-            return this;
-        }
-
-        @Override
         public EntityController delAll() {
             return this;
         }
 
-        @Override
-        public EntityController change(JsonObject json) {
-            return this;
-        }
-
-        @Override
-        public EntityController add(JsonObject json) {
-            return this;
-        }
     };
 
     public EntityController(Farm farm) {
@@ -69,24 +55,16 @@ public abstract class EntityController {
     }
 
     public static String getControllerName(Class<?> clazz) {
-        return clazz.getSimpleName().toLowerCase().replace(CONTROLLER_NAME_SUFFIX, "");
+        return clazz.getSimpleName().replace(CONTROLLER_NAME_SUFFIX, "");
     }
 
-    @Deprecated
-    public abstract EntityController add(JsonObject json) throws Exception;
-
-    @Deprecated
-    public abstract EntityController del(JsonObject json) throws Exception;
-
     public abstract EntityController delAll() throws Exception;
-
-    @Deprecated
-    public abstract EntityController change(JsonObject json) throws Exception;
 
     public EntityController add(Entity entity) throws Exception {
         farm.add(entity);
         farm.setVersion(entity.getVersion());
-        return this;    }
+        return this;
+    }
 
     public EntityController del(Entity entity) throws Exception {
         farm.del(entity);

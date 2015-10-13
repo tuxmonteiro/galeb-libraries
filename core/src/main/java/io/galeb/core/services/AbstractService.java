@@ -17,7 +17,6 @@
 package io.galeb.core.services;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.inject.Inject;
@@ -26,12 +25,7 @@ import io.galeb.core.cluster.ClusterEvents;
 import io.galeb.core.cluster.ClusterListener;
 import io.galeb.core.cluster.DistributedMap;
 import io.galeb.core.cluster.DistributedMapListener;
-import io.galeb.core.controller.BackendController;
-import io.galeb.core.controller.BackendPoolController;
 import io.galeb.core.controller.EntityController;
-import io.galeb.core.controller.FarmController;
-import io.galeb.core.controller.RuleController;
-import io.galeb.core.controller.VirtualHostController;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
@@ -41,6 +35,8 @@ import io.galeb.core.model.Farm;
 import io.galeb.core.model.Rule;
 import io.galeb.core.model.VirtualHost;
 import io.galeb.core.statsd.StatsdClient;
+
+import static io.galeb.core.model.Farm.getClassNameFromEntityType;
 
 public abstract class AbstractService implements DistributedMapListener,
                                                  ClusterListener {
@@ -74,7 +70,8 @@ public abstract class AbstractService implements DistributedMapListener,
     }
 
     private void entityAdd(Entity entity) {
-        EntityController entityController = farm.getEntityMap().get(entity.getEntityType());
+        EntityController entityController = farm.getController(
+                getClassNameFromEntityType(entity.getEntityType()));
         try {
             entityController.add(entity.copy());
         } catch (Exception e) {
@@ -90,25 +87,7 @@ public abstract class AbstractService implements DistributedMapListener,
     }
 
     protected void prelaunch() {
-        registerControllers();
         registerCluster();
-    }
-
-    protected void registerControllers() {
-
-        final Map<String, EntityController> entityMap = farm.getEntityMap();
-
-        entityMap.put(EntityController.getControllerName(BackendController.class),
-                new BackendController(farm));
-        entityMap.put(EntityController.getControllerName(BackendPoolController.class),
-                new BackendPoolController(farm));
-        entityMap.put(EntityController.getControllerName(RuleController.class),
-                new RuleController(farm));
-        entityMap.put(EntityController.getControllerName(VirtualHostController.class),
-                new VirtualHostController(farm));
-        entityMap.put(EntityController.getControllerName(FarmController.class),
-                new FarmController(farm, entityMap));
-
     }
 
     public Farm getFarm() {
@@ -127,64 +106,54 @@ public abstract class AbstractService implements DistributedMapListener,
     public void entryAdded(Entity entity) {
         logger.debug("entryAdded: "+entity.getId()+" ("+entity.getEntityType()+")");
         entityAdd(entity);
-        showStatistic();
     }
 
     @Override
     public void entryRemoved(Entity entity) {
         logger.debug("entryRemoved: "+entity.getId()+" ("+entity.getEntityType()+")");
-        EntityController entityController = farm.getEntityMap().get(entity.getEntityType());
+        EntityController entityController = farm.getController(
+                getClassNameFromEntityType(entity.getEntityType()));
         try {
             entityController.del(entity.copy());
         } catch (Exception e) {
             logger.error(e);
         }
-        showStatistic();
     }
 
     @Override
     public void entryUpdated(Entity entity) {
         logger.debug("entryUpdated: "+entity.getId()+" ("+entity.getEntityType()+")");
-        EntityController entityController = farm.getEntityMap().get(entity.getEntityType());
+        EntityController entityController = farm.getController(
+                getClassNameFromEntityType(entity.getEntityType()));
         try {
             entityController.change(entity.copy());
         } catch (Exception e) {
             logger.error(e);
         }
-        showStatistic();
     }
 
     @Override
     public void mapCleared(String mapName) {
         logger.debug("mapCleared: "+mapName);
-        EntityController entityController = farm.getEntityMap().get(mapName.toLowerCase());
+        EntityController entityController = farm.getController(
+                getClassNameFromEntityType(mapName.toLowerCase()));
         try {
             entityController.delAll();
         } catch (Exception e) {
             logger.error(e);
         }
-        showStatistic();
     }
 
     @Override
     public void entryEvicted(Entity entity) {
         logger.debug("entryEvicted: "+entity.getId()+" ("+entity.getEntityType()+")");
         entryRemoved(entity);
-        showStatistic();
     }
 
     @Override
     public void mapEvicted(String mapName) {
         logger.debug("mapEvicted: "+mapName);
         mapCleared(mapName);
-        showStatistic();
-    }
-
-    @Override
-    public void showStatistic() {
-        if (logger.isDebugEnabled()) {
-            logger.debug(distributedMap.getStats().toString());
-        }
     }
 
     @Override

@@ -1,6 +1,5 @@
 package io.galeb.core.controller;
 
-import io.galeb.core.json.JsonObject;
 import io.galeb.core.model.Backend;
 import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Entity;
@@ -8,31 +7,35 @@ import io.galeb.core.model.Farm;
 import io.galeb.core.model.Rule;
 import io.galeb.core.model.VirtualHost;
 
-import java.util.Map;
-
 public class FarmController extends EntityController {
 
-    private final BackendController backendController;
-    private final BackendPoolController backendPoolController;
-    private final RuleController ruleController;
-    private final VirtualHostController virtualHostController;
+    private BackendController backendController;
+    private BackendPoolController backendPoolController;
+    private RuleController ruleController;
+    private VirtualHostController virtualHostController;
 
-    public FarmController(final Farm farm, final Map<String, EntityController> entityControllerMap) {
+    public FarmController(final Farm farm) {
         super(farm);
-        backendController = (BackendController) entityControllerMap
-                .getOrDefault(getControllerName(BackendController.class), NULL);
-        backendPoolController = (BackendPoolController) entityControllerMap
-                .getOrDefault(getControllerName(BackendPoolController.class), NULL);
-        ruleController = (RuleController) entityControllerMap
-                .getOrDefault(getControllerName(RuleController.class), NULL);
-        virtualHostController = (VirtualHostController) entityControllerMap
-                .getOrDefault(getControllerName(VirtualHostController.class), NULL);
     }
 
-    @Deprecated @Override
-    public EntityController add(JsonObject json) throws Exception {
-        final Farm farmAdded = (Farm) json.instanceOf(Farm.class);
-        return add(farmAdded);
+    public FarmController setBackendController(BackendController backendController) {
+        this.backendController = backendController;
+        return this;
+    }
+
+    public FarmController setBackendPoolController(BackendPoolController backendPoolController) {
+        this.backendPoolController = backendPoolController;
+        return this;
+    }
+
+    public FarmController setRuleController(RuleController ruleController) {
+        this.ruleController = ruleController;
+        return this;
+    }
+
+    public FarmController setVirtualHostController(VirtualHostController virtualHostController) {
+        this.virtualHostController = virtualHostController;
+        return this;
     }
 
     @Override
@@ -53,12 +56,6 @@ public class FarmController extends EntityController {
         return this;
     }
 
-    @Deprecated @Override
-    public EntityController del(JsonObject json) throws Exception {
-        delAll();
-        return this;
-    }
-
     @Override
     public EntityController del(Entity entity) throws Exception {
         delAll();
@@ -73,12 +70,6 @@ public class FarmController extends EntityController {
         delAll(VirtualHost.class);
         setVersion(0);
         return this;
-    }
-
-    @Deprecated @Override
-    public EntityController change(JsonObject json) throws Exception {
-        final Farm farmChanged = (Farm) json.instanceOf(Farm.class);
-        return change(farmChanged);
     }
 
     @Override

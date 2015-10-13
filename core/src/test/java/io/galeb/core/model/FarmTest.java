@@ -86,11 +86,6 @@ public class FarmTest {
     }
 
     @Test
-    public void getEntityMapDefaultIsEmptyAtFarm() {
-        assertThat(farm.getEntityMap()).isEmpty();
-    }
-
-    @Test
     public void getVirtualHostsAtFarm() {
         assertThat(farm.getCollection(VirtualHost.class)).isEmpty();
     }
