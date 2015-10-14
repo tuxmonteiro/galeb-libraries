@@ -63,8 +63,15 @@ public class Rule extends Entity {
     }
 
     public int getRuleOrder() {
-        final String ruleOrderStr = (String) getProperty(Rule.PROP_RULE_ORDER);
-        return ruleOrderStr == null ? Integer.MAX_VALUE : Integer.valueOf(ruleOrderStr);
+        Object ruleOrderObj = getProperty(Rule.PROP_RULE_ORDER);
+        if (ruleOrderObj instanceof Integer) {
+            return (Integer)ruleOrderObj;
+        }
+        if (ruleOrderObj instanceof String) {
+            final String ruleOrderStr = (String) ruleOrderObj;
+            return Integer.valueOf(ruleOrderStr);
+        }
+        return Integer.MAX_VALUE;
     }
 
     public String getMatch() {
@@ -84,6 +91,14 @@ public class Rule extends Entity {
     }
 
     public boolean isDefault() {
-        return Boolean.getBoolean((String)getProperty(Rule.PROP_DEFAULT));
+        Object defaultObj = getProperty(Rule.PROP_DEFAULT);
+        if (defaultObj instanceof Boolean) {
+            return (Boolean)defaultObj;
+        }
+        if (defaultObj instanceof String) {
+            String defaultStr = (String) getProperty(Rule.PROP_DEFAULT);
+            return Boolean.getBoolean(defaultStr);
+        }
+        return false;
     }
 }
