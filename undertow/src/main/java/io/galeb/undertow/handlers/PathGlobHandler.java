@@ -16,10 +16,11 @@
 
 package io.galeb.undertow.handlers;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.galeb.core.model.Rule;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.ResponseCodeHandler;
@@ -27,28 +28,20 @@ import jodd.util.Wildcard;
 
 public class PathGlobHandler implements HttpHandler {
 
-    private final HttpHandler defaultHandler;
-    private final Map<String, HttpHandler> patterns = new LinkedHashMap<>();
-
-    public PathGlobHandler(final HttpHandler defaultHandler) {
-        this.defaultHandler = defaultHandler;
-    }
-
-    public PathGlobHandler() {
-        this(ResponseCodeHandler.HANDLE_404);
-    }
+    private HttpHandler defaultHandler = ResponseCodeHandler.HANDLE_404;
+    private final Map<Rule, HttpHandler> rules = new TreeMap<>();
 
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
-        if (patterns.isEmpty()) {
+        if (rules.isEmpty()) {
             defaultHandler.handleRequest(exchange);
             return;
         }
         final String path = exchange.getRelativePath();
 
         AtomicBoolean hit = new AtomicBoolean(false);
-        patterns.entrySet().stream().forEach(entry -> {
-            String pathKey = entry.getKey();
+        rules.entrySet().stream().forEach(entry -> {
+            String pathKey = entry.getKey().getMatch();
             if (pathKey.endsWith("/") && !pathKey.contains("*")) {
                 pathKey = pathKey + "*";
             }
@@ -66,18 +59,13 @@ public class PathGlobHandler implements HttpHandler {
         }
     }
 
-    public synchronized PathGlobHandler addPattern(final String pattern, final HttpHandler handler) {
-        patterns.put(pattern, handler);
+    public synchronized PathGlobHandler addRule(final Rule rule, final HttpHandler handler) {
+        rules.put(rule, handler);
         return this;
     }
 
-    public synchronized PathGlobHandler removePattern(final String pattern) {
-        patterns.remove(pattern);
-        return this;
-    }
-
-    public synchronized PathGlobHandler clearPattern() {
-        patterns.clear();
+    public synchronized PathGlobHandler removeRule(final Rule rule) {
+        rules.remove(rule);
         return this;
     }
 
@@ -85,4 +73,8 @@ public class PathGlobHandler implements HttpHandler {
         return defaultHandler;
     }
 
+    public HttpHandler setDefaultHandler(HttpHandler defaultHandler) {
+        this.defaultHandler = defaultHandler;
+        return this;
+    }
 }

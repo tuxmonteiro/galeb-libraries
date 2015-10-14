@@ -20,7 +20,7 @@ import io.galeb.core.json.JsonObject;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import com.google.gson.annotations.Expose;
 
@@ -30,7 +30,7 @@ public class VirtualHost extends Entity {
 
     public static final String CLASS_NAME = "VirtualHost";
 
-    @Expose private Set<Rule> rules = new CopyOnWriteArraySet<>();
+    @Expose private Set<Rule> rules = new ConcurrentSkipListSet<>();
 
     public VirtualHost() {
         super();

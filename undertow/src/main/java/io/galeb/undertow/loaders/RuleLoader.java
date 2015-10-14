@@ -28,8 +28,6 @@ import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.Rule;
 import io.galeb.core.model.VirtualHost;
-import io.galeb.core.model.collections.BackendPoolCollection;
-import io.galeb.core.model.collections.VirtualHostCollection;
 import io.galeb.undertow.handlers.BackendProxyClient;
 import io.galeb.undertow.handlers.PathGlobHandler;
 import io.undertow.server.HttpHandler;
@@ -72,10 +70,16 @@ public class RuleLoader implements Loader {
             return;
         }
 
-        if (hasParent(entity)) {
+        final Rule rule;
+        if (entity instanceof Rule) {
+            rule = (Rule)entity;
+        } else {
+            return;
+        }
+
+        if (hasParent(rule.getParentId())) {
             final String virtualhostId = entity.getParentId();
-            final String match = (String)entity.getProperty(Rule.PROP_MATCH);
-            if (virtualhostId == null || match == null) {
+            if (virtualhostId == null || rule.getMatch() == null) {
                 return;
             }
             final Map<String, HttpHandler> hosts = ((NameVirtualHostHandler) virtualHostHandler).getHosts();
@@ -83,13 +87,11 @@ public class RuleLoader implements Loader {
 
             switch (action) {
                 case ADD:
-                    final String targetId = (String)entity.getProperty(Rule.PROP_TARGET_ID);
-
-                    if (hasTarget((Rule) entity)) {
+                    if (hasTarget(rule.getTargetId())) {
                         final int maxRequestTime = 0;
 
-                        if (!Integer.toString(StatusCodes.NOT_FOUND).equals(targetId)) {
-                            final BackendProxyClient backendPool = backendPools.get(targetId);
+                        if (!Integer.toString(StatusCodes.NOT_FOUND).equals(rule.getTargetId())) {
+                            final BackendProxyClient backendPool = backendPools.get(rule.getTargetId());
                             if (backendPool==null) {
                                 optionalLogger.ifPresent(logger -> logger.error("addRule("+entity.getId()+"): TargetId not found"));
                                 return;
@@ -98,12 +100,17 @@ public class RuleLoader implements Loader {
                             final HttpHandler targetHandler = new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404);
 
                             if (pathHandler instanceof PathGlobHandler) {
-                                ((PathGlobHandler)pathHandler).addPattern(match, targetHandler);
+                                ((PathGlobHandler) pathHandler).addRule(rule, targetHandler);
+                                if (rule.isDefault()) {
+                                    ((PathGlobHandler)pathHandler).setDefaultHandler(targetHandler);
+                                }
                             }
                         }
                         isOk = true;
                     } else {
-                        final String message = "Action ADD not applied - "+entity.getId()+" ("+entity.getEntityType()+"): "+targetId+" NOT FOUND";
+                        final String message = "Action ADD not applied - " + entity.getId() +
+                                " (" + entity.getEntityType() + "): " +
+                                rule.getTargetId() + " NOT FOUND";
                         optionalLogger.ifPresent(logger -> logger.debug(message));
                     }
                     break;
@@ -111,7 +118,7 @@ public class RuleLoader implements Loader {
                 case DEL:
                     final HttpHandler pathHandler = hosts.get(virtualhostId);
                     if (pathHandler instanceof PathGlobHandler) {
-                        ((PathGlobHandler)pathHandler).removePattern(match);
+                        ((PathGlobHandler)pathHandler).removeRule(rule);
                     }
                     isOk = true;
                     break;
@@ -135,14 +142,12 @@ public class RuleLoader implements Loader {
         from(entity, Action.CHANGE);
     }
 
-    private boolean hasParent(Entity entity) {
-        final String parentId = entity.getParentId();
-        return !((VirtualHostCollection) farm.getCollection(VirtualHost.class)).getListByID(parentId).isEmpty();
+    private boolean hasParent(String parentId) {
+        return parentId != null && !farm.getCollection(VirtualHost.class).getListByID(parentId).isEmpty();
     }
 
-    private boolean hasTarget(Rule rule) {
-        final String targetId = (String) rule.getProperty(Rule.PROP_TARGET_ID);
-        return !((BackendPoolCollection)farm.getCollection(BackendPool.class)).getListByID(targetId).isEmpty();
+    private boolean hasTarget(String targetId) {
+        return targetId != null && !farm.getCollection(BackendPool.class).getListByID(targetId).isEmpty();
     }
 
 }

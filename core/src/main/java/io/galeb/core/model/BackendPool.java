@@ -18,7 +18,7 @@ package io.galeb.core.model;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 import com.google.gson.annotations.Expose;
 
@@ -40,7 +40,7 @@ public class BackendPool extends Entity {
 
     public static final String PROP_LOADBALANCE_POLICY = "loadBalancePolicy";
 
-    @Expose private final Set<Backend> backends = new CopyOnWriteArraySet<>();
+    @Expose private final Set<Backend> backends = new ConcurrentSkipListSet<>();
 
     public BackendPool() {
         super();

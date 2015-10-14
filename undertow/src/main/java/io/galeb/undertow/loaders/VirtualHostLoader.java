@@ -65,7 +65,7 @@ public class VirtualHostLoader implements Loader {
 
         switch (action) {
             case ADD:
-                final HttpHandler pathHandler = new PathGlobHandler(ResponseCodeHandler.HANDLE_404);
+                final HttpHandler pathHandler = new PathGlobHandler();
                 ((NameVirtualHostHandler) virtualHostHandler).addHost(virtualhostId, pathHandler);
                 isOk = true;
                 break;

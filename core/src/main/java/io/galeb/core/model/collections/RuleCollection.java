@@ -24,12 +24,12 @@ import io.galeb.core.model.VirtualHost;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
 
 public class RuleCollection implements Collection<Rule, VirtualHost> {
 
-    private Set<Entity> rules = new CopyOnWriteArraySet<>();
+    private Set<Entity> rules = new ConcurrentSkipListSet<>();
 
     private Collection<? extends Entity, ? extends Entity> virtualHosts;
 

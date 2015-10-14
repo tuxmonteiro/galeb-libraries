@@ -24,12 +24,12 @@ import io.galeb.core.model.Entity;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
 
 public class BackendCollection implements Collection<Backend, BackendPool> {
 
-    private final Set<Entity> backends = new CopyOnWriteArraySet<>();
+    private final Set<Entity> backends = new ConcurrentSkipListSet<>();
 
     private Collection<? extends Entity, ? extends Entity> backendPools;
 
