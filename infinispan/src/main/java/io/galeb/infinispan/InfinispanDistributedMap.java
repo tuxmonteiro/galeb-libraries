@@ -47,7 +47,7 @@ public class InfinispanDistributedMap implements DistributedMap<String,String> {
 
     @Override
     public ConcurrentMap<String, String> getMap(String key) {
-        if (!CACHE_MANAGER.cacheExists(key)) {
+        if (CACHE_MANAGER.cacheExists(key)) {
             return CACHE_MANAGER.getCache(key);
         } else {
             Cache<String, String> cache = CACHE_MANAGER.getCache(key, true);
