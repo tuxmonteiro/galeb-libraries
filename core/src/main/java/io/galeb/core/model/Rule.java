@@ -51,15 +51,16 @@ public class Rule extends Entity {
     @Override
     public int compareTo(Entity entity) {
         if (entity == null || !(entity instanceof Rule)) {
-            return -1;
+            return super.compareTo(entity);
         }
-
         Rule that = (Rule) entity;
+        int diff = this.getRuleOrder() - that.getRuleOrder();
+        return diff == 0 ? super.compareTo(entity) : diff;
+    }
 
-        if (that.equals(this)) {
-            return 0;
-        }
-        return this.getRuleOrder() - that.getRuleOrder();
+    @Override
+    public boolean equals(Object entity) {
+        return super.equals(entity);
     }
 
     public int getRuleOrder() {
@@ -67,9 +68,19 @@ public class Rule extends Entity {
         if (ruleOrderObj instanceof Integer) {
             return (Integer)ruleOrderObj;
         }
+        if (ruleOrderObj instanceof Float) {
+            return Math.round((Float)ruleOrderObj);
+        }
+        if (ruleOrderObj instanceof Double) {
+            return ((Double)ruleOrderObj).intValue();
+        }
         if (ruleOrderObj instanceof String) {
             final String ruleOrderStr = (String) ruleOrderObj;
-            return Integer.valueOf(ruleOrderStr);
+            try {
+                return Integer.valueOf(ruleOrderStr);
+            } catch (NumberFormatException ignore) {
+                return Integer.MAX_VALUE;
+            }
         }
         return Integer.MAX_VALUE;
     }
@@ -94,6 +105,9 @@ public class Rule extends Entity {
         Object defaultObj = getProperty(Rule.PROP_DEFAULT);
         if (defaultObj instanceof Boolean) {
             return (Boolean)defaultObj;
+        }
+        if (defaultObj instanceof Integer) {
+            return (Integer)defaultObj == 1;
         }
         if (defaultObj instanceof String) {
             String defaultStr = (String) getProperty(Rule.PROP_DEFAULT);
