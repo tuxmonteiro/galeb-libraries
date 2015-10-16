@@ -53,6 +53,9 @@ public class Rule extends Entity {
         if (entity == null || !(entity instanceof Rule)) {
             return super.compareTo(entity);
         }
+        if (super.equals(entity)) {
+            return 0;
+        }
         Rule that = (Rule) entity;
         int diff = this.getRuleOrder() - that.getRuleOrder();
         return diff == 0 ? super.compareTo(entity) : diff;
@@ -61,6 +64,11 @@ public class Rule extends Entity {
     @Override
     public boolean equals(Object entity) {
         return super.equals(entity);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
     public int getRuleOrder() {

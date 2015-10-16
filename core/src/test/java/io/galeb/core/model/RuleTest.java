@@ -21,7 +21,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class RuleTest {
 
@@ -100,4 +107,142 @@ public class RuleTest {
         assertThat(rule1).isLessThan(rule3);
     }
 
+    @Test
+    public void rulesInSortedList() {
+        LinkedList<Rule> rules = IntStream.rangeClosed(1, 5).parallel().boxed().map(aInteger -> {
+            HashMap<String, Object> properties = new HashMap<>();
+            properties.put(Rule.PROP_RULE_ORDER, aInteger);
+            Rule rule = new Rule();
+            rule.setId(aInteger.toString())
+                .setParentId("sameParent")
+                .setProperties(properties);
+            return rule;
+        }).sorted().collect(Collectors.toCollection(LinkedList<Rule>::new));
+        assertThat(rules).hasSize(5);
+        assertThat(rules).isSorted();
+    }
+
+    @Test
+    public void rulesInSortedSet() {
+        Set<Rule> rules = new ConcurrentSkipListSet<>();
+        rules.addAll(IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
+            HashMap<String, Object> properties = new HashMap<>();
+            properties.put(Rule.PROP_RULE_ORDER, aInteger);
+            Rule rule = new Rule();
+            rule.setId(aInteger.toString())
+                .setParentId("sameParent")
+                .setProperties(properties);
+            return rule;
+        }).collect(Collectors.toSet()));
+        assertThat(rules).hasSize(5);
+    }
+
+    @Test
+    public void rulesInSortedSetWithSameId() {
+        Set<Rule> rules = IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
+            HashMap<String, Object> properties = new HashMap<>();
+            properties.put(Rule.PROP_RULE_ORDER, aInteger);
+            Rule rule = new Rule();
+            rule.setId("sameId")
+                .setParentId("sameParent")
+                .setProperties(properties);
+            return rule;
+        }).sorted().collect(Collectors.toSet());
+        assertThat(rules).hasSize(1);
+    }
+
+    @Test
+    public void rulesInSortedSetWithDiffParent() {
+        Set<Rule> rules = IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
+            HashMap<String, Object> properties = new HashMap<>();
+            properties.put(Rule.PROP_RULE_ORDER, aInteger);
+            Rule rule = new Rule();
+            rule.setId(aInteger.toString())
+                .setParentId(aInteger.toString())
+                .setProperties(properties);
+            return rule;
+        }).sorted().collect(Collectors.toSet());
+        assertThat(rules).hasSize(5);
+    }
+
+    @Test
+    public void rulesInSortedSetWithSameOrder() {
+        Set<Rule> rules = IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
+            HashMap<String, Object> properties = new HashMap<>();
+            properties.put(Rule.PROP_RULE_ORDER, 1);
+            Rule rule = new Rule();
+            rule.setId(aInteger.toString())
+                .setParentId(aInteger.toString())
+                .setProperties(properties);
+            return rule;
+        }).sorted().collect(Collectors.toSet());
+        assertThat(rules).hasSize(5);
+    }
+
+
+    @Test
+    public void rulesInSortedMap() {
+        Map<String, Rule> rules = new ConcurrentSkipListMap<>();
+        rules.putAll(IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
+            HashMap<String, Object> properties = new HashMap<>();
+            properties.put(Rule.PROP_RULE_ORDER, aInteger);
+            Rule rule = new Rule();
+            rule.setId(aInteger.toString())
+                .setParentId("sameParent")
+                .setProperties(properties);
+            return rule;
+        }).collect(Collectors.toMap(Rule::compoundId, Rule::new)));
+        assertThat(rules).hasSize(5);
+    }
+
+    @Test
+    public void rulesInSortedMapWithSameId() {
+        Map<Rule, Rule> rules = new TreeMap<>();
+        IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
+            HashMap<String, Object> properties = new HashMap<>();
+            properties.put(Rule.PROP_RULE_ORDER, aInteger);
+            Rule rule = new Rule();
+            rule.setId("sameId")
+                .setParentId("sameParent")
+                .setProperties(properties);
+            return rule;
+        }).forEach(rule -> {
+            rules.put(rule, rule);
+        });
+        assertThat(rules).hasSize(1);
+    }
+
+    @Test
+    public void rulesInSortedMapWithDiffParent() {
+        Map<Rule, Rule> rules = new ConcurrentSkipListMap<>();
+        IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
+            HashMap<String, Object> properties = new HashMap<>();
+            properties.put(Rule.PROP_RULE_ORDER, aInteger);
+            Rule rule = new Rule();
+            rule.setId("sameId")
+                .setParentId(aInteger.toString())
+                .setProperties(properties);
+            return rule;
+        }).forEach(rule -> {
+            rules.put(rule, rule);
+        });
+        assertThat(rules).hasSize(5);
+    }
+
+    @Test
+    public void rulesInSortedMapWithSameOrder() {
+        Map<Rule, Rule> rules = new ConcurrentSkipListMap<>();
+        IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
+            HashMap<String, Object> properties = new HashMap<>();
+            properties.put(Rule.PROP_RULE_ORDER, 1);
+            Rule rule = new Rule();
+            rule.setId(aInteger.toString())
+                .setParentId(aInteger.toString())
+                .setProperties(properties);
+            return rule;
+        }).forEach(rule -> {
+            rules.put(rule, rule);
+        });
+        assertThat(rules).hasSize(5);
+    }
 }
