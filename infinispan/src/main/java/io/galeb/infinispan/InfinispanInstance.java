@@ -16,15 +16,22 @@
 
 package io.galeb.infinispan;
 
-import org.infinispan.configuration.cache.*;
-import org.infinispan.configuration.global.*;
 import org.infinispan.manager.*;
+
+import java.io.IOException;
 
 public class InfinispanInstance {
 
     private static final DefaultCacheManager CACHE_MANAGER;
     static {
-        CACHE_MANAGER = new DefaultCacheManager("infinispan.xml");
+        DefaultCacheManager CACHE_MANAGER1 = null;
+        try {
+            CACHE_MANAGER1 = new DefaultCacheManager("infinispan.xml");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            CACHE_MANAGER = CACHE_MANAGER1;
+        }
     }
 
     private InfinispanInstance() {
