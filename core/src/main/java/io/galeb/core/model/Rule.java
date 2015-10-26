@@ -30,7 +30,7 @@ public class Rule extends Entity {
 
     public static final String PROP_TARGET_TYPE = "targetType";
 
-    public static final String PROP_RULE_ORDER  = "order";
+    public static final String PROP_RULE_ORDER  = "orderNum";
 
     public static final String PROP_DEFAULT     = "default";
 
