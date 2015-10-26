@@ -17,6 +17,7 @@
 package io.galeb.undertow.handlers;
 
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -29,7 +30,7 @@ import jodd.util.Wildcard;
 public class PathGlobHandler implements HttpHandler {
 
     private HttpHandler defaultHandler = ResponseCodeHandler.HANDLE_404;
-    private final Map<Rule, HttpHandler> rules = new TreeMap<>();
+    private final SortedMap<Rule, HttpHandler> rules = new TreeMap<>();
 
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
@@ -40,17 +41,19 @@ public class PathGlobHandler implements HttpHandler {
         final String path = exchange.getRelativePath();
 
         AtomicBoolean hit = new AtomicBoolean(false);
-        rules.entrySet().stream().forEach(entry -> {
-            String pathKey = entry.getKey().getMatch();
-            if (pathKey.endsWith("/") && !pathKey.contains("*")) {
-                pathKey = pathKey + "*";
-            }
-            hit.set(Wildcard.match(path, pathKey));
-            if (hit.get()) {
-                try {
-                    entry.getValue().handleRequest(exchange);
-                } catch (Exception e) {
-                    // TODO: log.error(e)
+        rules.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> {
+            if (!hit.get()) {
+                String pathKey = entry.getKey().getMatch();
+                if (pathKey.endsWith("/") && !pathKey.contains("*")) {
+                    pathKey = pathKey + "*";
+                }
+                hit.set(Wildcard.match(path, pathKey));
+                if (hit.get()) {
+                    try {
+                        entry.getValue().handleRequest(exchange);
+                    } catch (Exception e) {
+                        // TODO: log.error(e)
+                    }
                 }
             }
         });
