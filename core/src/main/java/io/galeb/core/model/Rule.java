@@ -50,6 +50,9 @@ public class Rule extends Entity {
 
     @Override
     public int compareTo(Entity entity) {
+        final int BEFORE = -1;
+        final int AFTER = 1;
+
         if (entity == null || !(entity instanceof Rule)) {
             return super.compareTo(entity);
         }
@@ -58,7 +61,7 @@ public class Rule extends Entity {
         }
         Rule that = (Rule) entity;
         int diff = this.getRuleOrder() - that.getRuleOrder();
-        return diff == 0 ? super.compareTo(entity) : diff;
+        return diff == 0 ? super.compareTo(entity) : diff < 0 ? BEFORE : AFTER;
     }
 
     @Override

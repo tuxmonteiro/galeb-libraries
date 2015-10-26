@@ -55,10 +55,9 @@ public class RuleController extends EntityController {
     private void fixRuleOrder(final Entity entity) {
         if (entity instanceof Rule) {
             Rule rule = (Rule)entity;
-            Map<String, Object> properties = rule.getProperties();
+            final Map<String, Object> properties = rule.getProperties();
             if (properties.get(Rule.PROP_RULE_ORDER) == null) {
                 properties.put(Rule.PROP_RULE_ORDER, Integer.MAX_VALUE);
-                rule.setProperties(properties);
             }
         }
     }
