@@ -82,33 +82,7 @@ public class RuleTest {
     }
 
     @Test
-    public void rulesIsOrderedByRuleOrder() {
-        int ruleOrder1 = 2;
-        final Map<String, Object> properties1 = new HashMap<>();
-        properties1.put(Rule.PROP_RULE_ORDER, String.valueOf(ruleOrder1));
-
-        int ruleOrder2 = 1;
-        final Map<String, Object> properties2 = new HashMap<>();
-        properties2.put(Rule.PROP_RULE_ORDER, String.valueOf(ruleOrder2));
-
-        int ruleOrder3 = 3;
-        final Map<String, Object> properties3 = new HashMap<>();
-        properties3.put(Rule.PROP_RULE_ORDER, String.valueOf(ruleOrder3));
-
-        Rule rule1 = new Rule();
-        rule1.setParentId("sameParent").setId("aRule").setProperties(properties1);
-        Rule rule2 = new Rule();
-        rule2.setParentId("sameParent").setId("otherRule").setProperties(properties2);
-        Rule rule3 = new Rule();
-        rule3.setParentId("sameParent").setId("otherOtherRule").setProperties(properties3);
-
-        assertThat(rule2).isLessThan(rule3);
-        assertThat(rule1).isGreaterThan(rule2);
-        assertThat(rule1).isLessThan(rule3);
-    }
-
-    @Test
-    public void rulesInSortedList() {
+    public void rulesInList() {
         LinkedList<Rule> rules = IntStream.rangeClosed(1, 5).parallel().boxed().map(aInteger -> {
             HashMap<String, Object> properties = new HashMap<>();
             properties.put(Rule.PROP_RULE_ORDER, aInteger);
@@ -117,13 +91,12 @@ public class RuleTest {
                 .setParentId("sameParent")
                 .setProperties(properties);
             return rule;
-        }).sorted().collect(Collectors.toCollection(LinkedList<Rule>::new));
+        }).collect(Collectors.toCollection(LinkedList<Rule>::new));
         assertThat(rules).hasSize(5);
-        assertThat(rules).isSorted();
     }
 
     @Test
-    public void rulesInSortedSet() {
+    public void rulesInSet() {
         Set<Rule> rules = new ConcurrentSkipListSet<>();
         rules.addAll(IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
             HashMap<String, Object> properties = new HashMap<>();
@@ -138,7 +111,7 @@ public class RuleTest {
     }
 
     @Test
-    public void rulesInSortedSetWithSameId() {
+    public void rulesInSetWithSameId() {
         Set<Rule> rules = IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
             HashMap<String, Object> properties = new HashMap<>();
             properties.put(Rule.PROP_RULE_ORDER, aInteger);
@@ -147,12 +120,12 @@ public class RuleTest {
                 .setParentId("sameParent")
                 .setProperties(properties);
             return rule;
-        }).sorted().collect(Collectors.toSet());
+        }).collect(Collectors.toSet());
         assertThat(rules).hasSize(1);
     }
 
     @Test
-    public void rulesInSortedSetWithDiffParent() {
+    public void rulesInSetWithDiffParent() {
         Set<Rule> rules = IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
             HashMap<String, Object> properties = new HashMap<>();
             properties.put(Rule.PROP_RULE_ORDER, aInteger);
@@ -161,12 +134,12 @@ public class RuleTest {
                 .setParentId(aInteger.toString())
                 .setProperties(properties);
             return rule;
-        }).sorted().collect(Collectors.toSet());
+        }).collect(Collectors.toSet());
         assertThat(rules).hasSize(5);
     }
 
     @Test
-    public void rulesInSortedSetWithSameOrder() {
+    public void rulesInSetWithSameOrder() {
         Set<Rule> rules = IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
             HashMap<String, Object> properties = new HashMap<>();
             properties.put(Rule.PROP_RULE_ORDER, 1);
@@ -175,13 +148,13 @@ public class RuleTest {
                 .setParentId(aInteger.toString())
                 .setProperties(properties);
             return rule;
-        }).sorted().collect(Collectors.toSet());
+        }).collect(Collectors.toSet());
         assertThat(rules).hasSize(5);
     }
 
 
     @Test
-    public void rulesInSortedMap() {
+    public void rulesInMap() {
         Map<String, Rule> rules = new ConcurrentSkipListMap<>();
         rules.putAll(IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
             HashMap<String, Object> properties = new HashMap<>();
@@ -196,7 +169,7 @@ public class RuleTest {
     }
 
     @Test
-    public void rulesInSortedMapWithSameId() {
+    public void rulesInMapWithSameId() {
         Map<Rule, Rule> rules = new TreeMap<>();
         IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
             HashMap<String, Object> properties = new HashMap<>();
@@ -213,7 +186,7 @@ public class RuleTest {
     }
 
     @Test
-    public void rulesInSortedMapWithDiffParent() {
+    public void rulesInMapWithDiffParent() {
         Map<Rule, Rule> rules = new ConcurrentSkipListMap<>();
         IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
             HashMap<String, Object> properties = new HashMap<>();
@@ -230,7 +203,7 @@ public class RuleTest {
     }
 
     @Test
-    public void rulesInSortedMapWithSameOrder() {
+    public void rulesInMapWithSameOrder() {
         Map<Rule, Rule> rules = new ConcurrentSkipListMap<>();
         IntStream.rangeClosed(1, 5).boxed().map(aInteger -> {
             HashMap<String, Object> properties = new HashMap<>();
