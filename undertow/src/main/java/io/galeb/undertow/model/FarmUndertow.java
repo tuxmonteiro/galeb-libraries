@@ -35,7 +35,6 @@ import io.galeb.undertow.loaders.BackendPoolLoader;
 import io.galeb.undertow.loaders.Loader;
 import io.galeb.undertow.loaders.RuleLoader;
 import io.galeb.undertow.loaders.VirtualHostLoader;
-import io.galeb.undertow.scheduler.*;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.accesslog.AccessLogReceiver;

@@ -191,7 +191,7 @@ public class Entity implements Serializable, Comparable<Entity> {
 
     @Override
     public int compareTo(Entity o) {
-        return o != null ? compoundId().compareTo(o.compoundId()) : Integer.MIN_VALUE;
+        return o != null ? compoundId().compareTo(o.compoundId()) : -1;
     }
 
 }

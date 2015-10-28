@@ -48,32 +48,6 @@ public class Rule extends Entity {
         return new Rule(this);
     }
 
-    @Override
-    public int compareTo(Entity entity) {
-        final int BEFORE = -1;
-        final int AFTER = 1;
-
-        if (entity == null || !(entity instanceof Rule)) {
-            return super.compareTo(entity);
-        }
-        if (super.equals(entity)) {
-            return 0;
-        }
-        Rule that = (Rule) entity;
-        int diff = this.getRuleOrder() - that.getRuleOrder();
-        return diff == 0 ? super.compareTo(entity) : diff < 0 ? BEFORE : AFTER;
-    }
-
-    @Override
-    public boolean equals(Object entity) {
-        return super.equals(entity);
-    }
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
     public int getRuleOrder() {
         Object ruleOrderObj = getProperty(Rule.PROP_RULE_ORDER);
         if (ruleOrderObj instanceof Integer) {

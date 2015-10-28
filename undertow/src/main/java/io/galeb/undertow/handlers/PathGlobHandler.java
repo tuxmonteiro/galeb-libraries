@@ -16,21 +16,24 @@
 
 package io.galeb.undertow.handlers;
 
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.galeb.core.model.Rule;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.ResponseCodeHandler;
+import io.undertow.util.*;
 import jodd.util.Wildcard;
 
 public class PathGlobHandler implements HttpHandler {
 
     private HttpHandler defaultHandler = ResponseCodeHandler.HANDLE_404;
-    private final SortedMap<Rule, HttpHandler> rules = new TreeMap<>();
+    private final Map<Rule, HttpHandler> rules = new CopyOnWriteMap<>();
+
+    private Comparator<Map.Entry<Rule, HttpHandler>> ruleOrderComparator() {
+        return (e1, e2) -> Integer.compare(e1.getKey().getRuleOrder(), e2.getKey().getRuleOrder());
+    }
 
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
@@ -41,7 +44,7 @@ public class PathGlobHandler implements HttpHandler {
         final String path = exchange.getRelativePath();
 
         AtomicBoolean hit = new AtomicBoolean(false);
-        rules.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> {
+        rules.entrySet().stream().sorted(ruleOrderComparator()).forEach(entry -> {
             if (!hit.get()) {
                 String pathKey = entry.getKey().getMatch();
                 if (pathKey.endsWith("/") && !pathKey.contains("*")) {
