@@ -116,6 +116,9 @@ public class Farm extends Entity {
     }
 
     public EntityController getController(String className) {
+        if (className == null) {
+            return EntityController.NULL;
+        }
         switch (className) {
             case Backend.CLASS_NAME:
                 return backendController;
