@@ -90,12 +90,14 @@ public class RuleCollection implements Collection<Rule, VirtualHost> {
                 .forEach(virtualHost -> {
                     final Rule myrule = ((VirtualHost) virtualHost).getRule(ruleId);
                     myrule.setProperties(rule.getProperties());
+                    myrule.setVersion(rule.getVersion());
                     myrule.updateETag();
                     myrule.updateModifiedAt();
                 });
             rules.stream().filter(myrule -> myrule.equals(rule))
                 .forEach(myrule -> {
                     myrule.setProperties(rule.getProperties());
+                    myrule.setVersion(rule.getVersion());
                     myrule.updateETag();
                     myrule.updateModifiedAt();
                 });
