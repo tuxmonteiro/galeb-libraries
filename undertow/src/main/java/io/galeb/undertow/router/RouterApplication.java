@@ -71,9 +71,11 @@ public class RouterApplication {
         final int works = options.containsKey("workers") ? Integer.parseInt(options.get("workers")) : Runtime.getRuntime().availableProcessors()*8;
         final int maxWorks = options.containsKey("max_workers") ? Integer.parseInt(options.get("max_workers")) : works;
         final int backlog = options.containsKey("backlog") ? Integer.parseInt(options.get("backlog")) : 1000;
+        final int idleTimeout = options.containsKey("idleTimeout") ? Integer.parseInt(options.get("idleTimeout")) : -1;
 
         final Undertow router = Undertow.builder().addHttpListener(port, host)
                 .setServerOption(UndertowOptions.RECORD_REQUEST_START_TIME, true)
+                .setServerOption(UndertowOptions.IDLE_TIMEOUT, idleTimeout)
                 .setIoThreads(iothreads)
                 .setWorkerThreads(works)
                 .setWorkerOption(Options.WORKER_TASK_MAX_THREADS, maxWorks)
