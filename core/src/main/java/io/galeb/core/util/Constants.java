@@ -18,12 +18,8 @@ package io.galeb.core.util;
 
 public final class Constants {
 
-    public static final String TRUE  = Boolean.toString(true);
-
-    public static final String FALSE = Boolean.toString(false);
-
     public enum SysProp {
-        PROP_ENABLE_ACCESSLOG  ("io.galeb.accesslog"        , FALSE),
+        PROP_ENABLE_ACCESSLOG  ("io.galeb.accesslog"        , Boolean.toString(false)),
         PROP_MAXCONN           ("io.galeb.maxConn"          , String.valueOf(1000)),
         PROP_SCHEDULER_INTERVAL("io.galeb.schedulerInterval", String.valueOf(1000)),
         PROP_HOSTNAME          ("io.galeb.fqdn"             , System.getenv("HOSTNAME"));

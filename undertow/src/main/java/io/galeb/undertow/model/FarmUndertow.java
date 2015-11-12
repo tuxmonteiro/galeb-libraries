@@ -16,7 +16,6 @@
 
 package io.galeb.undertow.model;
 
-import static io.galeb.core.util.Constants.TRUE;
 import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
@@ -37,8 +36,8 @@ import io.galeb.undertow.loaders.RuleLoader;
 import io.galeb.undertow.loaders.VirtualHostLoader;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
+import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.accesslog.AccessLogReceiver;
-import io.undertow.util.CopyOnWriteMap;
 
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +47,8 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 
+import io.undertow.util.CopyOnWriteMap;
+import io.undertow.util.StatusCodes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.spi.ExtendedLogger;
 
@@ -63,7 +64,8 @@ public class FarmUndertow extends Farm {
     private StatsdClient statsdClient;
 
     private HttpHandler rootHandler;
-    private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
+    private final HttpHandler virtualHostHandler = new NameVirtualHostHandler()
+                                                    .setDefaultHandler(new ResponseCodeHandler(StatusCodes.NOT_FOUND+400));
     private final Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
 
     public FarmUndertow() {
@@ -99,7 +101,7 @@ public class FarmUndertow extends Farm {
             }
         };
 
-        rootHandler = TRUE.equals(enableAccessLogProperty) ?
+        rootHandler = Boolean.parseBoolean(enableAccessLogProperty) ?
                 new AccessLogExtendedHandler(hostMetricsHandler,
                                              accessLogReceiver,
                                              LOGPATTERN,

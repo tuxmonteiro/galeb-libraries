@@ -17,7 +17,6 @@
 package io.galeb.undertow.extractable;
 
 import io.galeb.core.extractable.SourceIP;
-import io.galeb.core.util.Constants;
 import io.undertow.server.HttpServerExchange;
 
 public class UndertowSourceIP implements SourceIP {
@@ -31,7 +30,7 @@ public class UndertowSourceIP implements SourceIP {
         }
 
         if (IGNORE_XFORWARDED_FOR.isPresent() &&
-                (!IGNORE_XFORWARDED_FOR.get().equalsIgnoreCase(Constants.FALSE) ||
+                (!IGNORE_XFORWARDED_FOR.get().equalsIgnoreCase(Boolean.toString(false)) ||
                  !IGNORE_XFORWARDED_FOR.get().equals("0"))) {
             aSourceIP = exchange.getSourceAddress().getHostString();
         } else {

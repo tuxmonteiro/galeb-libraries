@@ -21,17 +21,22 @@ import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import io.undertow.UndertowLogger;
+import io.undertow.client.ClientConnection;
+import io.undertow.client.UndertowClient;
+import io.undertow.util.AttachmentKey;
+import io.undertow.util.Headers;
+import io.undertow.util.StatusCodes;
+import org.xnio.IoUtils;
 import org.xnio.OptionMap;
 import org.xnio.ssl.XnioSsl;
 
-import io.undertow.client.UndertowClient;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.proxy.ExclusivityChecker;
 import io.undertow.server.handlers.proxy.LoadBalancingProxyClient;
 import io.undertow.server.handlers.proxy.ProxyCallback;
 import io.undertow.server.handlers.proxy.ProxyClient;
 import io.undertow.server.handlers.proxy.ProxyConnection;
-import io.undertow.util.Headers;
 
 public class BackendProxyClient implements ProxyClient {
 
@@ -63,7 +68,8 @@ public class BackendProxyClient implements ProxyClient {
             final ProxyCallback<ProxyConnection> callback, long timeout, TimeUnit timeUnit) {
 
         backendSelector.setExchange(exchange);
-        loadBalanceProxyClient.getConnection(target, exchange, callback, timeout, timeUnit);
+        final ProxyCallback<ProxyConnection> newCallback = new LocalProxyCallback(callback);
+        loadBalanceProxyClient.getConnection(target, exchange, newCallback, timeout, timeUnit);
     }
 
     public BackendProxyClient addSessionCookieName(
@@ -194,5 +200,58 @@ public class BackendProxyClient implements ProxyClient {
 
     public void reset() {
         backendSelector.reset();
+    }
+
+    private final static class LocalProxyCallback implements ProxyCallback<ProxyConnection> {
+
+        private static final AttachmentKey<ProxyConnection> CONNECTION = AttachmentKey.create(ProxyConnection.class);
+
+        private final ProxyCallback<ProxyConnection> callback;
+
+        public LocalProxyCallback(ProxyCallback<ProxyConnection> callback) {
+            this.callback = callback;
+        }
+
+        @Override
+        public void completed(HttpServerExchange exchange, ProxyConnection result) {
+            callback.completed(exchange, result);
+        }
+
+        @Override
+        public void failed(HttpServerExchange exchange) {
+            callback.failed(exchange);
+        }
+
+        @Override
+        public void couldNotResolveBackend(HttpServerExchange exchange) {
+            if (exchange.isResponseStarted()) {
+                IoUtils.safeClose(exchange.getConnection());
+            } else {
+                exchange.setResponseCode(StatusCodes.SERVICE_UNAVAILABLE+400);
+                exchange.endExchange();
+            }
+        }
+
+        @Override
+        public void queuedRequestFailed(HttpServerExchange exchange) {
+            callback.queuedRequestFailed(exchange);
+        }
+
+        void cancel(final HttpServerExchange exchange) {
+            final ProxyConnection connectionAttachment = exchange.getAttachment(CONNECTION);
+            if (connectionAttachment != null) {
+                ClientConnection clientConnection = connectionAttachment.getConnection();
+                UndertowLogger.REQUEST_LOGGER.timingOutRequest(clientConnection.getPeerAddress() + "" + exchange.getRequestURI());
+                IoUtils.safeClose(clientConnection);
+            } else {
+                UndertowLogger.REQUEST_LOGGER.timingOutRequest(exchange.getRequestURI());
+            }
+            if (exchange.isResponseStarted()) {
+                IoUtils.safeClose(exchange.getConnection());
+            } else {
+                exchange.setResponseCode(StatusCodes.SERVICE_UNAVAILABLE+400);
+                exchange.endExchange();
+            }
+        }
     }
 }

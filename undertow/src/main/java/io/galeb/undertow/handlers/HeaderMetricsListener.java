@@ -29,14 +29,13 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
         final String real_dest = exchange.getAttachment(BackendSelector.REAL_DEST);
-        if (real_dest != null) {
-            String virtualhost = exchange.getHostName();
-            String backend = real_dest;
-            String httpStatus = String.valueOf(exchange.getResponseCode());
-            long requestTime = (System.nanoTime() - exchange.getRequestStartTime())/1000000L;
-            sendHttpStatusCount(virtualhost, backend, httpStatus);
-            sendRequestTime(virtualhost, backend, requestTime);
-        }
+        String virtualhost = exchange.getHostName();
+        String backend = real_dest != null ? real_dest : "UNKNOWN@" + virtualhost;
+        String httpStatus = String.valueOf(exchange.getResponseCode());
+        long requestTime = (System.nanoTime() - exchange.getRequestStartTime())/1000000L;
+        sendHttpStatusCount(virtualhost, backend, httpStatus);
+        sendRequestTime(virtualhost, backend, requestTime);
+
         nextListener.proceed();
     }
 
