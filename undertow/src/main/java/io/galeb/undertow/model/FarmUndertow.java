@@ -88,7 +88,7 @@ public class FarmUndertow extends Farm {
         final String EXTENDED_LOGPATTERN = "(%v -> " + AccessLogExtendedHandler.REAL_DEST
                                            + " [%D]ms \"X-Real-IP: %{i,X-Real-IP}\""
                                            + " \"X-Forwarded-For: %{i,X-Forwarded-For}\")";
-        final String LOGPATTERN = "%h %l %u %t \"%r\" %s %b " + EXTENDED_LOGPATTERN;
+        final String LOGPATTERN = "%h\t%l\t%u\t%t\t%r\t%s\t%b\t" + EXTENDED_LOGPATTERN;
 
         final AccessLogReceiver accessLogReceiver  = new AccessLogReceiver() {
             private final ExtendedLogger logger =
@@ -104,7 +104,8 @@ public class FarmUndertow extends Farm {
                 new AccessLogExtendedHandler(hostMetricsHandler,
                                              accessLogReceiver,
                                              LOGPATTERN,
-                                             FarmUndertow.class.getClassLoader()) :
+                                             FarmUndertow.class.getClassLoader(),
+                                             log) :
                 hostMetricsHandler;
     }
 

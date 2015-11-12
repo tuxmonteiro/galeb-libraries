@@ -29,9 +29,9 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
 
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
-        final String real_dest = exchange.getAttachment(BackendSelector.REAL_DEST);
+        final String realDest = exchange.getAttachment(BackendSelector.REAL_DEST);
         String virtualhost = exchange.getHostName();
-        String backend = real_dest != null ? real_dest : UNKNOWN + "@" + virtualhost;
+        String backend = realDest != null ? realDest : UNKNOWN + "@" + virtualhost;
         int statusCode = exchange.getResponseCode();
         if (backend.startsWith(UNKNOWN)) {
             statusCode = statusCode + 400;

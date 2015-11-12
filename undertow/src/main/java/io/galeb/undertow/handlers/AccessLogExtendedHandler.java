@@ -16,6 +16,7 @@
 
 package io.galeb.undertow.handlers;
 
+import io.galeb.core.logging.*;
 import io.undertow.attribute.ExchangeAttribute;
 import io.undertow.attribute.ExchangeAttributes;
 import io.undertow.attribute.SubstituteEmptyWrapper;
@@ -33,14 +34,18 @@ public class AccessLogExtendedHandler implements HttpHandler {
     private final AccessLogReceiver accessLogReceiver;
     private final ExchangeAttribute tokens;
     private final HttpHandler next;
+    private final Logger log;
 
     public AccessLogExtendedHandler(HttpHandler next,
                                     AccessLogReceiver accessLogReceiver,
                                     String formatString,
-                                    ClassLoader classLoader) {
+                                    ClassLoader classLoader,
+                                    Logger log) {
+        this.log = log;
         this.next = next;
         this.accessLogReceiver = accessLogReceiver;
         tokens = ExchangeAttributes.parser(classLoader, new SubstituteEmptyWrapper("-")).parse(formatString);
+        log.info("AccessLogExtendedHandler enabled");
     }
 
     @Override
@@ -54,14 +59,14 @@ public class AccessLogExtendedHandler implements HttpHandler {
         @Override
         public void exchangeEvent(HttpServerExchange exchange, NextListener nextListener) {
             try {
-                final String uri = exchange.getAttachment(BackendSelector.REAL_DEST);
-                String realDest = uri != null ? uri : UNKNOWN;
+                final String tempRealDest = exchange.getAttachment(BackendSelector.REAL_DEST);
+                String realDest = tempRealDest != null ? tempRealDest : UNKNOWN;
+                String message = tokens.readAttribute(exchange);
                 int realStatus = exchange.getResponseCode();
                 if (UNKNOWN.equals(realDest)) {
-                    exchange.setResponseCode(realStatus + 400);
+                    message = message.replaceAll("^([^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t)[^\t]+(\t.*)$", "$1" +
+                            String.valueOf(realStatus + 400) + "$2");
                 }
-                final String message = tokens.readAttribute(exchange);
-                exchange.setResponseCode(realStatus);
                 accessLogReceiver.logMessage(message.replaceAll(REAL_DEST, realDest));
             } finally {
                 nextListener.proceed();
