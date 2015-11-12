@@ -64,8 +64,7 @@ public class FarmUndertow extends Farm {
     private StatsdClient statsdClient;
 
     private HttpHandler rootHandler;
-    private final HttpHandler virtualHostHandler = new NameVirtualHostHandler()
-                                                    .setDefaultHandler(new ResponseCodeHandler(StatusCodes.NOT_FOUND+400));
+    private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
     private final Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
 
     public FarmUndertow() {

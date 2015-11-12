@@ -68,8 +68,7 @@ public class BackendProxyClient implements ProxyClient {
             final ProxyCallback<ProxyConnection> callback, long timeout, TimeUnit timeUnit) {
 
         backendSelector.setExchange(exchange);
-        final ProxyCallback<ProxyConnection> newCallback = new LocalProxyCallback(callback);
-        loadBalanceProxyClient.getConnection(target, exchange, newCallback, timeout, timeUnit);
+        loadBalanceProxyClient.getConnection(target, exchange, callback, timeout, timeUnit);
     }
 
     public BackendProxyClient addSessionCookieName(
@@ -202,56 +201,4 @@ public class BackendProxyClient implements ProxyClient {
         backendSelector.reset();
     }
 
-    private final static class LocalProxyCallback implements ProxyCallback<ProxyConnection> {
-
-        private static final AttachmentKey<ProxyConnection> CONNECTION = AttachmentKey.create(ProxyConnection.class);
-
-        private final ProxyCallback<ProxyConnection> callback;
-
-        public LocalProxyCallback(ProxyCallback<ProxyConnection> callback) {
-            this.callback = callback;
-        }
-
-        @Override
-        public void completed(HttpServerExchange exchange, ProxyConnection result) {
-            callback.completed(exchange, result);
-        }
-
-        @Override
-        public void failed(HttpServerExchange exchange) {
-            callback.failed(exchange);
-        }
-
-        @Override
-        public void couldNotResolveBackend(HttpServerExchange exchange) {
-            if (exchange.isResponseStarted()) {
-                IoUtils.safeClose(exchange.getConnection());
-            } else {
-                exchange.setResponseCode(StatusCodes.SERVICE_UNAVAILABLE+400);
-                exchange.endExchange();
-            }
-        }
-
-        @Override
-        public void queuedRequestFailed(HttpServerExchange exchange) {
-            callback.queuedRequestFailed(exchange);
-        }
-
-        void cancel(final HttpServerExchange exchange) {
-            final ProxyConnection connectionAttachment = exchange.getAttachment(CONNECTION);
-            if (connectionAttachment != null) {
-                ClientConnection clientConnection = connectionAttachment.getConnection();
-                UndertowLogger.REQUEST_LOGGER.timingOutRequest(clientConnection.getPeerAddress() + "" + exchange.getRequestURI());
-                IoUtils.safeClose(clientConnection);
-            } else {
-                UndertowLogger.REQUEST_LOGGER.timingOutRequest(exchange.getRequestURI());
-            }
-            if (exchange.isResponseStarted()) {
-                IoUtils.safeClose(exchange.getConnection());
-            } else {
-                exchange.setResponseCode(StatusCodes.SERVICE_UNAVAILABLE+400);
-                exchange.endExchange();
-            }
-        }
-    }
 }
