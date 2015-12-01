@@ -12,7 +12,6 @@ Its main features are:
 * Highly scalable
 * Masterless (SNA - Shared nothing architecture)
 * Sends metrics to external counters (eg statsd)
-* Webhooks support
 
 Using
 -----
