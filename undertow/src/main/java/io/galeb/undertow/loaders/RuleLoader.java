@@ -28,6 +28,7 @@ import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.Rule;
 import io.galeb.core.model.VirtualHost;
+import io.galeb.core.util.Constants.SysProp;
 import io.galeb.undertow.handlers.BackendProxyClient;
 import io.galeb.undertow.handlers.PathGlobHandler;
 import io.undertow.server.HttpHandler;
@@ -97,7 +98,7 @@ public class RuleLoader implements Loader {
                                 return;
                             }
                             HttpHandler pathHandler = hosts.get(virtualhostId);
-                            final HttpHandler targetHandler = new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404);
+                            final HttpHandler targetHandler = new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404, false, reuseXForwarded());
 
                             if (pathHandler instanceof PathGlobHandler) {
                                 ((PathGlobHandler) pathHandler).addRule(rule, targetHandler);
@@ -148,6 +149,12 @@ public class RuleLoader implements Loader {
 
     private boolean hasTarget(String targetId) {
         return targetId != null && !farm.getCollection(BackendPool.class).getListByID(targetId).isEmpty();
+    }
+
+    private boolean reuseXForwarded() {
+        String reuseXForwardedStr = System.getProperty(SysProp.PROP_REUSE_XFORWARDED.toString(),
+                SysProp.PROP_REUSE_XFORWARDED.def());
+        return Boolean.valueOf(reuseXForwardedStr);
     }
 
 }
