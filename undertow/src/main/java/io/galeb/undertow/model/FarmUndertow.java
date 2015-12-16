@@ -64,7 +64,7 @@ public class FarmUndertow extends Farm {
     private StatsdClient statsdClient;
 
     private HttpHandler rootHandler;
-    private final HttpHandler virtualHostHandler = new NameVirtualHostHandler();
+    private final NameVirtualHostHandler virtualHostHandler = new NameVirtualHostHandler();
     private final Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
 
     public FarmUndertow() {
@@ -78,6 +78,7 @@ public class FarmUndertow extends Farm {
     }
 
     private void setRootHandler() {
+        virtualHostHandler.setDefaultHandler(ResponseCodeHandler.HANDLE_500);
         final HttpHandler hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler)
                                                     .setStatsd(statsdClient)
                                                     .setLogger(log);
