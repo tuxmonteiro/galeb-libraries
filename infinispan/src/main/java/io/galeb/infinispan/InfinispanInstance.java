@@ -16,17 +16,21 @@
 
 package io.galeb.infinispan;
 
-import org.infinispan.manager.*;
+import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
 
 import java.io.IOException;
 
+import static io.galeb.core.util.Constants.SysProp.PROP_CLUSTER_CONF;
+
 public class InfinispanInstance {
 
-    private static final DefaultCacheManager CACHE_MANAGER;
+    private static final EmbeddedCacheManager CACHE_MANAGER;
     static {
-        DefaultCacheManager CACHE_MANAGER1 = null;
+        String infinispanCfg = System.getProperty(PROP_CLUSTER_CONF.name(), "infinispan.xml");
+        EmbeddedCacheManager CACHE_MANAGER1 = null;
         try {
-            CACHE_MANAGER1 = new DefaultCacheManager("infinispan.xml");
+            CACHE_MANAGER1 = new DefaultCacheManager(infinispanCfg);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -38,7 +42,7 @@ public class InfinispanInstance {
         // singleton ?
     }
 
-    public static DefaultCacheManager getCacheManager() {
+    public static EmbeddedCacheManager getCacheManager() {
         return CACHE_MANAGER;
     }
 }

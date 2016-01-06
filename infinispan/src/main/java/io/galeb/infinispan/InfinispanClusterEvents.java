@@ -16,15 +16,15 @@
 
 package io.galeb.infinispan;
 
-import io.galeb.core.cluster.*;
-import org.infinispan.manager.*;
+import io.galeb.core.cluster.ClusterEvents;
+import org.infinispan.manager.EmbeddedCacheManager;
 
-import javax.enterprise.inject.*;
+import javax.enterprise.inject.Default;
 
 @Default
 public class InfinispanClusterEvents implements ClusterEvents {
 
-    private static final DefaultCacheManager CACHE_MANAGER = InfinispanInstance.getCacheManager();
+    private static final EmbeddedCacheManager CACHE_MANAGER = InfinispanInstance.getCacheManager();
 
     @Override
     public boolean isReady() {
