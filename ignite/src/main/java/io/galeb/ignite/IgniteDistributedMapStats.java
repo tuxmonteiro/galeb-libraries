@@ -23,6 +23,6 @@ import io.galeb.core.cluster.DistributedMapStats;
 public class IgniteDistributedMapStats implements DistributedMapStats {
     @Override
     public String getStats() {
-        return null;
+        return "";
     }
 }

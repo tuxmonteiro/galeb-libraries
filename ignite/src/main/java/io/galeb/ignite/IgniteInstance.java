@@ -19,14 +19,22 @@
 package io.galeb.ignite;
 
 import org.apache.ignite.Ignite;
+import org.apache.ignite.Ignition;
 
-import java.util.concurrent.atomic.AtomicReference;
+import static io.galeb.core.util.Constants.SysProp.PROP_CLUSTER_CONF;
 
 public class IgniteInstance {
 
-    AtomicReference<Object> igniteInstance = new AtomicReference<Object>();
+    public static Ignite INSTANCE = null;
+    static {
+        try {
+            INSTANCE = Ignition.start(System.getProperty(PROP_CLUSTER_CONF.name(), "ignite.xml"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-    public static Ignite getInstance() {
-        return null;
+    private IgniteInstance() {
+        // singleton?
     }
 }

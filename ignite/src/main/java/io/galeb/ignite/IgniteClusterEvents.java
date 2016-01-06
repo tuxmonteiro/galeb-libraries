@@ -21,14 +21,16 @@ package io.galeb.ignite;
 import io.galeb.core.cluster.ClusterEvents;
 import io.galeb.core.cluster.ClusterListener;
 
+import static io.galeb.ignite.IgniteInstance.INSTANCE;
+
 public class IgniteClusterEvents implements ClusterEvents {
     @Override
     public void registerListener(ClusterListener clusterListener) {
-
+        // TODO: Register Listener
     }
 
     @Override
     public boolean isReady() {
-        return false;
+        return INSTANCE.cluster().localNode().isLocal();
     }
 }

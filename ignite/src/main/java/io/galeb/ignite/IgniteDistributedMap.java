@@ -21,33 +21,55 @@ package io.galeb.ignite;
 import io.galeb.core.cluster.DistributedMap;
 import io.galeb.core.cluster.DistributedMapListener;
 import io.galeb.core.cluster.DistributedMapStats;
+import org.apache.ignite.events.*;
 
+import javax.cache.Cache;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+
+import static io.galeb.ignite.IgniteInstance.INSTANCE;
 
 public class IgniteDistributedMap implements DistributedMap<String, String> {
 
+    private static final Set<DistributedMapListener> LISTENERS = new CopyOnWriteArraySet<>();
+    private final DistributedMapStats distributedMapStats = new IgniteDistributedMapStats();
+    private final Map<String, ConcurrentMap> maps = new ConcurrentHashMap<>();
+
     @Override
+    @SuppressWarnings("unchecked")
     public ConcurrentMap<String, String> getMap(String key) {
-        return null;
+        if (maps.containsKey(key)) {
+            return maps.get(key);
+        }
+        final Cache<String, String> cache = INSTANCE.getOrCreateCache(key);
+        INSTANCE.events(INSTANCE.cluster().forCacheNodes(key)).remoteListen(null, e -> true,
+                EventType.EVT_CACHE_OBJECT_PUT,
+                EventType.EVT_CACHE_OBJECT_REMOVED);
+        INSTANCE.events().remoteQuery()
+        return new ProxyJCacheToConcurrentMap<>(cache);
     }
 
     @Override
     public void remove(String key) {
-
+        INSTANCE.destroyCache(key);
+        maps.remove(key);
     }
 
     @Override
     public void registerListener(DistributedMapListener distributedMapListener) {
-
+        LISTENERS.add(distributedMapListener);
     }
 
     @Override
     public void unregisterListener(DistributedMapListener distributedMapListener) {
-
+        LISTENERS.remove(distributedMapListener);
     }
 
     @Override
     public DistributedMapStats getStats() {
-        return null;
+        return distributedMapStats;
     }
 }
