@@ -40,11 +40,6 @@
       <artifactId>infinispan-core</artifactId>
       <version>${org.infinispan.version}</version>
     </dependency>
-    <dependency>
-      <groupId>javax.cache</groupId>
-      <artifactId>cache-api</artifactId>
-      <version>${javax.cache.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>

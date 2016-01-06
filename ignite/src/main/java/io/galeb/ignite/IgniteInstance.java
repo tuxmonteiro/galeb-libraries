@@ -18,15 +18,23 @@
 
 package io.galeb.ignite;
 
-import org.apache.ignite.Ignite;
+import org.apache.ignite.*;
 
 import java.util.concurrent.atomic.AtomicReference;
 
 public class IgniteInstance {
 
-    AtomicReference<Object> igniteInstance = new AtomicReference<Object>();
-
-    public static Ignite getInstance() {
-        return null;
+    public static Ignite INSTANCE = null;
+    static {
+        try {
+            INSTANCE = Ignition.start(System.getProperty("ignite.configuration.file", "ignite.xml"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
+    public static void stop() {
+        INSTANCE.cluster().localNode().
+    }
+
 }

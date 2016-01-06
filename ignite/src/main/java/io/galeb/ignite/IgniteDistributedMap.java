@@ -21,33 +21,42 @@ package io.galeb.ignite;
 import io.galeb.core.cluster.DistributedMap;
 import io.galeb.core.cluster.DistributedMapListener;
 import io.galeb.core.cluster.DistributedMapStats;
+import org.apache.ignite.events.Event;
+import org.apache.ignite.lang.IgnitePredicate;
 
-import java.util.concurrent.ConcurrentMap;
+import javax.cache.Cache;
+import java.util.*;
+import java.util.concurrent.*;
+
+import static io.galeb.ignite.IgniteInstance.INSTANCE;
 
 public class IgniteDistributedMap implements DistributedMap<String, String> {
 
+    private static final Set<DistributedMapListener> LISTENERS = new CopyOnWriteArraySet<>();
+
     @Override
     public ConcurrentMap<String, String> getMap(String key) {
+        final Cache<String, String> cache = INSTANCE.getOrCreateCache(key);
         return null;
     }
 
     @Override
     public void remove(String key) {
-
+        INSTANCE.destroyCache(key);
     }
 
     @Override
     public void registerListener(DistributedMapListener distributedMapListener) {
-
+        LISTENERS.add(distributedMapListener);
     }
 
     @Override
     public void unregisterListener(DistributedMapListener distributedMapListener) {
-
+        LISTENERS.remove(distributedMapListener);
     }
 
     @Override
     public DistributedMapStats getStats() {
-        return null;
+        return new IgniteDistributedMapStats();
     }
 }

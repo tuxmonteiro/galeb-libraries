@@ -31,6 +31,7 @@ import io.galeb.core.statsd.StatsdClient;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.cache.*;
 import javax.inject.Inject;
 
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -69,8 +70,8 @@ public class AbstractServiceTest {
         // Fake
 
         @Override
-        public ConcurrentMap<String, String> getMap(String key) {
-            return new ConcurrentHashMap<>();
+        public Cache<String, String> getMap(String key) {
+            return null;
         }
 
         @Override

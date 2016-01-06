@@ -17,8 +17,8 @@
 package io.galeb.core.services;
 
 import java.util.Arrays;
-import java.util.concurrent.ConcurrentMap;
 
+import javax.cache.Cache;
 import javax.inject.Inject;
 
 import io.galeb.core.cluster.ClusterEvents;
@@ -107,13 +107,13 @@ public abstract class AbstractService implements DistributedMapListener,
 
     @Override
     public void entryAdded(Entity entity) {
-        logger.debug("entryAdded: "+entity.getId()+" ("+entity.getEntityType()+")");
+        logger.info("entryAdded: "+entity.getId()+" ("+entity.getEntityType()+")");
         entityAdd(entity);
     }
 
     @Override
     public void entryRemoved(Entity entity) {
-        logger.debug("entryRemoved: "+entity.getId()+" ("+entity.getEntityType()+")");
+        logger.info("entryRemoved: "+entity.getId()+" ("+entity.getEntityType()+")");
         EntityController entityController = farm.getController(
                 getClassNameFromEntityType(entity.getEntityType()));
         try {
@@ -125,7 +125,7 @@ public abstract class AbstractService implements DistributedMapListener,
 
     @Override
     public void entryUpdated(Entity entity) {
-        logger.debug("entryUpdated: "+entity.getId()+" ("+entity.getEntityType()+")");
+        logger.info("entryUpdated: "+entity.getId()+" ("+entity.getEntityType()+")");
         EntityController entityController = farm.getController(
                 getClassNameFromEntityType(entity.getEntityType()));
         try {
@@ -137,7 +137,7 @@ public abstract class AbstractService implements DistributedMapListener,
 
     @Override
     public void mapCleared(String mapName) {
-        logger.debug("mapCleared: "+mapName);
+        logger.info("mapCleared: "+mapName);
         EntityController entityController = farm.getController(
                 getClassNameFromEntityType(mapName.toLowerCase()));
         try {
@@ -149,13 +149,13 @@ public abstract class AbstractService implements DistributedMapListener,
 
     @Override
     public void entryEvicted(Entity entity) {
-        logger.debug("entryEvicted: "+entity.getId()+" ("+entity.getEntityType()+")");
+        logger.info("entryEvicted: "+entity.getId()+" ("+entity.getEntityType()+")");
         entryRemoved(entity);
     }
 
     @Override
     public void mapEvicted(String mapName) {
-        logger.debug("mapEvicted: "+mapName);
+        logger.info("mapEvicted: "+mapName);
         mapCleared(mapName);
     }
 
@@ -167,8 +167,9 @@ public abstract class AbstractService implements DistributedMapListener,
         distributedMap.registerListener(this);
         Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class).stream()
             .forEach(clazz -> {
-                ConcurrentMap<String, String> map = distributedMap.getMap(clazz.getName());
-                map.forEach( (key, value) -> {
+                Cache<String, String> map = distributedMap.getMap(clazz.getName());
+                map.forEach( entry -> {
+                    String value = entry.getValue();
                     Entity entity = (Entity) JsonObject.fromJson(value, clazz);
                     entity.setEntityType(clazz.getSimpleName().toLowerCase());
                     entityAdd(entity);

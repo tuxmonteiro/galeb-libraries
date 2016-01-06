@@ -5,11 +5,14 @@ import io.galeb.core.cluster.DistributedMapListener;
 import io.galeb.core.cluster.DistributedMapStats;
 import io.galeb.core.json.JsonObject;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
+import javax.cache.*;
+import javax.cache.configuration.*;
+import javax.cache.spi.*;
 import javax.enterprise.inject.Default;
 
 import com.hazelcast.core.EntryEvent;
@@ -34,10 +37,15 @@ public class HzDistributedMap implements DistributedMap<String, String> {
     private static final Set<DistributedMapListener> LISTENERS = new CopyOnWriteArraySet<>();
 
     @Override
-    public ConcurrentMap<String, String> getMap(String key) {
-        final IMap<String, String> map = HZ.getMap(key);
-        map.addEntryListener(new Listener(), true);
-        return map;
+    public Cache<String, String> getMap(String key) {
+        CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
+        CompleteConfiguration<String, String> config = new MutableConfiguration<String, String>()
+                                                        .setTypes( String.class, String.class );
+        Cache<String, String> cache = cacheManager.getCache(key, String.class, String.class);
+
+        CacheEntryListenerConfiguration<String,String> cacheEntryListenerConfiguration = null;
+        //cache.registerCacheEntryListener(cacheEntryListenerConfiguration);
+        return cache;
     }
 
     @Override

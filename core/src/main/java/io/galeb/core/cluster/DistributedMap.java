@@ -1,12 +1,12 @@
 package io.galeb.core.cluster;
 
-import java.util.concurrent.ConcurrentMap;
+import javax.cache.Cache;
 
 public interface DistributedMap<K, V> {
 
     public static final String BACKEND_CONNECTIONS = "backendConnections";
 
-    default ConcurrentMap<K, V> getMap(String key) {
+    default Cache<K, V> getMap(String key) {
         throw new UnsupportedOperationException();
     }
 
