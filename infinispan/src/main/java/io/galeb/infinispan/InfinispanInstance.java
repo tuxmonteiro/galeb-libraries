@@ -16,15 +16,22 @@
 
 package io.galeb.infinispan;
 
-import org.infinispan.manager.*;
+import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
 
 import java.io.IOException;
+
+import static io.galeb.core.util.Constants.SysProp.PROP_CLUSTER_CONF;
 
 public class InfinispanInstance {
 
     private static final EmbeddedCacheManager CACHE_MANAGER;
     static {
+<<<<<<< HEAD
         String infinispanCfg = System.getProperty("infinispan.config.filename", "infinispan.xml");
+=======
+        String infinispanCfg = System.getProperty(PROP_CLUSTER_CONF.name(), "infinispan.xml");
+>>>>>>> master
         EmbeddedCacheManager CACHE_MANAGER1 = null;
         try {
             CACHE_MANAGER1 = new DefaultCacheManager(infinispanCfg);
