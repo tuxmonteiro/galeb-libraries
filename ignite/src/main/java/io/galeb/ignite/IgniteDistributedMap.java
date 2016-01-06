@@ -48,7 +48,6 @@ public class IgniteDistributedMap implements DistributedMap<String, String> {
         INSTANCE.events(INSTANCE.cluster().forCacheNodes(key)).remoteListen(null, e -> true,
                 EventType.EVT_CACHE_OBJECT_PUT,
                 EventType.EVT_CACHE_OBJECT_REMOVED);
-        INSTANCE.events().remoteQuery()
         return new ProxyJCacheToConcurrentMap<>(cache);
     }
 
