@@ -16,12 +16,14 @@
 
 package io.galeb.ignite;
 
-import com.google.common.collect.*;
-
 import javax.cache.Cache;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.stream.StreamSupport;
 
