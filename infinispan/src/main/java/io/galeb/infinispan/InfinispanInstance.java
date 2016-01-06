@@ -27,11 +27,7 @@ public class InfinispanInstance {
 
     private static final EmbeddedCacheManager CACHE_MANAGER;
     static {
-<<<<<<< HEAD
-        String infinispanCfg = System.getProperty("infinispan.config.filename", "infinispan.xml");
-=======
         String infinispanCfg = System.getProperty(PROP_CLUSTER_CONF.name(), "infinispan.xml");
->>>>>>> master
         EmbeddedCacheManager CACHE_MANAGER1 = null;
         try {
             CACHE_MANAGER1 = new DefaultCacheManager(infinispanCfg);
