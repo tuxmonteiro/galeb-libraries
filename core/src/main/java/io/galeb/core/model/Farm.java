@@ -45,6 +45,15 @@ public class Farm extends Entity {
 
     public static final String CLASS_NAME = "Farm";
 
+    public static final Map<String, Class<? extends Entity>> ENTITY_CLASSES = new ConcurrentHashMap<>();
+    static {
+        ENTITY_CLASSES.put(Backend.class.getSimpleName().toLowerCase(), Backend.class);
+        ENTITY_CLASSES.put(BackendPool.class.getSimpleName().toLowerCase(), BackendPool.class);
+        ENTITY_CLASSES.put(Rule.class.getSimpleName().toLowerCase(), Rule.class);
+        ENTITY_CLASSES.put(VirtualHost.class.getSimpleName().toLowerCase(), VirtualHost.class);
+        ENTITY_CLASSES.put(Farm.class.getSimpleName().toLowerCase(), Farm.class);
+    }
+
     @Expose private final Collection<VirtualHost, Rule> virtualHosts = new VirtualHostCollection();
     @Expose private final Collection<BackendPool, Backend> backendPools = new BackendPoolCollection();
     private final Collection<Backend, BackendPool> backends = new BackendCollection();

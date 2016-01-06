@@ -17,15 +17,12 @@
 package io.galeb.core.services;
 
 import java.util.Arrays;
-import java.util.concurrent.ConcurrentMap;
 
 import javax.inject.Inject;
 
-import io.galeb.core.cluster.ClusterEvents;
-import io.galeb.core.cluster.ClusterListener;
-import io.galeb.core.cluster.DistributedMap;
-import io.galeb.core.cluster.DistributedMapListener;
 import io.galeb.core.controller.EntityController;
+import io.galeb.core.jcache.CacheFactory;
+import io.galeb.core.jcache.CacheListener;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
@@ -38,8 +35,7 @@ import io.galeb.core.statsd.StatsdClient;
 
 import static io.galeb.core.model.Farm.getClassNameFromEntityType;
 
-public abstract class AbstractService implements DistributedMapListener,
-                                                 ClusterListener {
+public abstract class AbstractService {
 
     public static final String LOGGER          = "logger";
     public static final String FARM            = "farm";
@@ -52,13 +48,7 @@ public abstract class AbstractService implements DistributedMapListener,
     protected Farm farm;
 
     @Inject
-    protected DistributedMap<String, String> distributedMap;
-
-    @Inject
     protected Logger logger;
-
-    @Inject
-    protected ClusterEvents clusterEvents;
 
     @Inject
     protected StatsdClient statsdClient;
@@ -66,7 +56,7 @@ public abstract class AbstractService implements DistributedMapListener,
     @Inject
     protected ProcessorScheduler processorScheduler;
 
-    private boolean clusterListenerRegistered = false;
+    private CacheListener<String, String> cacheListener = new CacheListener<>();
 
     public AbstractService() {
         super();
@@ -82,15 +72,19 @@ public abstract class AbstractService implements DistributedMapListener,
         }
     }
 
-    private void registerCluster() {
-        clusterEvents.registerListener(this);
-        if (clusterEvents.isReady() && !clusterListenerRegistered) {
-            onClusterReady();
-        }
-    }
-
     protected void prelaunch() {
-        registerCluster();
+        logger.info("== Cluster ready");
+        processorScheduler.setupScheduler(logger, farm);
+        processorScheduler.startProcessorJob();
+        CacheFactory.createCache(cacheListener.setFarm(farm).setLogger(logger));
+        Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class).stream()
+                .forEach(clazz -> {
+                    CacheFactory.getCache(clazz.getName()).forEach(entry -> {
+                        Entity entity = (Entity) JsonObject.fromJson(entry.getValue(), clazz);
+                        entity.setEntityType(clazz.getSimpleName().toLowerCase());
+                        entityAdd(entity);
+                    });
+                });
     }
 
     public Farm getFarm() {
@@ -99,82 +93,6 @@ public abstract class AbstractService implements DistributedMapListener,
 
     public Logger getLogger() {
         return logger;
-    }
-
-    public DistributedMap<String, String> getDistributedMap() {
-        return distributedMap;
-    }
-
-    @Override
-    public void entryAdded(Entity entity) {
-        logger.debug("entryAdded: "+entity.getId()+" ("+entity.getEntityType()+")");
-        entityAdd(entity);
-    }
-
-    @Override
-    public void entryRemoved(Entity entity) {
-        logger.debug("entryRemoved: "+entity.getId()+" ("+entity.getEntityType()+")");
-        EntityController entityController = farm.getController(
-                getClassNameFromEntityType(entity.getEntityType()));
-        try {
-            entityController.del(entity.copy());
-        } catch (Exception e) {
-            logger.error(e);
-        }
-    }
-
-    @Override
-    public void entryUpdated(Entity entity) {
-        logger.debug("entryUpdated: "+entity.getId()+" ("+entity.getEntityType()+")");
-        EntityController entityController = farm.getController(
-                getClassNameFromEntityType(entity.getEntityType()));
-        try {
-            entityController.change(entity.copy());
-        } catch (Exception e) {
-            logger.error(e);
-        }
-    }
-
-    @Override
-    public void mapCleared(String mapName) {
-        logger.debug("mapCleared: "+mapName);
-        EntityController entityController = farm.getController(
-                getClassNameFromEntityType(mapName.toLowerCase()));
-        try {
-            entityController.delAll();
-        } catch (Exception e) {
-            logger.error(e);
-        }
-    }
-
-    @Override
-    public void entryEvicted(Entity entity) {
-        logger.debug("entryEvicted: "+entity.getId()+" ("+entity.getEntityType()+")");
-        entryRemoved(entity);
-    }
-
-    @Override
-    public void mapEvicted(String mapName) {
-        logger.debug("mapEvicted: "+mapName);
-        mapCleared(mapName);
-    }
-
-    @Override
-    public void onClusterReady() {
-        logger.info("== Cluster ready");
-        processorScheduler.setupScheduler(logger, farm);
-        processorScheduler.startProcessorJob();
-        distributedMap.registerListener(this);
-        Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class).stream()
-            .forEach(clazz -> {
-                ConcurrentMap<String, String> map = distributedMap.getMap(clazz.getName());
-                map.forEach( (key, value) -> {
-                    Entity entity = (Entity) JsonObject.fromJson(value, clazz);
-                    entity.setEntityType(clazz.getSimpleName().toLowerCase());
-                    entityAdd(entity);
-                });
-            });
-        clusterListenerRegistered = true;
     }
 
 }
