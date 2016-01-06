@@ -7,7 +7,7 @@
   <parent>
     <groupId>io.galeb</groupId>
     <artifactId>galeb-libraries</artifactId>
-    <version>3.1.11-SNAPSHOT</version>
+    <version>3.1.11.1-SNAPSHOT</version>
   </parent>
 
   <licenses>
@@ -19,7 +19,7 @@
   </licenses>
 
   <properties>
-    <org.infinispan.version>8.0.1.Final</org.infinispan.version>
+    <org.infinispan.version>8.1.0.Final</org.infinispan.version>
     <javax.cache.version>1.0.0</javax.cache.version>
     <org.apache.logging.log4j.version>2.1</org.apache.logging.log4j.version>
     <mockito.version>1.10.19</mockito.version>

@@ -24,7 +24,7 @@ import io.galeb.core.json.JsonObject;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import org.infinispan.Cache;
-import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.notifications.Listener;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
@@ -41,7 +41,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @Default
 public class InfinispanDistributedMap implements DistributedMap<String,String> {
 
-    private static final DefaultCacheManager CACHE_MANAGER = InfinispanInstance.getCacheManager();
+    private static final EmbeddedCacheManager CACHE_MANAGER = InfinispanInstance.getCacheManager();
 
     private static final Set<DistributedMapListener> LISTENERS = new CopyOnWriteArraySet<>();
 
