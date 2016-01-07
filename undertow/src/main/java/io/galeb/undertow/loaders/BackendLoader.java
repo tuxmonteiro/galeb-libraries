@@ -68,30 +68,33 @@ public class BackendLoader implements Loader {
 
             switch (action) {
                 case ADD:
-                    final Backend.Health backendHealth = ((Backend) entity).getHealth();
-                    if (backendPool!=null) {
-                        if (backendHealth==Health.HEALTHY) {
+                    if (backendPool != null) {
+                        final Backend.Health backendHealth = ((Backend) entity).getHealth();
+                        if (backendHealth == Health.HEALTHY && !backendPool.contains(URI.create(backendId))) {
                             backendPool.addHost(newURI(backendId));
                             isOk = true;
-                        } else {
+                        }
+                        if (backendHealth == Health.DEADY) {
                             backendPool.removeHost(newURI(backendId));
                             final String message = "DEL action applied (instead of ADD action) because backend is not "
-                                    +Health.HEALTHY.toString()+": "+entity.getId()+" ("+entity.getEntityType()+")";
+                                    + Health.HEALTHY.toString() + ": " + entity.getId() + " (" + entity.getEntityType() + ")";
                             optionalLogger.ifPresent(logger -> logger.debug(message));
                         }
                     }
                     break;
 
                 case DEL:
-                    if (backendPool!=null) {
+                    if (backendPool != null && backendPool.contains(URI.create(backendId))) {
                         backendPool.removeHost(newURI(backendId));
                         isOk = true;
                     }
                     break;
 
                 case CHANGE:
-                    from(entity, Action.ADD);
-                    isOk = true;
+                    if (backendPool != null) {
+                        from(entity, Action.ADD);
+                        isOk = true;
+                    }
                     break;
 
                 default:

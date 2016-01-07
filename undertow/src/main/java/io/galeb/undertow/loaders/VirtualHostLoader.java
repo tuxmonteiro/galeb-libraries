@@ -63,23 +63,30 @@ public class VirtualHostLoader implements Loader {
         final String virtualhostId = entity.getId();
         boolean isOk = false;
 
+        final NameVirtualHostHandler nameVirtualHostHandler = (NameVirtualHostHandler) virtualHostHandler;
         switch (action) {
             case ADD:
-                final HttpHandler pathHandler = new PathGlobHandler();
-                ((NameVirtualHostHandler) virtualHostHandler).addHost(virtualhostId, pathHandler);
-                isOk = true;
+                if (!nameVirtualHostHandler.getHosts().containsKey(virtualhostId)) {
+                    final HttpHandler pathHandler = new PathGlobHandler();
+                    nameVirtualHostHandler.addHost(virtualhostId, pathHandler);
+                    isOk = true;
+                }
                 break;
 
             case DEL:
-                ((VirtualHost)entity).getRules().forEach(r -> ruleLoader.from(r, Action.DEL));
-                ((NameVirtualHostHandler) virtualHostHandler).removeHost(virtualhostId);
-                isOk = true;
+                if (nameVirtualHostHandler.getHosts().containsKey(virtualhostId)) {
+                    ((VirtualHost) entity).getRules().forEach(r -> ruleLoader.from(r, Action.DEL));
+                    nameVirtualHostHandler.removeHost(virtualhostId);
+                    isOk = true;
+                }
                 break;
 
             case CHANGE:
-                from(entity, Action.DEL);
-                from(entity, Action.ADD);
-                isOk = true;
+                if (nameVirtualHostHandler.getHosts().containsKey(virtualhostId)) {
+                    from(entity, Action.DEL);
+                    from(entity, Action.ADD);
+                    isOk = true;
+                }
                 break;
 
             default:

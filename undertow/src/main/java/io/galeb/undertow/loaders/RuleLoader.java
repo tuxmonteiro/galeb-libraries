@@ -98,9 +98,10 @@ public class RuleLoader implements Loader {
                                 return;
                             }
                             HttpHandler pathHandler = hosts.get(virtualhostId);
-                            final HttpHandler targetHandler = new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404, false, reuseXForwarded());
 
-                            if (pathHandler instanceof PathGlobHandler) {
+                            if (pathHandler instanceof PathGlobHandler && !((PathGlobHandler) pathHandler).contains(rule)) {
+                                final HttpHandler targetHandler =
+                                        new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404, false, reuseXForwarded());
                                 ((PathGlobHandler) pathHandler).addRule(rule, targetHandler);
                                 if (rule.isDefault()) {
                                     ((PathGlobHandler)pathHandler).setDefaultHandler(targetHandler);
@@ -118,10 +119,10 @@ public class RuleLoader implements Loader {
 
                 case DEL:
                     final HttpHandler pathHandler = hosts.get(virtualhostId);
-                    if (pathHandler instanceof PathGlobHandler) {
-                        ((PathGlobHandler)pathHandler).removeRule(rule);
+                    if (pathHandler instanceof PathGlobHandler && ((PathGlobHandler) pathHandler).contains(rule)) {
+                        ((PathGlobHandler) pathHandler).removeRule(rule);
+                        isOk = true;
                     }
-                    isOk = true;
                     break;
 
                 case CHANGE:
