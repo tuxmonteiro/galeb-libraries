@@ -39,7 +39,8 @@ public class CacheFactory {
     private static final CacheManager cacheManager = cachingProvider.getCacheManager();
     private static final MutableConfiguration<String, String> config =
             new MutableConfiguration<String, String>()
-            .setTypes(String.class, String.class);
+            .setTypes(String.class, String.class)
+            .setStatisticsEnabled(false);
 
     public static void createCache(final CacheListener<String, String> cacheListener) {
         Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class).stream()
@@ -52,7 +53,7 @@ public class CacheFactory {
     }
 
     public static Cache<String, String> getCache(String key) {
-        return cacheManager.getCache(key);
+        return cacheManager.getCache(key, String.class, String.class);
     }
 
     private CacheFactory() {
