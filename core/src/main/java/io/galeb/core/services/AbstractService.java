@@ -93,6 +93,11 @@ public abstract class AbstractService implements DistributedMapListener,
         registerCluster();
     }
 
+    protected void startProcessorScheduler() {
+        processorScheduler.setupScheduler(logger, farm);
+        processorScheduler.startProcessorJob();
+    }
+
     public Farm getFarm() {
         return farm;
     }
@@ -162,8 +167,6 @@ public abstract class AbstractService implements DistributedMapListener,
     @Override
     public void onClusterReady() {
         logger.info("== Cluster ready");
-        processorScheduler.setupScheduler(logger, farm);
-        processorScheduler.startProcessorJob();
         distributedMap.registerListener(this);
         Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class).stream()
             .forEach(clazz -> {
