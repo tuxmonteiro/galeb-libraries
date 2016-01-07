@@ -129,6 +129,10 @@ public class BackendProxyClient implements ProxyClient {
         return this;
     }
 
+    public synchronized boolean contains(final URI host) {
+        return  backendSelector.contains(host);
+    }
+
     public synchronized BackendProxyClient addHost(final URI host) {
         if (!backendSelector.contains(host)) {
             loadBalanceProxyClient.addHost(host);

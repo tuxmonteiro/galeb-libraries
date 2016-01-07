@@ -65,6 +65,10 @@ public class PathGlobHandler implements HttpHandler {
         }
     }
 
+    public synchronized boolean contains(final Rule rule) {
+        return rules.containsKey(rule);
+    }
+
     public synchronized PathGlobHandler addRule(final Rule rule, final HttpHandler handler) {
         rules.put(rule, handler);
         return this;

@@ -87,6 +87,11 @@ public abstract class AbstractService {
                 });
     }
 
+    protected void startProcessorScheduler() {
+        processorScheduler.setupScheduler(logger, farm);
+        processorScheduler.startProcessorJob();
+    }
+
     public Farm getFarm() {
         return farm;
     }

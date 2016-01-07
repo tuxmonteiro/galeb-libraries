@@ -112,9 +112,11 @@ public class BackendPoolLoader implements Loader {
                 break;
 
             case DEL:
-                ((BackendPool) entity).getBackends().forEach(b -> backendLoader.from(b, Action.DEL));
-                backendPools.remove(backendPoolId);
-                isOk = true;
+                if (backendPools.containsKey(backendPoolId)) {
+                    ((BackendPool) entity).getBackends().forEach(b -> backendLoader.from(b, Action.DEL));
+                    backendPools.remove(backendPoolId);
+                    isOk = true;
+                }
                 break;
 
             case CHANGE:
