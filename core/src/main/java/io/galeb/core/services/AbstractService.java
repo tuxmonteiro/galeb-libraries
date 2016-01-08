@@ -18,12 +18,12 @@ package io.galeb.core.services;
 
 import java.util.Arrays;
 
-import javax.cache.*;
+import javax.cache.Cache;
 import javax.inject.Inject;
 
 import io.galeb.core.controller.EntityController;
 import io.galeb.core.jcache.CacheFactory;
-import io.galeb.core.jcache.CacheListener;
+import io.galeb.core.jcache.IgniteCacheFactory;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
@@ -57,7 +57,7 @@ public abstract class AbstractService {
     @Inject
     protected ProcessorScheduler processorScheduler;
 
-    protected CacheFactory cacheFactory = CacheFactory.INSTANCE;
+    protected CacheFactory cacheFactory = IgniteCacheFactory.INSTANCE;
 
     public AbstractService() {
         super();
@@ -74,8 +74,7 @@ public abstract class AbstractService {
     }
 
     protected void prelaunch() {
-        cacheFactory.setLogger(logger).setFarm(farm).registerCacheListenerConfiguration().registerCacheConfiguration();
-        cacheFactory.createMaps();
+        cacheFactory.setLogger(logger).setFarm(farm);
         Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class).stream()
                 .forEach(clazz -> {
                     final Cache<String, String> cache = cacheFactory.getCache(clazz.getName());
