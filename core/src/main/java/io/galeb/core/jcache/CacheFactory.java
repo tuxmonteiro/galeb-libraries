@@ -18,10 +18,8 @@
 
 package io.galeb.core.jcache;
 
-import io.galeb.core.model.Backend;
-import io.galeb.core.model.BackendPool;
-import io.galeb.core.model.Rule;
-import io.galeb.core.model.VirtualHost;
+import io.galeb.core.logging.*;
+import io.galeb.core.model.*;
 
 import javax.cache.Cache;
 import javax.cache.CacheManager;
@@ -30,33 +28,97 @@ import javax.cache.configuration.CacheEntryListenerConfiguration;
 import javax.cache.configuration.FactoryBuilder;
 import javax.cache.configuration.MutableCacheEntryListenerConfiguration;
 import javax.cache.configuration.MutableConfiguration;
+import javax.cache.expiry.*;
 import javax.cache.spi.CachingProvider;
-import java.util.Arrays;
+import java.net.*;
+import java.util.*;
+
+import static io.galeb.core.util.Constants.SysProp.PROP_CLUSTER_CONF;
 
 public class CacheFactory {
 
-    private static final CachingProvider cachingProvider = Caching.getCachingProvider();
-    private static final CacheManager cacheManager = cachingProvider.getCacheManager();
-    private static final MutableConfiguration<String, String> config =
-            new MutableConfiguration<String, String>()
-            .setTypes(String.class, String.class)
-            .setStatisticsEnabled(false);
+    public static final CacheFactory INSTANCE = new CacheFactory();
 
-    public static void createCache(final CacheListener<String, String> cacheListener) {
-        Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class).stream()
-                .forEach(clazz -> {
-                    CacheEntryListenerConfiguration<String, String> cacheEntryListenerConfiguration =
-                            new MutableCacheEntryListenerConfiguration<>(
-                                    FactoryBuilder.factoryOf(cacheListener), null, true, false);
-                    cacheManager.createCache(clazz.getName(), config).registerCacheEntryListener(cacheEntryListenerConfiguration);
-                });
-    }
+    private final String configFile = System.getProperty(PROP_CLUSTER_CONF.name(), "file:///" + System.getenv("PWD") + "/" + PROP_CLUSTER_CONF.def());
+    private final CachingProvider cachingProvider = Caching.getCachingProvider();
+    private final CacheManager cacheManager = cachingProvider.getCacheManager(URI.create(configFile),null);
+    private final CacheListener<String, String> cacheListener = new CacheListener<>();
+    private final Set<String> cachesRegistered = new HashSet<>();
 
-    public static Cache<String, String> getCache(String key) {
-        return cacheManager.getCache(key, String.class, String.class);
-    }
+    private CacheEntryListenerConfiguration<String, String> cacheEntryListenerConfiguration = null;
+    private MutableConfiguration<String, String> cacheConfig = new MutableConfiguration<String, String>()
+                                                                    .setTypes(String.class, String.class);
+    private Logger logger = new NullLogger();
 
     private CacheFactory() {
         // singleton?
     }
+
+    public CacheFactory setFarm(final Farm farm) {
+        cacheListener.setFarm(farm);
+        return this;
+    }
+
+    public CacheFactory setLogger(final Logger logger) {
+        this.logger = logger;
+        cacheListener.setLogger(logger);
+        return this;
+    }
+
+    public CacheFactory registerCacheConfiguration() {
+        cacheConfig = new MutableConfiguration<String, String>()
+                .setTypes(String.class, String.class)
+                .setExpiryPolicyFactory(AccessedExpiryPolicy.factoryOf(Duration.ETERNAL))
+                .setStatisticsEnabled(false)
+                .addCacheEntryListenerConfiguration(cacheEntryListenerConfiguration);
+        logger.info("Cache Configured");
+        return this;
+    }
+
+    public CacheFactory registerCacheListenerConfiguration() {
+        cacheEntryListenerConfiguration = new MutableCacheEntryListenerConfiguration<>(
+                FactoryBuilder.factoryOf(cacheListener), null, true, false);
+        logger.info("CacheListener Configured");
+        return this;
+    }
+
+    public void createMaps() {
+        Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class).stream()
+                .forEach(clazz -> {
+
+                    Iterator<String> cacheNamesIter = cacheManager.getCacheNames().iterator();
+                    boolean exist = false;
+                    while (cacheNamesIter.hasNext()) {
+                        String cacheName = cacheNamesIter.next();
+                        if (cacheName != null && cacheName.equals(clazz.getName())) {
+                            exist = true;
+                            break;
+                        }
+                    }
+                    try {
+                        if (!exist) {
+                            String cacheName= clazz.getName();
+                            cacheManager.createCache(cacheName, cacheConfig);
+                            cachesRegistered.add(cacheName);
+                            logger.info("Map (JSR107) " + cacheName + " created");
+                        }
+                    } catch (Exception e) {
+                        logger.error(e);
+                    }
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    public Cache<String, String> getCache(String key) {
+        Cache cache = cacheManager.getCache(key);
+        try {
+            if (!cachesRegistered.contains(key)) {
+                cache.registerCacheEntryListener(cacheEntryListenerConfiguration);
+            }
+        } catch (IllegalArgumentException e) {
+            logger.debug(e);
+        }
+        return cache;
+    }
+
 }

@@ -106,9 +106,9 @@ public class RuleLoader implements Loader {
                                 if (rule.isDefault()) {
                                     ((PathGlobHandler)pathHandler).setDefaultHandler(targetHandler);
                                 }
+                                isOk = true;
                             }
                         }
-                        isOk = true;
                     } else {
                         final String message = "Action ADD not applied - " + entity.getId() +
                                 " (" + entity.getEntityType() + "): " +

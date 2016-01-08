@@ -25,11 +25,7 @@ import io.galeb.core.logging.NullLogger;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 
-import javax.cache.event.CacheEntryCreatedListener;
-import javax.cache.event.CacheEntryEvent;
-import javax.cache.event.CacheEntryListenerException;
-import javax.cache.event.CacheEntryRemovedListener;
-import javax.cache.event.CacheEntryUpdatedListener;
+import javax.cache.event.*;
 
 import java.io.Serializable;
 
@@ -44,6 +40,9 @@ public class CacheListener<K, V> implements CacheEntryCreatedListener<K, V>,
     private Farm farm = null;
     private Logger logger = new NullLogger();
 
+
+
+
     public CacheListener<K, V> setFarm(final Farm farm) {
         this.farm = farm;
         return this;
@@ -57,8 +56,9 @@ public class CacheListener<K, V> implements CacheEntryCreatedListener<K, V>,
     @Override
     public void onCreated(Iterable<CacheEntryEvent<? extends K, ? extends V>> iterable) throws CacheEntryListenerException {
         iterable.forEach(event -> {
+            V entryStr = event.getValue();
+            logger.info("Creating " + entryStr);
             if (farm != null) {
-                V entryStr = event.getValue();
                 String entityType = ((Entity) JsonObject.fromJson((String) entryStr, Entity.class)).getEntityType();
                 Entity entity = (Entity) JsonObject.fromJson((String) entryStr, ENTITY_CLASSES.get(entityType));
                 EntityController entityController = farm.getController(
@@ -68,6 +68,8 @@ public class CacheListener<K, V> implements CacheEntryCreatedListener<K, V>,
                 } catch (Exception e) {
                     logger.error(e);
                 }
+            } else {
+                logger.error("onCreated event Failed: FARM is NULL");
             }
         });
     }
@@ -75,8 +77,10 @@ public class CacheListener<K, V> implements CacheEntryCreatedListener<K, V>,
     @Override
     public void onRemoved(Iterable<CacheEntryEvent<? extends K, ? extends V>> iterable) throws CacheEntryListenerException {
         iterable.forEach(event -> {
+            V entryStr = event.getOldValue();
+            logger.info("Removing " + entryStr);
+
             if (farm != null) {
-                V entryStr = event.getOldValue();
                 String entityType = ((Entity) JsonObject.fromJson((String) entryStr, Entity.class)).getEntityType();
                 Entity entity = (Entity) JsonObject.fromJson((String) entryStr, ENTITY_CLASSES.get(entityType));
                 EntityController entityController = farm.getController(
@@ -86,6 +90,8 @@ public class CacheListener<K, V> implements CacheEntryCreatedListener<K, V>,
                 } catch (Exception e) {
                     logger.error(e);
                 }
+            } else {
+                logger.error("onRemoved event Failed: FARM is NULL");
             }
         });
     }
@@ -93,8 +99,10 @@ public class CacheListener<K, V> implements CacheEntryCreatedListener<K, V>,
     @Override
     public void onUpdated(Iterable<CacheEntryEvent<? extends K, ? extends V>> iterable) throws CacheEntryListenerException {
         iterable.forEach(event -> {
+            V entryStr = event.getOldValue();
+            logger.info("Updating " + entryStr);
+
             if (farm != null) {
-                V entryStr = event.getOldValue();
                 String entityType = ((Entity) JsonObject.fromJson((String) entryStr, Entity.class)).getEntityType();
                 Entity entity = (Entity) JsonObject.fromJson((String) entryStr, ENTITY_CLASSES.get(entityType));
                 EntityController entityController = farm.getController(
@@ -104,6 +112,8 @@ public class CacheListener<K, V> implements CacheEntryCreatedListener<K, V>,
                 } catch (Exception e) {
                     logger.error(e);
                 }
+            } else {
+                logger.error("onUpdated event Failed: FARM is NULL");
             }
         });
     }

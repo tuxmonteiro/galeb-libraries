@@ -18,6 +18,7 @@ package io.galeb.core.services;
 
 import java.util.Arrays;
 
+import javax.cache.*;
 import javax.inject.Inject;
 
 import io.galeb.core.controller.EntityController;
@@ -39,7 +40,7 @@ public abstract class AbstractService {
 
     public static final String LOGGER          = "logger";
     public static final String FARM            = "farm";
-    public static final String DISTRIBUTEDMAP  = "distributedMap";
+    public static final String CACHEFACTORY    = "cacheFactory";
     public static final String STATSD          = "statsd";
     public static final String CLUSTER_EVENTS  = "clusterEvents";
     public static final String INTERVAL        = "interval";
@@ -56,7 +57,7 @@ public abstract class AbstractService {
     @Inject
     protected ProcessorScheduler processorScheduler;
 
-    private CacheListener<String, String> cacheListener = new CacheListener<>();
+    protected CacheFactory cacheFactory = CacheFactory.INSTANCE;
 
     public AbstractService() {
         super();
@@ -73,17 +74,18 @@ public abstract class AbstractService {
     }
 
     protected void prelaunch() {
-        logger.info("== Cluster ready");
-        processorScheduler.setupScheduler(logger, farm);
-        processorScheduler.startProcessorJob();
-        CacheFactory.createCache(cacheListener.setFarm(farm).setLogger(logger));
+        cacheFactory.setLogger(logger).setFarm(farm).registerCacheListenerConfiguration().registerCacheConfiguration();
+        cacheFactory.createMaps();
         Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class).stream()
                 .forEach(clazz -> {
-                    CacheFactory.getCache(clazz.getName()).forEach(entry -> {
-                        Entity entity = (Entity) JsonObject.fromJson(entry.getValue(), clazz);
-                        entity.setEntityType(clazz.getSimpleName().toLowerCase());
-                        entityAdd(entity);
-                    });
+                    final Cache<String, String> cache = cacheFactory.getCache(clazz.getName());
+                    if (cache != null) {
+                        cache.forEach(entry -> {
+                            Entity entity = (Entity) JsonObject.fromJson(entry.getValue(), clazz);
+                            entity.setEntityType(clazz.getSimpleName().toLowerCase());
+                            entityAdd(entity);
+                        });
+                    }
                 });
     }
 
@@ -98,6 +100,10 @@ public abstract class AbstractService {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    public CacheFactory getCacheFactory() {
+        return cacheFactory;
     }
 
 }
