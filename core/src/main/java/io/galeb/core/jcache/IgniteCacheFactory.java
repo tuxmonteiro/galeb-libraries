@@ -44,7 +44,7 @@ public class IgniteCacheFactory implements CacheFactory {
 
     public static final IgniteCacheFactory INSTANCE = new IgniteCacheFactory();
 
-    private final String configFile = System.getProperty(PROP_CLUSTER_CONF.name(), "file:///" + System.getenv("PWD") + "/" + PROP_CLUSTER_CONF.def());
+    private final String configFile = System.getProperty(PROP_CLUSTER_CONF.toString(), "file:///" + System.getenv("PWD") + "/" + PROP_CLUSTER_CONF.def());
     private final Ignite ignite;
 
     private Farm farm = null;
