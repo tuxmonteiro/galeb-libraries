@@ -24,8 +24,7 @@ import io.galeb.core.logging.Logger;
 import io.galeb.core.logging.NullLogger;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
-import org.apache.ignite.Ignite;
-import org.apache.ignite.Ignition;
+import org.apache.ignite.*;
 import org.apache.ignite.events.CacheEvent;
 import org.apache.ignite.events.EventType;
 import org.apache.ignite.lang.IgnitePredicate;
@@ -38,7 +37,7 @@ import java.util.stream.Collectors;
 import static io.galeb.core.model.Entity.SEP_COMPOUND_ID;
 import static io.galeb.core.model.Farm.ENTITY_CLASSES;
 import static io.galeb.core.model.Farm.getClassNameFromEntityType;
-import static io.galeb.core.util.Constants.SysProp.*;
+import static io.galeb.core.util.Constants.SysProp.PROP_CLUSTER_CONF;
 
 public class IgniteCacheFactory implements CacheFactory {
 
@@ -192,6 +191,17 @@ public class IgniteCacheFactory implements CacheFactory {
     @Override
     public Cache<String, String> getCache(String key) {
         return ignite.getOrCreateCache(key);
+    }
+
+    public boolean lock(String lockName) {
+        return ignite.semaphore(lockName, 1, true, true).tryAcquire();
+    }
+
+    public void release(String lockName) {
+        IgniteSemaphore semaphore = ignite.semaphore(lockName, 1, true, false);
+        if (semaphore != null) {
+            semaphore.release();
+        }
     }
 
 }

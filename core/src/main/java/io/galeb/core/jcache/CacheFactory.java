@@ -34,4 +34,8 @@ public interface CacheFactory {
     }
 
     Cache<String, String> getCache(String key);
+
+    boolean lock(String lockName);
+
+    void release(String lockName);
 }
