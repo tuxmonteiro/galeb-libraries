@@ -25,6 +25,7 @@ import io.galeb.core.logging.NullLogger;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import org.apache.ignite.Ignite;
+import org.apache.ignite.IgniteException;
 import org.apache.ignite.IgniteSemaphore;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.events.CacheEvent;
@@ -203,6 +204,15 @@ public class IgniteCacheFactory implements CacheFactory {
         IgniteSemaphore semaphore = ignite.semaphore(lockName, 1, true, false);
         if (semaphore != null) {
             semaphore.release();
+        }
+    }
+
+    public boolean isLocked(String lockName) {
+        try {
+            return ignite.semaphore(lockName, 1, true, false) != null;
+        } catch (IgniteException e) {
+            logger.debug(e);
+            return false;
         }
     }
 

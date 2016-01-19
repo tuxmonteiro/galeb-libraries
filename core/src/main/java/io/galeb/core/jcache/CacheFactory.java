@@ -38,4 +38,6 @@ public interface CacheFactory {
     boolean lock(String lockName);
 
     void release(String lockName);
+
+    boolean isLocked(String lockName);
 }
