@@ -181,13 +181,17 @@ public class IgniteCacheFactory implements CacheFactory {
 
     @Override
     public CacheFactory setFarm(final Farm farm) {
-        this.farm = farm;
+        if (farm != null) {
+            this.farm = farm;
+        }
         return this;
     }
 
     @Override
     public CacheFactory setLogger(final Logger logger) {
-        this.logger = logger;
+        if (logger != null) {
+            this.logger = logger;
+        }
         return this;
     }
 
@@ -197,23 +201,39 @@ public class IgniteCacheFactory implements CacheFactory {
     }
 
     public boolean lock(String lockName) {
-        return ignite.semaphore(lockName, 1, true, true).tryAcquire();
+        IgniteSemaphore semaphore;
+        boolean result = false;
+        try {
+            semaphore = ignite.semaphore(lockName, 1, true, true);
+            result = semaphore != null && semaphore.tryAcquire();
+        } catch (IgniteException e) {
+            logger.debug(e);
+        }
+        return result;
     }
 
     public void release(String lockName) {
-        IgniteSemaphore semaphore = ignite.semaphore(lockName, 1, true, false);
-        if (semaphore != null) {
-            semaphore.release();
+        IgniteSemaphore semaphore;
+        try {
+            semaphore = ignite.semaphore(lockName, 1, true, false);
+            if (semaphore != null) {
+                semaphore.release();
+            }
+        } catch (IgniteException e) {
+            logger.debug(e);
         }
     }
 
     public boolean isLocked(String lockName) {
+        IgniteSemaphore semaphore;
+        boolean result = false;
         try {
-            return ignite.semaphore(lockName, 1, true, false) != null;
+            semaphore = ignite.semaphore(lockName, 1, true, false);
+            result = semaphore != null;
         } catch (IgniteException e) {
             logger.debug(e);
-            return false;
         }
+        return result;
     }
 
 }
