@@ -21,9 +21,11 @@ import java.util.Arrays;
 import javax.cache.Cache;
 import javax.inject.Inject;
 
+import io.galeb.core.cluster.ClusterLocker;
+import io.galeb.core.cluster.ignite.IgniteCacheFactory;
+import io.galeb.core.cluster.ignite.IgniteClusterLocker;
 import io.galeb.core.controller.EntityController;
 import io.galeb.core.jcache.CacheFactory;
-import io.galeb.core.cluster.ignite.IgniteCacheFactory;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
@@ -41,6 +43,7 @@ public abstract class AbstractService {
     public static final String LOGGER          = "logger";
     public static final String FARM            = "farm";
     public static final String CACHEFACTORY    = "cacheFactory";
+    public static final String CLUSTERLOCKER   = "clusterLocker";
     public static final String STATSD          = "statsd";
     public static final String CLUSTER_EVENTS  = "clusterEvents";
     public static final String INTERVAL        = "interval";
@@ -58,6 +61,8 @@ public abstract class AbstractService {
     protected ProcessorScheduler processorScheduler;
 
     protected CacheFactory cacheFactory = IgniteCacheFactory.INSTANCE;
+
+    protected ClusterLocker clusterLocker = IgniteClusterLocker.INSTANCE;
 
     public AbstractService() {
         super();
@@ -105,4 +110,7 @@ public abstract class AbstractService {
         return cacheFactory;
     }
 
+    public ClusterLocker getClusterLocker() {
+        return clusterLocker;
+    }
 }
