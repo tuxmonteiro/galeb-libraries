@@ -25,6 +25,8 @@ import javax.cache.Cache;
 
 public interface CacheFactory {
 
+    Object getClusterInstance();
+
     default CacheFactory setLogger(final Logger logger) {
         return this;
     }
@@ -35,9 +37,4 @@ public interface CacheFactory {
 
     Cache<String, String> getCache(String key);
 
-    boolean lock(String lockName);
-
-    void release(String lockName);
-
-    boolean isLocked(String lockName);
 }
