@@ -16,9 +16,10 @@
  *  limitations under the License.
  */
 
-package io.galeb.core.jcache;
+package io.galeb.core.cluster.ignite;
 
 import io.galeb.core.controller.EntityController;
+import io.galeb.core.jcache.*;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.logging.NullLogger;

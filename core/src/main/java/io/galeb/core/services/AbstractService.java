@@ -23,7 +23,7 @@ import javax.inject.Inject;
 
 import io.galeb.core.controller.EntityController;
 import io.galeb.core.jcache.CacheFactory;
-import io.galeb.core.jcache.IgniteCacheFactory;
+import io.galeb.core.cluster.ignite.IgniteCacheFactory;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
