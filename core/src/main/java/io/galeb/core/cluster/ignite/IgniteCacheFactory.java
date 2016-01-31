@@ -19,13 +19,14 @@
 package io.galeb.core.cluster.ignite;
 
 import io.galeb.core.controller.EntityController;
-import io.galeb.core.jcache.*;
+import io.galeb.core.jcache.CacheFactory;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.logging.NullLogger;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
-import org.apache.ignite.*;
+import org.apache.ignite.Ignite;
+import org.apache.ignite.Ignition;
 import org.apache.ignite.events.CacheEvent;
 import org.apache.ignite.events.EventType;
 import org.apache.ignite.lang.IgnitePredicate;

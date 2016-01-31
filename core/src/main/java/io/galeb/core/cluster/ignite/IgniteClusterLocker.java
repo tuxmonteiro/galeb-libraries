@@ -1,9 +1,30 @@
+/*
+ *  Galeb - Load Balance as a Service Plataform
+ *
+ *  Copyright (C) 2014-2016 Globo.com
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package io.galeb.core.cluster.ignite;
 
 import io.galeb.core.cluster.ClusterLocker;
-import io.galeb.core.jcache.*;
-import io.galeb.core.logging.*;
-import org.apache.ignite.*;
+import io.galeb.core.jcache.CacheFactory;
+import io.galeb.core.logging.Logger;
+import io.galeb.core.logging.NullLogger;
+import org.apache.ignite.Ignite;
+import org.apache.ignite.IgniteException;
+import org.apache.ignite.IgniteSemaphore;
 
 public class IgniteClusterLocker implements ClusterLocker {
 
@@ -34,6 +55,8 @@ public class IgniteClusterLocker implements ClusterLocker {
             result = semaphore != null && semaphore.tryAcquire();
         } catch (IgniteException e) {
             logger.debug(e);
+        } finally {
+            logger.info("Locking " + lockName + " " + (result ? "applied" : "not possible"));
         }
         return result;
     }
@@ -46,33 +69,14 @@ public class IgniteClusterLocker implements ClusterLocker {
             if (semaphore != null) {
                 semaphore.release();
             }
+            if (semaphore != null) {
+                semaphore.close();
+            }
         } catch (IgniteException e) {
             logger.debug(e);
+        } finally {
+            logger.info("Lock " + lockName + " released");
         }
-    }
-
-    @Override
-    public boolean isLocked(String lockName) {
-        IgniteSemaphore semaphore;
-        boolean result = false;
-        try {
-            semaphore = ignite.semaphore(lockName, 1, true, false);
-            result = semaphore != null;
-        } catch (IgniteException e) {
-            logger.debug(e);
-        }
-        return result;
-    }
-
-    @Override
-    public Object countDownLatch(String name, int count) {
-        IgniteCountDownLatch countDownLatch = null;
-        try {
-            countDownLatch = ignite.countDownLatch(name, count, true, true);
-        } catch (Exception e) {
-            logger.error(e);
-        }
-        return countDownLatch;
     }
 
 }
