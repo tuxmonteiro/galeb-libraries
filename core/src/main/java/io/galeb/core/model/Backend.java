@@ -28,7 +28,7 @@ public class Backend extends Entity {
 
     public enum Health {
         HEALTHY,
-        DEADY,
+        DEAD,
         UNKNOWN
     }
 

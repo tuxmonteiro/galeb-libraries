@@ -42,8 +42,8 @@ public class BackendTest {
 
     @Test
     public void healthSetDeadyAtBackend() {
-        backend.setHealth(Health.DEADY);
-        assertThat(backend.getHealth()).isEqualTo(Health.DEADY);
+        backend.setHealth(Health.DEAD);
+        assertThat(backend.getHealth()).isEqualTo(Health.DEAD);
     }
 
     @Test
@@ -59,7 +59,7 @@ public class BackendTest {
 
     @Test
     public void healthHasDeadyAtBackend() {
-        assertThat(Health.valueOf("DEADY")).isEqualTo(Health.DEADY);
+        assertThat(Health.valueOf("DEAD")).isEqualTo(Health.DEAD);
     }
 
     @Test

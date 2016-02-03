@@ -74,7 +74,7 @@ public class BackendLoader implements Loader {
                             backendPool.addHost(newURI(backendId));
                             isOk = true;
                         }
-                        if (backendHealth == Health.DEADY) {
+                        if (backendHealth == Health.DEAD) {
                             backendPool.removeHost(newURI(backendId));
                             final String message = "DEL action applied (instead of ADD action) because backend is not "
                                     + Health.HEALTHY.toString() + ": " + entity.getId() + " (" + entity.getEntityType() + ")";
