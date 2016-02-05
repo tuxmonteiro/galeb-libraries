@@ -54,7 +54,7 @@ public class IgniteCacheFactory implements CacheFactory {
     private IgniteCacheFactory() {
         super();
         ignite = Ignition.start(configFile);
-        ignite.events().withAsync().enableLocal(EventType.EVT_CACHE_OBJECT_PUT,
+        ignite.events().enableLocal(EventType.EVT_CACHE_OBJECT_PUT,
                                                 EventType.EVT_CACHE_OBJECT_REMOVED);
         IgnitePredicate<CacheEvent> listener = evt -> {
             if (evt.type() == EventType.EVT_CACHE_OBJECT_PUT) {
@@ -65,7 +65,7 @@ public class IgniteCacheFactory implements CacheFactory {
             }
             return true;
         };
-        ignite.events().withAsync().localListen(listener,
+        ignite.events().localListen(listener,
                            EventType.EVT_CACHE_OBJECT_PUT,
                            EventType.EVT_CACHE_OBJECT_REMOVED);
     }
