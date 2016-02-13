@@ -26,6 +26,8 @@ import com.google.gson.annotations.Expose;
 
 public class VirtualHost extends Entity {
 
+    public static final String ALLOW_PROPERTY = "allow";
+
     private static final long serialVersionUID = 1L;
 
     public static final String CLASS_NAME = "VirtualHost";

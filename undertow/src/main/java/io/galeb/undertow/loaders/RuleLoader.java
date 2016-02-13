@@ -32,6 +32,7 @@ import io.galeb.core.util.Constants.SysProp;
 import io.galeb.undertow.handlers.BackendProxyClient;
 import io.galeb.undertow.handlers.PathGlobHandler;
 import io.undertow.server.HttpHandler;
+import io.undertow.server.handlers.IPAddressAccessControlHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.proxy.ProxyHandler;
@@ -97,7 +98,13 @@ public class RuleLoader implements Loader {
                                 optionalLogger.ifPresent(logger -> logger.error("addRule("+entity.getId()+"): TargetId not found"));
                                 return;
                             }
-                            HttpHandler pathHandler = hosts.get(virtualhostId);
+                            HttpHandler nextHandler = hosts.get(virtualhostId);
+                            HttpHandler pathHandler = null;
+                            if (nextHandler instanceof PathGlobHandler) {
+                                pathHandler = nextHandler;
+                            } else if (nextHandler instanceof IPAddressAccessControlHandler) {
+                                pathHandler = ((IPAddressAccessControlHandler) nextHandler).getNext();
+                            }
 
                             if (pathHandler instanceof PathGlobHandler && !((PathGlobHandler) pathHandler).contains(rule)) {
                                 final HttpHandler targetHandler =
