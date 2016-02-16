@@ -107,7 +107,7 @@ public class Farm extends Entity {
         }
     }
 
-    public static Class<?> getClassFromEntityType(String entityType) {
+    public static Class<? extends Entity> getClassFromEntityType(String entityType) {
         switch (entityType) {
             case "virtualhost":
                 return VirtualHost.class;
