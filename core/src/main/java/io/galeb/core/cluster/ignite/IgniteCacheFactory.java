@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 import static io.galeb.core.model.Entity.SEP_COMPOUND_ID;
 import static io.galeb.core.model.Farm.ENTITY_CLASSES;
 import static io.galeb.core.model.Farm.getClassNameFromEntityType;
+import static io.galeb.core.model.Farm.getClassFromEntityType;
 import static io.galeb.core.util.Constants.SysProp.PROP_CLUSTER_CONF;
 
 public class IgniteCacheFactory implements CacheFactory {
@@ -114,34 +115,38 @@ public class IgniteCacheFactory implements CacheFactory {
     }
 
     private void putEvent(CacheEvent evt) {
-        if (evt.newValue() != null && evt.oldValue() == null) {
-            createdEvent(evt);
-        } else {
+        Entity entity = getEntity(getValue(evt));
+        boolean exist = entityContains(entity);
+        if (exist) {
             updatedEvent(evt);
+        } else {
+            createdEvent(evt);
         }
     }
 
     private void updatedEvent(CacheEvent evt) {
         String key = evt.key();
         String cacheName = evt.cacheName();
-        String value = (String) (evt.oldValue() != null ?
-                        evt.oldValue() :
-                        evt.newValue());
+        String value = getValue(evt);
 
         if (value == null) {
             logger.warn("Updating " + key + " aborted: VALUE is NULL");
             return;
         }
+        String newValue = (String) evt.newValue();
 
         logger.debug("UPDATED:" + key);
         logger.debug("UPDATED:" + cacheName);
-        logger.info("Updating :" + value);
+        if (newValue != null) {
+            logger.info("Updating :" + newValue);
+        } else {
+            logger.warn("Updating : " + value + " (OLD) Fail - has not new value");
+            return;
+        }
 
         if (farm != null) {
-            String entityType = ((Entity) JsonObject.fromJson(value, Entity.class)).getEntityType();
-            Entity entity = (Entity) JsonObject.fromJson(value, ENTITY_CLASSES.get(entityType));
-            EntityController entityController = farm.getController(
-                    getClassNameFromEntityType(entity.getEntityType()));
+            Entity entity = getEntity(newValue);
+            EntityController entityController = getController(entity);
             try {
                 entityController.change(entity.copy());
             } catch (Exception e) {
@@ -152,12 +157,21 @@ public class IgniteCacheFactory implements CacheFactory {
         }
     }
 
+    private String getValue(CacheEvent evt) {
+        return (String) (evt.oldValue() != null ?
+                            evt.oldValue() :
+                            evt.newValue());
+    }
+
+    private Entity getEntity(String value) {
+        String entityType = ((Entity) JsonObject.fromJson(value, Entity.class)).getEntityType();
+        return (Entity) JsonObject.fromJson(value, ENTITY_CLASSES.get(entityType));
+    }
+
     private void createdEvent(CacheEvent evt) {
         String key = evt.key();
         String cacheName = evt.cacheName();
-        String value = (String) (evt.oldValue() != null ?
-                        evt.oldValue() :
-                        evt.newValue());
+        String value = getValue(evt);
 
         if (value == null) {
             logger.warn("Creating " + key + " aborted: VALUE is NULL");
@@ -169,10 +183,8 @@ public class IgniteCacheFactory implements CacheFactory {
         logger.info("Creating :" + value);
 
         if (farm != null) {
-            String entityType = ((Entity) JsonObject.fromJson(value, Entity.class)).getEntityType();
-            Entity entity = (Entity) JsonObject.fromJson(value, ENTITY_CLASSES.get(entityType));
-            EntityController entityController = farm.getController(
-                    getClassNameFromEntityType(entity.getEntityType()));
+            Entity entity = getEntity(value);
+            EntityController entityController = getController(entity);
             try {
                 entityController.add(entity.copy());
             } catch (Exception e) {
@@ -181,6 +193,15 @@ public class IgniteCacheFactory implements CacheFactory {
         } else {
             logger.error("CREATED event aborted: FARM is NULL");
         }
+    }
+
+    private EntityController getController(Entity entity) {
+        return farm.getController(getClassNameFromEntityType(entity.getEntityType()));
+    }
+
+    private boolean entityContains(Entity entity) {
+        return farm.getCollection(getClassFromEntityType(entity.getEntityType())).stream()
+                .filter(e -> e.compoundId().equals(entity.compoundId())).count() > 0;
     }
 
     @Override
