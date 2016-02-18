@@ -18,6 +18,7 @@ package io.galeb.core.services;
 
 import java.util.Arrays;
 
+import javax.annotation.PostConstruct;
 import javax.cache.Cache;
 import javax.inject.Inject;
 
@@ -66,6 +67,12 @@ public abstract class AbstractService {
 
     public AbstractService() {
         super();
+    }
+
+    @PostConstruct
+    public void init() {
+        cacheFactory.setLogger(logger);
+        clusterLocker.setLogger(logger);
     }
 
     private void entityAdd(Entity entity) {
