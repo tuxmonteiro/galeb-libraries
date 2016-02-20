@@ -18,7 +18,6 @@ package io.galeb.aop.undertow;
 
 import io.galeb.core.util.map.ConnectionMapManager;
 import io.undertow.server.handlers.proxy.ProxyConnectionPool;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public aspect HostThreadDataConnectionsAspect {
 
