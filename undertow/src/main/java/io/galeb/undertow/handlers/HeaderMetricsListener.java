@@ -32,7 +32,7 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
         final String realDest = exchange.getAttachment(BackendSelector.REAL_DEST);
         String virtualhost = exchange.getHostName();
         String backend = realDest != null ? realDest : UNKNOWN + "@" + virtualhost;
-        int statusCode = exchange.getResponseCode();
+        int statusCode = exchange.getStatusCode();
         if (backend.startsWith(UNKNOWN)) {
             statusCode = statusCode + 400;
         }
