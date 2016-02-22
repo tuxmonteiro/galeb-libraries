@@ -175,6 +175,15 @@ public class Farm extends Entity {
         getCollection(entityClass).clear();
     }
 
+    public boolean contains(final Entity entity) {
+        final Class<? extends Entity> entityType = getClassFromEntityType(entity.getEntityType());
+        if (entityType == null) {
+            return false;
+        }
+        return getCollection(entityType).stream()
+                .filter(e -> e.compoundId().equals(entity.compoundId())).count() > 0;
+    }
+
     public Object getRootHandler() {
         return null;
     }
