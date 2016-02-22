@@ -82,10 +82,13 @@ public class IgniteCacheFactory implements CacheFactory {
                 case EventType.EVT_NODE_JOINED:
                 case EventType.EVT_NODE_LEFT:
                 case EventType.EVT_NODE_SEGMENTED:
+                    final String[] hostnames = new String[1];
                     logger.warn(EventTypeResolver.EVENTS.get(cacheEvent.type()) + ": " + cacheEvent.toString());
-                    logger.warn("Active nodes:");
-                    ignite.cluster().nodes().stream().forEach(node -> logger.warn(node.id().toString()));
-                break;
+                    ignite.cluster().nodes().stream().forEach(node -> {
+                        hostnames[0] = hostnames[0] + " " + node.hostNames().stream().reduce((t, u) -> t + " " + u).get();
+                    });
+                    logger.warn("Active nodes:" + hostnames[0]);
+                    break;
                 default:
                     logger.debug(EventTypeResolver.EVENTS.get(cacheEvent.type()) + ": " + cacheEvent.toString());
             }
