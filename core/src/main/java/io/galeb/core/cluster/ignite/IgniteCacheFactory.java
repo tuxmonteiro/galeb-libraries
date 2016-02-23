@@ -66,7 +66,8 @@ public class IgniteCacheFactory implements CacheFactory {
                                     EventType.EVT_CACHE_REBALANCE_STOPPED,
                                     EventType.EVT_NODE_JOINED,
                                     EventType.EVT_NODE_LEFT,
-                                    EventType.EVT_NODE_SEGMENTED);
+                                    EventType.EVT_NODE_SEGMENTED,
+                                    EventType.EVT_CACHE_STOPPED);
         IgnitePredicate<Event> listener = cacheEvent -> {
             switch (cacheEvent.type()) {
                 case EventType.EVT_CACHE_OBJECT_PUT:
@@ -82,10 +83,11 @@ public class IgniteCacheFactory implements CacheFactory {
                 case EventType.EVT_NODE_JOINED:
                 case EventType.EVT_NODE_LEFT:
                 case EventType.EVT_NODE_SEGMENTED:
+                case EventType.EVT_CACHE_STOPPED:
                     final String[] hostnames = new String[1];
                     logger.warn(EventTypeResolver.EVENTS.get(cacheEvent.type()) + ": " + cacheEvent.toString());
                     ignite.cluster().nodes().stream().forEach(node -> {
-                        hostnames[0] = hostnames[0] + " " + node.hostNames().stream().reduce((t, u) -> t + " " + u).get();
+                        hostnames[0] = (hostnames[0] != null ? hostnames[0] : "") + " " + node.hostNames().stream().reduce((t, u) -> t + " " + u).get();
                     });
                     logger.warn("Active nodes:" + hostnames[0]);
                     break;
@@ -103,7 +105,8 @@ public class IgniteCacheFactory implements CacheFactory {
                 EventType.EVT_CACHE_REBALANCE_STOPPED,
                 EventType.EVT_NODE_JOINED,
                 EventType.EVT_NODE_LEFT,
-                EventType.EVT_NODE_SEGMENTED);
+                EventType.EVT_NODE_SEGMENTED,
+                EventType.EVT_CACHE_STOPPED);
     }
 
     @Override
