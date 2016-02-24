@@ -66,7 +66,8 @@ public class IgniteCacheFactory implements CacheFactory {
                                     EventType.EVT_CACHE_REBALANCE_STOPPED,
                                     EventType.EVT_NODE_JOINED,
                                     EventType.EVT_NODE_LEFT,
-                                    EventType.EVT_NODE_SEGMENTED);
+                                    EventType.EVT_NODE_SEGMENTED,
+                                    EventType.EVT_CACHE_STOPPED);
         IgnitePredicate<Event> listener = cacheEvent -> {
             switch (cacheEvent.type()) {
                 case EventType.EVT_CACHE_OBJECT_PUT:
@@ -82,10 +83,14 @@ public class IgniteCacheFactory implements CacheFactory {
                 case EventType.EVT_NODE_JOINED:
                 case EventType.EVT_NODE_LEFT:
                 case EventType.EVT_NODE_SEGMENTED:
+                case EventType.EVT_CACHE_STOPPED:
+                    final String[] hostnames = new String[1];
                     logger.warn(EventTypeResolver.EVENTS.get(cacheEvent.type()) + ": " + cacheEvent.toString());
-                    logger.warn("Active nodes:");
-                    ignite.cluster().nodes().stream().forEach(node -> logger.warn(node.id().toString()));
-                break;
+                    ignite.cluster().nodes().stream().forEach(node -> {
+                        hostnames[0] = (hostnames[0] != null ? hostnames[0] : "") + " " + node.hostNames().stream().reduce((t, u) -> t + " " + u).get();
+                    });
+                    logger.warn("Active nodes:" + hostnames[0]);
+                    break;
                 default:
                     logger.debug(EventTypeResolver.EVENTS.get(cacheEvent.type()) + ": " + cacheEvent.toString());
             }
@@ -100,7 +105,8 @@ public class IgniteCacheFactory implements CacheFactory {
                 EventType.EVT_CACHE_REBALANCE_STOPPED,
                 EventType.EVT_NODE_JOINED,
                 EventType.EVT_NODE_LEFT,
-                EventType.EVT_NODE_SEGMENTED);
+                EventType.EVT_NODE_SEGMENTED,
+                EventType.EVT_CACHE_STOPPED);
     }
 
     @Override
@@ -147,8 +153,13 @@ public class IgniteCacheFactory implements CacheFactory {
         }
     }
 
-    private void putEvent(Event cacheEvent) {
-        Entity entity = getEntity(getValue(cacheEvent));
+    private void putEvent(Event event) {
+        final CacheEvent cacheEvent = (CacheEvent) event;
+        final Entity entity = getEntity(getValue(cacheEvent));
+        if (entity == null) {
+            logger.error("Entity is NULL. " + cacheEvent.toString());
+            return;
+        }
         boolean exist = entityContains(entity);
         if (exist) {
             updatedEvent(cacheEvent);
@@ -179,8 +190,12 @@ public class IgniteCacheFactory implements CacheFactory {
         }
 
         if (farm != null) {
-            Entity entity = getEntity(newValue);
-            EntityController entityController = getController(entity);
+            final Entity entity = getEntity(newValue);
+            if (entity == null) {
+                logger.error("Entity is NULL. " + cacheEvent.toString());
+                return;
+            }
+            final EntityController entityController = getController(entity);
             try {
                 entityController.change(entity.copy());
             } catch (Exception e) {
@@ -200,6 +215,10 @@ public class IgniteCacheFactory implements CacheFactory {
 
     private Entity getEntity(String value) {
         String entityType = ((Entity) JsonObject.fromJson(value, Entity.class)).getEntityType();
+        if (entityType == null || "entity".equals(entityType) || "".equals(entityType)) {
+            logger.error("EntityType is invalid. " + value);
+            return null;
+        }
         return (Entity) JsonObject.fromJson(value, ENTITY_CLASSES.get(entityType));
     }
 
@@ -219,8 +238,12 @@ public class IgniteCacheFactory implements CacheFactory {
         logger.info("Creating :" + value);
 
         if (farm != null) {
-            Entity entity = getEntity(value);
-            EntityController entityController = getController(entity);
+            final Entity entity = getEntity(value);
+            if (entity == null) {
+                logger.error("Entity is NULL. " + cacheEvent.toString());
+                return;
+            }
+            final EntityController entityController = getController(entity);
             try {
                 entityController.add(entity.copy());
             } catch (Exception e) {
@@ -236,8 +259,7 @@ public class IgniteCacheFactory implements CacheFactory {
     }
 
     private boolean entityContains(Entity entity) {
-        return farm.getCollection(getClassFromEntityType(entity.getEntityType())).stream()
-                .filter(e -> e.compoundId().equals(entity.compoundId())).count() > 0;
+        return farm.contains(entity);
     }
 
     @Override
