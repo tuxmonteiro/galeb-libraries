@@ -30,7 +30,7 @@ public class Entity implements Serializable, Comparable<Entity> {
     public static final String SEP_COMPOUND_ID = "#";
 
     /** internal use **/
-    private volatile String compoundId = "";
+    private String compoundId = "";
 
     /** The primary key */
     @Expose private int                        pk            = -1;
