@@ -75,11 +75,14 @@ public abstract class AbstractService {
         clusterLocker.setLogger(logger);
     }
 
-    private void entityAdd(Entity entity) {
+    private void entityAdd(String entityStr, Class<?> clazz) {
+        Entity entity = (Entity) JsonObject.fromJson(entityStr, clazz);
+        entity.setEntityType(clazz.getSimpleName().toLowerCase());
         EntityController entityController = farm.getController(
                 getClassNameFromEntityType(entity.getEntityType()));
         try {
             entityController.add(entity.copy());
+            logger.warn("Loading entity " + entity + ": " + entityStr );
         } catch (Exception e) {
             logger.error(e);
         }
@@ -91,11 +94,7 @@ public abstract class AbstractService {
                 .forEach(clazz -> {
                     final Cache<String, String> cache = cacheFactory.getCache(clazz.getName());
                     if (cache != null) {
-                        cache.forEach(entry -> {
-                            Entity entity = (Entity) JsonObject.fromJson(entry.getValue(), clazz);
-                            entity.setEntityType(clazz.getSimpleName().toLowerCase());
-                            entityAdd(entity);
-                        });
+                        cache.forEach(entry -> entityAdd(entry.getValue(), clazz));
                     }
                 });
     }
