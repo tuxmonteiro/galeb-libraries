@@ -29,9 +29,6 @@ public class Entity implements Serializable, Comparable<Entity> {
 
     public static final String SEP_COMPOUND_ID = "#";
 
-    /** internal use **/
-    private String compoundId = "";
-
     /** The primary key */
     @Expose private int                        pk            = -1;
 
@@ -92,7 +89,6 @@ public class Entity implements Serializable, Comparable<Entity> {
 
     public final Entity setId(String id) {
         this.id = id;
-        updateCompoundId();
         return this;
     }
 
@@ -102,7 +98,6 @@ public class Entity implements Serializable, Comparable<Entity> {
 
     public final Entity setParentId(String parentId) {
         this.parentId = parentId;
-        updateCompoundId();
         return this;
     }
 
@@ -179,11 +174,7 @@ public class Entity implements Serializable, Comparable<Entity> {
     }
 
     public String compoundId() {
-        return compoundId;
-    }
-
-    private void updateCompoundId() {
-        compoundId = getId()+SEP_COMPOUND_ID+getParentId();
+        return getId()+SEP_COMPOUND_ID+getParentId();
     }
 
     @Override

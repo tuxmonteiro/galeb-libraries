@@ -34,7 +34,7 @@ public class IgniteClusterLocker implements ClusterLocker {
     private Ignite ignite;
 
     private IgniteClusterLocker() {
-        CacheFactory cacheFactory = IgniteCacheFactory.INSTANCE;
+        CacheFactory cacheFactory = IgniteCacheFactory.getInstance().start();
         ignite = (Ignite) cacheFactory.getClusterInstance();
     }
 

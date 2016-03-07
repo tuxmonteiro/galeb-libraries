@@ -25,6 +25,7 @@ import io.galeb.core.logging.Logger;
 import io.galeb.core.logging.NullLogger;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
+import io.galeb.core.services.AbstractService;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.events.CacheEvent;
@@ -33,6 +34,8 @@ import org.apache.ignite.events.EventType;
 import org.apache.ignite.lang.IgnitePredicate;
 
 import javax.cache.Cache;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,71 +45,112 @@ import java.util.stream.Collectors;
 import static io.galeb.core.model.Entity.SEP_COMPOUND_ID;
 import static io.galeb.core.model.Farm.ENTITY_CLASSES;
 import static io.galeb.core.model.Farm.getClassNameFromEntityType;
-import static io.galeb.core.model.Farm.getClassFromEntityType;
 import static io.galeb.core.util.Constants.SysProp.PROP_CLUSTER_CONF;
 
 public class IgniteCacheFactory implements CacheFactory {
 
-    public static final IgniteCacheFactory INSTANCE = new IgniteCacheFactory();
+    private static IgniteCacheFactory INSTANCE;
+
+    private final List<Integer> EVENTS = new ArrayList<>(Arrays.asList(
+            EventType.EVT_NODE_FAILED,
+            EventType.EVT_CACHE_NODES_LEFT,
+            EventType.EVT_CACHE_REBALANCE_STARTED,
+            EventType.EVT_CACHE_REBALANCE_STOPPED,
+            EventType.EVT_NODE_JOINED,
+            EventType.EVT_NODE_LEFT,
+            EventType.EVT_NODE_SEGMENTED,
+            EventType.EVT_CACHE_STOPPED));
 
     private final String configFile = System.getProperty(PROP_CLUSTER_CONF.toString(), "file:///" + System.getenv("PWD") + "/" + PROP_CLUSTER_CONF.def());
-    private final Ignite ignite;
 
+    private Ignite ignite = null;
     private Farm farm = null;
     private Logger logger = new NullLogger();
+    private AbstractService service = null;
+    private boolean isStarted = false;
 
-    private IgniteCacheFactory() {
+    public synchronized CacheFactory start() {
+        if (!isStarted) {
+            startIgnite();
+            ignite.events().enableLocal(EVENTS.stream().mapToInt(i -> i).toArray());
+            IgnitePredicate<Event> listener = cacheEvent -> {
+                switch (cacheEvent.type()) {
+                    case EventType.EVT_CACHE_QUERY_OBJECT_READ:
+                        if (service != null) {
+                            String className = ((CacheEvent) cacheEvent).cacheName();
+                            String json = (String) ((CacheEvent) cacheEvent).newValue();
+                            if (json != null) {
+                                service.onClusterRead(json, className);
+                            }
+                        }
+                        break;
+                    case EventType.EVT_CACHE_OBJECT_PUT:
+                        putEvent(cacheEvent);
+                        break;
+                    case EventType.EVT_CACHE_OBJECT_REMOVED:
+                        removedEvent(cacheEvent);
+                        break;
+                    case EventType.EVT_NODE_FAILED:
+                    case EventType.EVT_CACHE_NODES_LEFT:
+                    case EventType.EVT_CACHE_REBALANCE_STARTED:
+                    case EventType.EVT_CACHE_REBALANCE_STOPPED:
+                    case EventType.EVT_NODE_JOINED:
+                    case EventType.EVT_NODE_LEFT:
+                    case EventType.EVT_NODE_SEGMENTED:
+                    case EventType.EVT_CACHE_STOPPED:
+                        final String[] hostnames = new String[1];
+                        logger.warn(EventTypeResolver.EVENTS.get(cacheEvent.type()) + ": " + cacheEvent.toString());
+                        ignite.cluster().nodes().stream().forEach(node -> {
+                            hostnames[0] = (hostnames[0] != null ? hostnames[0] : "") + " " + node.hostNames().stream().reduce((t, u) -> t + " " + u).get();
+                        });
+                        logger.warn("Active nodes:" + hostnames[0]);
+                        break;
+                    default:
+                        logger.debug(EventTypeResolver.EVENTS.get(cacheEvent.type()) + ": " + cacheEvent.toString());
+                }
+                return true;
+            };
+            ignite.events().localListen(listener, EVENTS.stream().mapToInt(i -> i).toArray());
+            isStarted = true;
+        }
+        return this;
+    }
+
+    private void startIgnite() {
+        if (ignite == null) {
+            ignite = Ignition.start(configFile);
+        }
+    }
+
+    public synchronized CacheFactory listeningReadEvent() {
+        EVENTS.add(EventType.EVT_CACHE_QUERY_OBJECT_READ);
+        return this;
+    }
+
+    public synchronized CacheFactory listeningPutEvent() {
+        EVENTS.add(EventType.EVT_CACHE_OBJECT_PUT);
+        return this;
+    }
+
+    public synchronized CacheFactory listeningRemoveEvent() {
+        EVENTS.add(EventType.EVT_CACHE_OBJECT_REMOVED);
+        return this;
+    }
+
+    private IgniteCacheFactory(final AbstractService service) {
         super();
-        ignite = Ignition.start(configFile);
-        ignite.events().enableLocal(EventType.EVT_CACHE_OBJECT_PUT,
-                                    EventType.EVT_CACHE_OBJECT_REMOVED,
-                                    EventType.EVT_NODE_FAILED,
-                                    EventType.EVT_CACHE_NODES_LEFT,
-                                    EventType.EVT_CACHE_REBALANCE_STARTED,
-                                    EventType.EVT_CACHE_REBALANCE_STOPPED,
-                                    EventType.EVT_NODE_JOINED,
-                                    EventType.EVT_NODE_LEFT,
-                                    EventType.EVT_NODE_SEGMENTED,
-                                    EventType.EVT_CACHE_STOPPED);
-        IgnitePredicate<Event> listener = cacheEvent -> {
-            switch (cacheEvent.type()) {
-                case EventType.EVT_CACHE_OBJECT_PUT:
-                    putEvent(cacheEvent);
-                    break;
-                case EventType.EVT_CACHE_OBJECT_REMOVED:
-                    removedEvent(cacheEvent);
-                    break;
-                case EventType.EVT_NODE_FAILED:
-                case EventType.EVT_CACHE_NODES_LEFT:
-                case EventType.EVT_CACHE_REBALANCE_STARTED:
-                case EventType.EVT_CACHE_REBALANCE_STOPPED:
-                case EventType.EVT_NODE_JOINED:
-                case EventType.EVT_NODE_LEFT:
-                case EventType.EVT_NODE_SEGMENTED:
-                case EventType.EVT_CACHE_STOPPED:
-                    final String[] hostnames = new String[1];
-                    logger.warn(EventTypeResolver.EVENTS.get(cacheEvent.type()) + ": " + cacheEvent.toString());
-                    ignite.cluster().nodes().stream().forEach(node -> {
-                        hostnames[0] = (hostnames[0] != null ? hostnames[0] : "") + " " + node.hostNames().stream().reduce((t, u) -> t + " " + u).get();
-                    });
-                    logger.warn("Active nodes:" + hostnames[0]);
-                    break;
-                default:
-                    logger.debug(EventTypeResolver.EVENTS.get(cacheEvent.type()) + ": " + cacheEvent.toString());
-            }
-            return true;
-        };
-        ignite.events().localListen(listener,
-                EventType.EVT_CACHE_OBJECT_PUT,
-                EventType.EVT_CACHE_OBJECT_REMOVED,
-                EventType.EVT_NODE_FAILED,
-                EventType.EVT_CACHE_NODES_LEFT,
-                EventType.EVT_CACHE_REBALANCE_STARTED,
-                EventType.EVT_CACHE_REBALANCE_STOPPED,
-                EventType.EVT_NODE_JOINED,
-                EventType.EVT_NODE_LEFT,
-                EventType.EVT_NODE_SEGMENTED,
-                EventType.EVT_CACHE_STOPPED);
+        this.service = service;
+    }
+
+    public static IgniteCacheFactory getInstance() {
+        return getInstance(null);
+    }
+
+    public static IgniteCacheFactory getInstance(AbstractService service) {
+        if (INSTANCE == null) {
+            INSTANCE = new IgniteCacheFactory(service);
+        }
+        return INSTANCE;
     }
 
     @Override
