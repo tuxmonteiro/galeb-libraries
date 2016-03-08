@@ -93,7 +93,7 @@ public abstract class AbstractService {
         return clusterLocker;
     }
 
-    public void onClusterRead(String json, String cacheName) {
+    public void onClusterLoaded(String cacheName) {
         // ignore by default
     }
 
