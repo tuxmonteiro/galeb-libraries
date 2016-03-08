@@ -25,11 +25,9 @@ import io.galeb.core.logging.Logger;
 import io.galeb.core.logging.NullLogger;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
-import io.galeb.core.services.AbstractService;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.events.CacheEvent;
-import org.apache.ignite.events.CacheRebalancingEvent;
 import org.apache.ignite.events.Event;
 import org.apache.ignite.events.EventType;
 import org.apache.ignite.lang.IgnitePredicate;
@@ -67,7 +65,6 @@ public class IgniteCacheFactory implements CacheFactory {
     private Ignite ignite = null;
     private Farm farm = null;
     private Logger logger = new NullLogger();
-    private AbstractService service = null;
     private boolean isStarted = false;
 
     public synchronized CacheFactory start() {
@@ -83,13 +80,6 @@ public class IgniteCacheFactory implements CacheFactory {
 
                 IgnitePredicate<Event> listener = event -> {
                     switch (event.type()) {
-                        case EventType.EVT_CACHE_REBALANCE_STOPPED:
-                            registerEventDetail(event);
-                            if (service != null) {
-                                String className = ((CacheRebalancingEvent) event).cacheName();
-                                service.onClusterLoaded(className);
-                            }
-                            break;
                         case EventType.EVT_CACHE_OBJECT_PUT:
                             putEvent(event);
                             break;
@@ -99,6 +89,7 @@ public class IgniteCacheFactory implements CacheFactory {
                         case EventType.EVT_NODE_FAILED:
                         case EventType.EVT_CACHE_NODES_LEFT:
                         case EventType.EVT_CACHE_REBALANCE_STARTED:
+                        case EventType.EVT_CACHE_REBALANCE_STOPPED:
                         case EventType.EVT_NODE_JOINED:
                         case EventType.EVT_NODE_LEFT:
                         case EventType.EVT_NODE_SEGMENTED:
@@ -153,20 +144,13 @@ public class IgniteCacheFactory implements CacheFactory {
         return this;
     }
 
-    private IgniteCacheFactory(final AbstractService service) {
+    private IgniteCacheFactory() {
         super();
-        if (this.service == null) {
-            this.service = service;
-        }
     }
 
     public static IgniteCacheFactory getInstance() {
-        return getInstance(null);
-    }
-
-    public static IgniteCacheFactory getInstance(AbstractService service) {
         if (INSTANCE == null) {
-            INSTANCE = new IgniteCacheFactory(service);
+            INSTANCE = new IgniteCacheFactory();
         }
         return INSTANCE;
     }
