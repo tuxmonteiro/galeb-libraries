@@ -42,8 +42,6 @@ public interface CacheFactory {
 
     default CacheFactory start() { return this; }
 
-    default CacheFactory listeningReadEvent() { return this; }
-
     default CacheFactory listeningPutEvent() { return this; }
 
     default CacheFactory listeningRemoveEvent() { return this; }
