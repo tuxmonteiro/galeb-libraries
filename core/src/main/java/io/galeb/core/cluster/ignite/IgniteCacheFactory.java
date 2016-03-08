@@ -29,6 +29,7 @@ import io.galeb.core.services.AbstractService;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.events.CacheEvent;
+import org.apache.ignite.events.CacheRebalancingEvent;
 import org.apache.ignite.events.Event;
 import org.apache.ignite.events.EventType;
 import org.apache.ignite.lang.IgnitePredicate;
@@ -71,60 +72,75 @@ public class IgniteCacheFactory implements CacheFactory {
 
     public synchronized CacheFactory start() {
         if (!isStarted) {
-            startIgnite();
-            ignite.events().enableLocal(EVENTS.stream().mapToInt(i -> i).toArray());
-            IgnitePredicate<Event> listener = cacheEvent -> {
-                switch (cacheEvent.type()) {
-                    case EventType.EVT_CACHE_QUERY_OBJECT_READ:
-                        if (service != null) {
-                            String className = ((CacheEvent) cacheEvent).cacheName();
-                            String json = (String) ((CacheEvent) cacheEvent).newValue();
-                            if (json != null) {
-                                service.onClusterRead(json, className);
+            String logLevel = System.getenv("LOGLEVEL");
+            if (logLevel != null && "DEBUG".equals(logLevel)) {
+                EVENTS.clear();
+                EVENTS.addAll(EventTypeResolver.EVENTS.keySet());
+            }
+            if (ignite == null) {
+                int[] arrayOfEvents = EVENTS.stream().mapToInt(i -> i).toArray();
+                String eventsStr = EVENTS.stream().map(EventTypeResolver.EVENTS::get).reduce((t, u) -> t + " " + u).get();
+
+                IgnitePredicate<Event> listener = event -> {
+                    switch (event.type()) {
+                        case EventType.EVT_CACHE_REBALANCE_STOPPED:
+                            registerEventDetail(event);
+                            if (service != null) {
+                                String className = ((CacheRebalancingEvent) event).cacheName();
+                                service.onClusterLoaded(className);
                             }
-                        }
-                        break;
-                    case EventType.EVT_CACHE_OBJECT_PUT:
-                        putEvent(cacheEvent);
-                        break;
-                    case EventType.EVT_CACHE_OBJECT_REMOVED:
-                        removedEvent(cacheEvent);
-                        break;
-                    case EventType.EVT_NODE_FAILED:
-                    case EventType.EVT_CACHE_NODES_LEFT:
-                    case EventType.EVT_CACHE_REBALANCE_STARTED:
-                    case EventType.EVT_CACHE_REBALANCE_STOPPED:
-                    case EventType.EVT_NODE_JOINED:
-                    case EventType.EVT_NODE_LEFT:
-                    case EventType.EVT_NODE_SEGMENTED:
-                    case EventType.EVT_CACHE_STOPPED:
-                        final String[] hostnames = new String[1];
-                        logger.warn(EventTypeResolver.EVENTS.get(cacheEvent.type()) + ": " + cacheEvent.toString());
-                        ignite.cluster().nodes().stream().forEach(node -> {
-                            hostnames[0] = (hostnames[0] != null ? hostnames[0] : "") + " " + node.hostNames().stream().reduce((t, u) -> t + " " + u).get();
-                        });
-                        logger.warn("Active nodes:" + hostnames[0]);
-                        break;
-                    default:
-                        logger.debug(EventTypeResolver.EVENTS.get(cacheEvent.type()) + ": " + cacheEvent.toString());
-                }
-                return true;
-            };
-            ignite.events().localListen(listener, EVENTS.stream().mapToInt(i -> i).toArray());
+                            break;
+                        case EventType.EVT_CACHE_OBJECT_PUT:
+                            putEvent(event);
+                            break;
+                        case EventType.EVT_CACHE_OBJECT_REMOVED:
+                            removedEvent(event);
+                            break;
+                        case EventType.EVT_NODE_FAILED:
+                        case EventType.EVT_CACHE_NODES_LEFT:
+                        case EventType.EVT_CACHE_REBALANCE_STARTED:
+                        case EventType.EVT_NODE_JOINED:
+                        case EventType.EVT_NODE_LEFT:
+                        case EventType.EVT_NODE_SEGMENTED:
+                        case EventType.EVT_CACHE_STOPPED:
+                            registerEventDetail(event);
+                            break;
+                        default:
+                            logger.debug(EventTypeResolver.EVENTS.get(event.type()) + ": " + event.toString());
+                    }
+                    return true;
+                };
+
+                ignite = igniteInstance();
+                ignite.events().enableLocal(arrayOfEvents);
+                ignite.events().localListen(listener, arrayOfEvents);
+                logger.info("Enabling tracking events: " + eventsStr);
+            }
             isStarted = true;
         }
         return this;
     }
 
-    private void startIgnite() {
-        if (ignite == null) {
-            ignite = Ignition.start(configFile);
-        }
+    private void registerEventDetail(Event event) {
+        logger.warn(EventTypeResolver.EVENTS.get(event.type()) + ": " + event.toString());
+        showActiveNodes();
     }
 
-    public synchronized CacheFactory listeningReadEvent() {
-        EVENTS.add(EventType.EVT_CACHE_QUERY_OBJECT_READ);
-        return this;
+    private void showActiveNodes() {
+        final String[] hostnames = getNodesHostname();
+        logger.warn("Active nodes:" + hostnames[0]);
+    }
+
+    private String[] getNodesHostname() {
+        final String[] hostnames = new String[1];
+        ignite.cluster().nodes().stream().forEach(node -> {
+            hostnames[0] = (hostnames[0] != null ? hostnames[0] : "") + " " + node.hostNames().stream().reduce((t, u) -> t + " " + u).get();
+        });
+        return hostnames;
+    }
+
+    private Ignite igniteInstance() {
+        return Ignition.start(configFile);
     }
 
     public synchronized CacheFactory listeningPutEvent() {
@@ -139,7 +155,9 @@ public class IgniteCacheFactory implements CacheFactory {
 
     private IgniteCacheFactory(final AbstractService service) {
         super();
-        this.service = service;
+        if (this.service == null) {
+            this.service = service;
+        }
     }
 
     public static IgniteCacheFactory getInstance() {
