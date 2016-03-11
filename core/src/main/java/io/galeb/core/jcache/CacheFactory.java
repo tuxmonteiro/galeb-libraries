@@ -18,6 +18,7 @@
 
 package io.galeb.core.jcache;
 
+import io.galeb.core.cluster.ClusterListener;
 import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Farm;
 
@@ -36,5 +37,13 @@ public interface CacheFactory {
     }
 
     Cache<String, String> getCache(String key);
+
+    default CacheFactory setListener(ClusterListener clusterListener) { return  this; }
+
+    default CacheFactory start() { return this; }
+
+    default CacheFactory listeningPutEvent() { return this; }
+
+    default CacheFactory listeningRemoveEvent() { return this; }
 
 }

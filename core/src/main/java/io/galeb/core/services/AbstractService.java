@@ -16,25 +16,15 @@
 
 package io.galeb.core.services;
 
-import java.util.Arrays;
-
-import javax.annotation.PostConstruct;
-import javax.cache.Cache;
 import javax.inject.Inject;
 
 import io.galeb.core.cluster.ClusterLocker;
-import io.galeb.core.cluster.ignite.IgniteCacheFactory;
-import io.galeb.core.cluster.ignite.IgniteClusterLocker;
 import io.galeb.core.controller.EntityController;
 import io.galeb.core.jcache.CacheFactory;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.logging.Logger;
-import io.galeb.core.model.Backend;
-import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
-import io.galeb.core.model.Rule;
-import io.galeb.core.model.VirtualHost;
 import io.galeb.core.statsd.StatsdClient;
 
 import static io.galeb.core.model.Farm.getClassNameFromEntityType;
@@ -61,43 +51,25 @@ public abstract class AbstractService {
     @Inject
     protected ProcessorScheduler processorScheduler;
 
-    protected CacheFactory cacheFactory = IgniteCacheFactory.INSTANCE;
+    protected CacheFactory cacheFactory;
 
-    protected ClusterLocker clusterLocker = IgniteClusterLocker.INSTANCE;
+    protected ClusterLocker clusterLocker;
 
     public AbstractService() {
         super();
     }
 
-    @PostConstruct
-    public void init() {
-        cacheFactory.setLogger(logger);
-        clusterLocker.setLogger(logger);
-    }
-
-    private void entityAdd(Entity entity) {
+    protected void entityAdd(String entityStr, Class<?> clazz) {
+        Entity entity = (Entity) JsonObject.fromJson(entityStr, clazz);
+        entity.setEntityType(clazz.getSimpleName().toLowerCase());
         EntityController entityController = farm.getController(
                 getClassNameFromEntityType(entity.getEntityType()));
         try {
             entityController.add(entity.copy());
+            logger.warn("Loading entity " + entity + ": " + entityStr );
         } catch (Exception e) {
             logger.error(e);
         }
-    }
-
-    protected void prelaunch() {
-        cacheFactory.setLogger(logger).setFarm(farm);
-        Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class).stream()
-                .forEach(clazz -> {
-                    final Cache<String, String> cache = cacheFactory.getCache(clazz.getName());
-                    if (cache != null) {
-                        cache.forEach(entry -> {
-                            Entity entity = (Entity) JsonObject.fromJson(entry.getValue(), clazz);
-                            entity.setEntityType(clazz.getSimpleName().toLowerCase());
-                            entityAdd(entity);
-                        });
-                    }
-                });
     }
 
     protected void startProcessorScheduler() {
@@ -120,4 +92,5 @@ public abstract class AbstractService {
     public ClusterLocker getClusterLocker() {
         return clusterLocker;
     }
+
 }

@@ -28,14 +28,24 @@ import org.apache.ignite.IgniteSemaphore;
 
 public class IgniteClusterLocker implements ClusterLocker {
 
-    public static final ClusterLocker INSTANCE = new IgniteClusterLocker();
+    private static final ClusterLocker INSTANCE = new IgniteClusterLocker();
 
     private Logger logger = new NullLogger();
     private Ignite ignite;
 
     private IgniteClusterLocker() {
-        CacheFactory cacheFactory = IgniteCacheFactory.INSTANCE;
+        //
+    }
+
+    public static ClusterLocker getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    public ClusterLocker start() {
+        CacheFactory cacheFactory = IgniteCacheFactory.getInstance().start();
         ignite = (Ignite) cacheFactory.getClusterInstance();
+        return this;
     }
 
     @Override
