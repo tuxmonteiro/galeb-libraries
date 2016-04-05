@@ -16,7 +16,6 @@
 
 package io.galeb.undertow.handlers;
 
-import io.galeb.core.logging.*;
 import io.undertow.attribute.ExchangeAttribute;
 import io.undertow.attribute.ExchangeAttributes;
 import io.undertow.attribute.SubstituteEmptyWrapper;
@@ -24,8 +23,12 @@ import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.accesslog.AccessLogReceiver;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AccessLogExtendedHandler implements HttpHandler {
+
+    private static final Logger LOGGER = LogManager.getLogger(AccessLogExtendedHandler.class);
 
     public static final String REAL_DEST = "#REAL_DEST#";
     public static final String UNKNOWN = "UNKNOWN";
@@ -34,18 +37,15 @@ public class AccessLogExtendedHandler implements HttpHandler {
     private final AccessLogReceiver accessLogReceiver;
     private final ExchangeAttribute tokens;
     private final HttpHandler next;
-    private final Logger log;
 
     public AccessLogExtendedHandler(HttpHandler next,
                                     AccessLogReceiver accessLogReceiver,
                                     String formatString,
-                                    ClassLoader classLoader,
-                                    Logger log) {
-        this.log = log;
+                                    ClassLoader classLoader) {
         this.next = next;
         this.accessLogReceiver = accessLogReceiver;
         tokens = ExchangeAttributes.parser(classLoader, new SubstituteEmptyWrapper("-")).parse(formatString);
-        log.info("AccessLogExtendedHandler enabled");
+        LOGGER.info("AccessLogExtendedHandler enabled");
     }
 
     @Override

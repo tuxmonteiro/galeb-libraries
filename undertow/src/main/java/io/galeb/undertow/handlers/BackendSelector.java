@@ -26,11 +26,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
 import io.galeb.core.loadbalance.LoadBalancePolicy;
 import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
-import io.galeb.core.logging.Logger;
 import io.galeb.core.util.consistenthash.HashAlgorithm;
 import io.galeb.core.util.consistenthash.HashAlgorithm.HashType;
 import io.galeb.undertow.extractable.UndertowCookie;
@@ -43,8 +40,12 @@ import io.undertow.server.handlers.proxy.LoadBalancingProxyClient.Host;
 import io.undertow.server.handlers.proxy.LoadBalancingProxyClient.HostSelector;
 import io.undertow.util.AttachmentKey;
 import io.undertow.util.CopyOnWriteMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class BackendSelector implements HostSelector {
+
+    private static final Logger LOGGER = LogManager.getLogger(BackendSelector.class);
 
     public static final AttachmentKey<String> REAL_DEST    = AttachmentKey.create(String.class);
     public static final String                HOST_UNDEF   = "http://UNDEF:0";
@@ -58,10 +59,6 @@ public class BackendSelector implements HostSelector {
     private final Map<String, URI> hosts = Collections.synchronizedMap(new LinkedHashMap<>());
     private final HashAlgorithm hashAlgorithm = new HashAlgorithm(HashType.MD5);
     private Boolean enabledStickCookie = null;
-
-    @Inject
-    private Logger logger;
-
 
     @Override
     public int selectHost(final Host[] availableHosts) {
@@ -87,7 +84,7 @@ public class BackendSelector implements HostSelector {
                 trace(host.getUri().toString());
             }
         } catch (final IndexOutOfBoundsException e) {
-            logger.error(e);
+            LOGGER.error(e);
             return 0;
         }
 

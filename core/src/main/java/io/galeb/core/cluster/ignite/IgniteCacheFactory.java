@@ -21,8 +21,6 @@ package io.galeb.core.cluster.ignite;
 import io.galeb.core.controller.EntityController;
 import io.galeb.core.jcache.CacheFactory;
 import io.galeb.core.json.JsonObject;
-import io.galeb.core.logging.Logger;
-import io.galeb.core.logging.NullLogger;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import org.apache.ignite.Ignite;
@@ -31,6 +29,8 @@ import org.apache.ignite.events.CacheEvent;
 import org.apache.ignite.events.Event;
 import org.apache.ignite.events.EventType;
 import org.apache.ignite.lang.IgnitePredicate;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.cache.Cache;
 import java.util.ArrayList;
@@ -48,6 +48,8 @@ import static io.galeb.core.util.Constants.SysProp.PROP_CLUSTER_CONF;
 
 public class IgniteCacheFactory implements CacheFactory {
 
+    private static final Logger LOGGER = LogManager.getLogger(IgniteCacheFactory.class);
+
     private static IgniteCacheFactory INSTANCE;
 
     private final List<Integer> EVENTS = new ArrayList<>(Arrays.asList(
@@ -64,7 +66,6 @@ public class IgniteCacheFactory implements CacheFactory {
 
     private Ignite ignite = null;
     private Farm farm = null;
-    private Logger logger = new NullLogger();
     private boolean isStarted = false;
 
     public synchronized CacheFactory start() {
@@ -97,7 +98,7 @@ public class IgniteCacheFactory implements CacheFactory {
                             registerEventDetail(event);
                             break;
                         default:
-                            logger.debug(EventTypeResolver.EVENTS.get(event.type()) + ": " + event.toString());
+                            LOGGER.debug(EventTypeResolver.EVENTS.get(event.type()) + ": " + event.toString());
                     }
                     return true;
                 };
@@ -105,7 +106,7 @@ public class IgniteCacheFactory implements CacheFactory {
                 ignite = igniteInstance();
                 ignite.events().enableLocal(arrayOfEvents);
                 ignite.events().localListen(listener, arrayOfEvents);
-                logger.info("Enabling tracking events: " + eventsStr);
+                LOGGER.info("Enabling tracking events: " + eventsStr);
             }
             isStarted = true;
         }
@@ -113,13 +114,13 @@ public class IgniteCacheFactory implements CacheFactory {
     }
 
     private void registerEventDetail(Event event) {
-        logger.warn(EventTypeResolver.EVENTS.get(event.type()) + ": " + event.toString());
+        LOGGER.warn(EventTypeResolver.EVENTS.get(event.type()) + ": " + event.toString());
         showActiveNodes();
     }
 
     private void showActiveNodes() {
         final String[] hostnames = getNodesHostname();
-        logger.warn("Active nodes:" + hostnames[0]);
+        LOGGER.warn("Active nodes:" + hostnames[0]);
     }
 
     private String[] getNodesHostname() {
@@ -165,15 +166,15 @@ public class IgniteCacheFactory implements CacheFactory {
         final CacheEvent cacheEvent = (CacheEvent) event;
         String key = cacheEvent.key();
         String cacheName = cacheEvent.cacheName();
-        logger.debug("REMOVED:" + cacheName);
-        logger.info("Removing :" + key);
+        LOGGER.debug("REMOVED:" + cacheName);
+        LOGGER.info("Removing :" + key);
 
         if (farm != null) {
             Class<? extends Entity> clazz;
             try {
                 clazz = (Class<? extends Entity>) Class.forName(cacheName);
             } catch (ClassNotFoundException e) {
-                logger.error(e);
+                LOGGER.error(e);
                 return;
             }
             String[] idWithParentId = key.split(SEP_COMPOUND_ID);
@@ -191,11 +192,11 @@ public class IgniteCacheFactory implements CacheFactory {
                 try {
                     entityController.del(entity.copy());
                 } catch (Exception e) {
-                    logger.error(e);
+                    LOGGER.error(e);
                 }
             });
         } else {
-            logger.error("REMOVED event aborted: FARM is NULL");
+            LOGGER.error("REMOVED event aborted: FARM is NULL");
         }
     }
 
@@ -203,7 +204,7 @@ public class IgniteCacheFactory implements CacheFactory {
         final CacheEvent cacheEvent = (CacheEvent) event;
         final Entity entity = getEntity(getValue(cacheEvent));
         if (entity == null) {
-            logger.error("Entity is NULL. " + cacheEvent.toString());
+            LOGGER.error("Entity is NULL. " + cacheEvent.toString());
             return;
         }
         boolean exist = entityContains(entity);
@@ -221,34 +222,34 @@ public class IgniteCacheFactory implements CacheFactory {
         String value = getValue(cacheEvent);
 
         if (value == null) {
-            logger.warn("Updating " + key + " aborted: VALUE is NULL");
+            LOGGER.warn("Updating " + key + " aborted: VALUE is NULL");
             return;
         }
         String newValue = (String) cacheEvent.newValue();
 
-        logger.debug("UPDATED:" + key);
-        logger.debug("UPDATED:" + cacheName);
+        LOGGER.debug("UPDATED:" + key);
+        LOGGER.debug("UPDATED:" + cacheName);
         if (newValue != null) {
-            logger.info("Updating :" + newValue);
+            LOGGER.info("Updating :" + newValue);
         } else {
-            logger.warn("Updating : " + value + " (OLD) Fail - has not new value");
+            LOGGER.warn("Updating : " + value + " (OLD) Fail - has not new value");
             return;
         }
 
         if (farm != null) {
             final Entity entity = getEntity(newValue);
             if (entity == null) {
-                logger.error("Entity is NULL. " + cacheEvent.toString());
+                LOGGER.error("Entity is NULL. " + cacheEvent.toString());
                 return;
             }
             final EntityController entityController = getController(entity);
             try {
                 entityController.change(entity.copy());
             } catch (Exception e) {
-                logger.error(e);
+                LOGGER.error(e);
             }
         } else {
-            logger.error("UPDATED event aborted: FARM is NULL");
+            LOGGER.error("UPDATED event aborted: FARM is NULL");
         }
     }
 
@@ -262,7 +263,7 @@ public class IgniteCacheFactory implements CacheFactory {
     private Entity getEntity(String value) {
         String entityType = ((Entity) JsonObject.fromJson(value, Entity.class)).getEntityType();
         if (entityType == null || "entity".equals(entityType) || "".equals(entityType)) {
-            logger.error("EntityType is invalid. " + value);
+            LOGGER.error("EntityType is invalid. " + value);
             return null;
         }
         return (Entity) JsonObject.fromJson(value, ENTITY_CLASSES.get(entityType));
@@ -275,28 +276,28 @@ public class IgniteCacheFactory implements CacheFactory {
         String value = getValue(cacheEvent);
 
         if (value == null) {
-            logger.warn("Creating " + key + " aborted: VALUE is NULL");
+            LOGGER.warn("Creating " + key + " aborted: VALUE is NULL");
             return;
         }
 
-        logger.debug("CREATED:" + key);
-        logger.debug("CREATED:" + cacheName);
-        logger.info("Creating :" + value);
+        LOGGER.debug("CREATED:" + key);
+        LOGGER.debug("CREATED:" + cacheName);
+        LOGGER.info("Creating :" + value);
 
         if (farm != null) {
             final Entity entity = getEntity(value);
             if (entity == null) {
-                logger.error("Entity is NULL. " + cacheEvent.toString());
+                LOGGER.error("Entity is NULL. " + cacheEvent.toString());
                 return;
             }
             final EntityController entityController = getController(entity);
             try {
                 entityController.add(entity.copy());
             } catch (Exception e) {
-                logger.error(e);
+                LOGGER.error(e);
             }
         } else {
-            logger.error("CREATED event aborted: FARM is NULL");
+            LOGGER.error("CREATED event aborted: FARM is NULL");
         }
     }
 
@@ -312,14 +313,6 @@ public class IgniteCacheFactory implements CacheFactory {
     public CacheFactory setFarm(final Farm farm) {
         if (farm != null) {
             this.farm = farm;
-        }
-        return this;
-    }
-
-    @Override
-    public CacheFactory setLogger(final Logger logger) {
-        if (logger != null) {
-            this.logger = logger;
         }
         return this;
     }

@@ -17,22 +17,22 @@
 package io.galeb.undertow.loaders;
 
 import java.util.List;
-import java.util.Optional;
 
 import io.galeb.core.controller.EntityController.Action;
-import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.VirtualHost;
 import io.galeb.undertow.handlers.PathGlobHandler;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
-import io.undertow.server.handlers.ResponseCodeHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class VirtualHostLoader implements Loader {
 
+    private static final Logger LOGGER = LogManager.getLogger(VirtualHostLoader.class);
+
     private HttpHandler virtualHostHandler;
-    private Optional<Logger> optionalLogger = Optional.empty();
     private Loader ruleLoader;
 
     public VirtualHostLoader setRuleLoader(final Loader ruleLoader) {
@@ -42,12 +42,6 @@ public class VirtualHostLoader implements Loader {
 
     public VirtualHostLoader setVirtualHostHandler(final HttpHandler virtualHostHandler) {
         this.virtualHostHandler = virtualHostHandler;
-        return this;
-    }
-
-    @Override
-    public Loader setLogger(Logger logger) {
-        optionalLogger = Optional.ofNullable(logger);
         return this;
     }
 
@@ -90,10 +84,10 @@ public class VirtualHostLoader implements Loader {
                 break;
 
             default:
-                optionalLogger.ifPresent(logger -> logger.error(action.toString()+" NOT FOUND"));
+                LOGGER.error(action.toString()+" NOT FOUND");
         }
         if (isOk) {
-            optionalLogger.ifPresent(logger -> logger.debug("Action "+action.toString()+" applied: "+virtualhostId+" ("+entity.getEntityType()+")"));
+            LOGGER.debug("Action "+action.toString()+" applied: "+virtualhostId+" ("+entity.getEntityType()+")");
         }
     }
 

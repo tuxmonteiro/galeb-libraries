@@ -17,7 +17,6 @@
 package io.galeb.undertow.model;
 
 import io.galeb.core.controller.EntityController.Action;
-import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
 import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Entity;
@@ -48,17 +47,16 @@ import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 
 import io.undertow.util.CopyOnWriteMap;
-import io.undertow.util.StatusCodes;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.ExtendedLogger;
 
 @Default
 public class FarmUndertow extends Farm {
 
-    private static final long serialVersionUID = 1L;
+    private static final Logger LOGGER = LogManager.getLogger(FarmUndertow.class);
 
-    @Inject
-    private Logger log;
+    private static final long serialVersionUID = 1L;
 
     @Inject
     private StatsdClient statsdClient;
@@ -79,9 +77,7 @@ public class FarmUndertow extends Farm {
 
     private void setRootHandler() {
         virtualHostHandler.setDefaultHandler(ResponseCodeHandler.HANDLE_500);
-        final HttpHandler hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler)
-                                                    .setStatsd(statsdClient)
-                                                    .setLogger(log);
+        final HttpHandler hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler).setStatsd(statsdClient);
 
         final String enableAccessLogProperty = System.getProperty(SysProp.PROP_ENABLE_ACCESSLOG.toString(),
                                                                   SysProp.PROP_ENABLE_ACCESSLOG.def());
@@ -105,8 +101,7 @@ public class FarmUndertow extends Farm {
                 new AccessLogExtendedHandler(hostMetricsHandler,
                                              accessLogReceiver,
                                              LOGPATTERN,
-                                             FarmUndertow.class.getClassLoader(),
-                                             log) :
+                                             FarmUndertow.class.getClassLoader()) :
                 hostMetricsHandler;
     }
 
@@ -117,23 +112,19 @@ public class FarmUndertow extends Farm {
         Loader ruleLoader;
 
         mapOfLoaders.put(Backend.class, backendLoader = new BackendLoader(this)
-                                                .setBackendPools(backendPoolsUndertow)
-                                                .setLogger(log));
+                                                .setBackendPools(backendPoolsUndertow));
 
         mapOfLoaders.put(BackendPool.class, new BackendPoolLoader(this)
                                                 .setBackendPools(backendPoolsUndertow)
-                                                .setBackendLoader(backendLoader)
-                                                .setLogger(log));
+                                                .setBackendLoader(backendLoader));
 
         mapOfLoaders.put(Rule.class, ruleLoader = new RuleLoader(this)
                                                 .setBackendPools(backendPoolsUndertow)
-                                                .setVirtualHostHandler(virtualHostHandler)
-                                                .setLogger(log));
+                                                .setVirtualHostHandler(virtualHostHandler));
 
         mapOfLoaders.put(VirtualHost.class, new VirtualHostLoader()
                                                 .setRuleLoader(ruleLoader)
-                                                .setVirtualHostHandler(virtualHostHandler)
-                                                .setLogger(log));
+                                                .setVirtualHostHandler(virtualHostHandler));
     }
 
     @Override

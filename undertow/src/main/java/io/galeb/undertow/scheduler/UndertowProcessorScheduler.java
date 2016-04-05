@@ -16,12 +16,13 @@
 
 package io.galeb.undertow.scheduler;
 
-import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Farm;
 import io.galeb.core.services.AbstractService;
 import io.galeb.core.services.ProcessorScheduler;
 import io.galeb.undertow.model.FarmUndertow;
 import io.galeb.undertow.scheduler.jobs.UndertowProcessorJob;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -41,14 +42,14 @@ import static org.quartz.TriggerBuilder.newTrigger;
 @Default
 public class UndertowProcessorScheduler implements JobListener, ProcessorScheduler {
 
-    private Logger logger;
+    private static final Logger LOGGER = LogManager.getLogger(UndertowProcessorScheduler.class);
+
     private FarmUndertow farmUndertow;
     private Scheduler scheduler;
 
     @Override
-    public void setupScheduler(final Logger logger, final Farm farm) {
+    public void setupScheduler(final Farm farm) {
         try {
-            this.logger = logger;
             if (farm instanceof FarmUndertow) {
                 this.farmUndertow = (FarmUndertow) farm;
             } else {
@@ -58,7 +59,7 @@ public class UndertowProcessorScheduler implements JobListener, ProcessorSchedul
             scheduler.getListenerManager().addJobListener(this);
             scheduler.start();
         } catch (SchedulerException e) {
-            logger.error(e);
+            LOGGER.error(e);
         }
     }
 
@@ -74,8 +75,7 @@ public class UndertowProcessorScheduler implements JobListener, ProcessorSchedul
                         .build();
 
                 JobDataMap jobdataMap = new JobDataMap();
-                jobdataMap.put(AbstractService.FARM, farmUndertow);
-                jobdataMap.put(AbstractService.LOGGER, logger);
+                jobdataMap.put(AbstractService.FARM_KEY, farmUndertow);
 
                 JobDetail jobDetail = newJob(UndertowProcessorJob.class).withIdentity(UndertowProcessorJob.class.getName())
                         .setJobData(jobdataMap)
@@ -85,14 +85,10 @@ public class UndertowProcessorScheduler implements JobListener, ProcessorSchedul
 
             } else {
                 String erroMsg = "FarmUndertow is NULL";
-                if (logger != null) {
-                    logger.error(erroMsg);
-                } else {
-                    System.err.println(erroMsg);
-                }
+                LOGGER.error(erroMsg);
             }
         } catch (SchedulerException e) {
-            logger.error(e);
+            LOGGER.error(e);
         }
     }
 
@@ -103,17 +99,17 @@ public class UndertowProcessorScheduler implements JobListener, ProcessorSchedul
 
     @Override
     public void jobToBeExecuted(JobExecutionContext context) {
-        logger.debug(context.getJobDetail().getKey().getName()+" to be executed");
+        LOGGER.debug(context.getJobDetail().getKey().getName()+" to be executed");
     }
 
     @Override
     public void jobExecutionVetoed(JobExecutionContext context) {
-        logger.debug(context.getJobDetail().getKey().getName()+" vetoed");
+        LOGGER.debug(context.getJobDetail().getKey().getName()+" vetoed");
     }
 
     @Override
     public void jobWasExecuted(JobExecutionContext context, JobExecutionException jobException) {
-        logger.debug(context.getJobDetail().getKey().getName()+" was executed");
+        LOGGER.debug(context.getJobDetail().getKey().getName()+" was executed");
     }
 
 }
