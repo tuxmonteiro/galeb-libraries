@@ -75,6 +75,7 @@ public abstract class AbstractService {
     protected void startProcessorScheduler() {
         processorScheduler.setupScheduler(farm);
         processorScheduler.startProcessorJob();
+        LOGGER.info("ProcessorScheduler started");
     }
 
     public Farm getFarm() {
