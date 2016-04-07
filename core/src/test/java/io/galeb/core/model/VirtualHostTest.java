@@ -44,45 +44,8 @@ public class VirtualHostTest {
     }
 
     @Test
-    public void clearRulesAtVirtualHost() {
-        virtualHost.newRule(ruleIdJson);
-        assertThat(virtualHost.getRules()).hasSize(1);
-        virtualHost.clearRules();
-        assertThat(virtualHost.getRules()).isEmpty();
-    }
-
-    @Test
     public void containRuleIsFalseInDefaultRulesAtVirtualHost() {
         assertThat(virtualHost.containRule(ruleId)).isFalse();
-    }
-
-    @Test
-    public void containRuleIsTrueAfterAddRuleAtVirtualHost() {
-        virtualHost.newRule(ruleIdJson);
-        assertThat(virtualHost.containRule(ruleId)).isTrue();
-    }
-
-    @Test
-    public void delRuleAtVirtualHost() {
-        virtualHost.newRule(ruleIdJson);
-        assertThat(virtualHost.getRules()).hasSize(1);
-        virtualHost.delRule(ruleId);
-        assertThat(virtualHost.getRules()).isEmpty();
-    }
-
-    @Test
-    public void delNullRuleAtVirtualHost() {
-        virtualHost.newRule(ruleIdJson);
-        assertThat(virtualHost.getRules()).hasSize(1);
-        virtualHost.delRule(ruleIdJson2);
-        assertThat(virtualHost.getRules()).hasSize(1);
-    }
-
-    @Test
-    public void getSingleRuleAtVirtualHost() {
-        virtualHost.newRule(ruleIdJson);
-        virtualHost.newRule(ruleIdJson2);
-        assertThat(virtualHost.getRule(ruleId)).isInstanceOf(Rule.class);
     }
 
 }
