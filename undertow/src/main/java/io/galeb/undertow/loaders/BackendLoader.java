@@ -35,7 +35,7 @@ import java.util.Map;
 
 public class BackendLoader implements Loader {
 
-    private static final Logger LOGGER = LogManager.getLogger(BackendLoader.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final Farm farm;
     private Map<String, BackendProxyClient> backendPools = new HashMap<>();

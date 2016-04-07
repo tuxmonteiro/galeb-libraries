@@ -48,7 +48,7 @@ import static io.galeb.core.util.Constants.SysProp.PROP_CLUSTER_CONF;
 
 public class IgniteCacheFactory implements CacheFactory {
 
-    private static final Logger LOGGER = LogManager.getLogger(IgniteCacheFactory.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static IgniteCacheFactory INSTANCE;
 

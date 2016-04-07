@@ -42,7 +42,7 @@ import static org.quartz.TriggerBuilder.newTrigger;
 @Default
 public class UndertowProcessorScheduler implements JobListener, ProcessorScheduler {
 
-    private static final Logger LOGGER = LogManager.getLogger(UndertowProcessorScheduler.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private FarmUndertow farmUndertow;
     private Scheduler scheduler;

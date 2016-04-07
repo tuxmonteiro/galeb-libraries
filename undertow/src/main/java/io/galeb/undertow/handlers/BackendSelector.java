@@ -45,7 +45,7 @@ import org.apache.logging.log4j.Logger;
 
 public class BackendSelector implements HostSelector {
 
-    private static final Logger LOGGER = LogManager.getLogger(BackendSelector.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final AttachmentKey<String> REAL_DEST    = AttachmentKey.create(String.class);
     public static final String                HOST_UNDEF   = "http://UNDEF:0";

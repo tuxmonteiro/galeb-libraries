@@ -54,7 +54,7 @@ import org.apache.logging.log4j.spi.ExtendedLogger;
 @Default
 public class FarmUndertow extends Farm {
 
-    private static final Logger LOGGER = LogManager.getLogger(FarmUndertow.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final long serialVersionUID = 1L;
 

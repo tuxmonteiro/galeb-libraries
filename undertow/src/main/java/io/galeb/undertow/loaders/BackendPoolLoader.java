@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class BackendPoolLoader implements Loader {
 
-    private static final Logger LOGGER = LogManager.getLogger(BackendPoolLoader.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public enum PoolProp {
         PROP_POOL_TTL                   ("io.galeb.pool.ttl"                        , String.valueOf(-1)),

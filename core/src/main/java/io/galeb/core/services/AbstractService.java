@@ -32,7 +32,7 @@ import static io.galeb.core.model.Farm.getClassNameFromEntityType;
 
 public abstract class AbstractService {
 
-    private static final Logger LOGGER = LogManager.getLogger(AbstractService.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final String LOGGER_KEY      = "logger";
     public static final String FARM_KEY        = "farm";

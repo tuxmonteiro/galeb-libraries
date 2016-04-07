@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
 
 public class IgniteClusterLocker implements ClusterLocker {
 
-    private static final Logger LOGGER = LogManager.getLogger(IgniteClusterLocker.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final ClusterLocker INSTANCE = new IgniteClusterLocker();
 
     private Ignite ignite;

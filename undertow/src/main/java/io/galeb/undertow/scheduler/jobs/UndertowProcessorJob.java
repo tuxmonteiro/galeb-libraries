@@ -29,7 +29,7 @@ import org.quartz.JobExecutionException;
 @DisallowConcurrentExecution
 public class UndertowProcessorJob implements Job {
 
-    private static final Logger LOGGER = LogManager.getLogger(UndertowProcessorJob.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {

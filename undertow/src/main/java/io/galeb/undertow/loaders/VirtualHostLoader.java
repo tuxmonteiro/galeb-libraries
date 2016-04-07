@@ -30,7 +30,7 @@ import org.apache.logging.log4j.Logger;
 
 public class VirtualHostLoader implements Loader {
 
-    private static final Logger LOGGER = LogManager.getLogger(VirtualHostLoader.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private HttpHandler virtualHostHandler;
     private Loader ruleLoader;

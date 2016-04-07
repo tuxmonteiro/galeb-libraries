@@ -28,7 +28,7 @@ import org.apache.logging.log4j.Logger;
 
 public class AccessLogExtendedHandler implements HttpHandler {
 
-    private static final Logger LOGGER = LogManager.getLogger(AccessLogExtendedHandler.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final String REAL_DEST = "#REAL_DEST#";
     public static final String UNKNOWN = "UNKNOWN";

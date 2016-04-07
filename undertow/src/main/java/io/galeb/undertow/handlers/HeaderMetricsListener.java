@@ -24,7 +24,7 @@ import org.apache.logging.log4j.Logger;
 
 class HeaderMetricsListener implements ExchangeCompletionListener {
 
-    private static final Logger LOGGER = LogManager.getLogger(HeaderMetricsListener.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final String UNKNOWN = "UNKNOWN";
     private StatsdClient statsdClient;

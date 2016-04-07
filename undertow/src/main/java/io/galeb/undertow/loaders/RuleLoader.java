@@ -39,7 +39,7 @@ import org.apache.logging.log4j.Logger;
 
 public class RuleLoader implements Loader {
 
-    private static final Logger LOGGER = LogManager.getLogger(RuleLoader.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final Farm farm;
     private Map<String, BackendProxyClient> backendPools = new HashMap<>();
