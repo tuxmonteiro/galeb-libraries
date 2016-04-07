@@ -122,7 +122,7 @@ public class FarmUndertow extends Farm {
                                                 .setBackendPools(backendPoolsUndertow)
                                                 .setVirtualHostHandler(virtualHostHandler));
 
-        mapOfLoaders.put(VirtualHost.class, new VirtualHostLoader()
+        mapOfLoaders.put(VirtualHost.class, new VirtualHostLoader(this)
                                                 .setRuleLoader(ruleLoader)
                                                 .setVirtualHostHandler(virtualHostHandler));
     }
@@ -162,7 +162,7 @@ public class FarmUndertow extends Farm {
             getCollection(Backend.class).stream()
                 .filter(backend -> backend.getParentId().equals(backendPool.getId()))
                 .forEach(backend -> {
-                    ((BackendPool) backendPool).addBackend((Backend)backend);
+                    ((BackendPool) backendPool).addBackend(backend.getId());
                     mapOfLoaders.get(Backend.class).from(backend, Action.ADD);
                 });
         });
@@ -171,7 +171,7 @@ public class FarmUndertow extends Farm {
             getCollection(Rule.class).stream()
                 .filter(rule -> rule.getParentId().equals(virtualhost.getId()))
                 .forEach(rule -> {
-                    ((VirtualHost) virtualhost).addRule((Rule)rule);
+                    ((VirtualHost) virtualhost).addRule(rule.getId());
                     mapOfLoaders.get(Rule.class).from(rule, Action.ADD);
                 });
         });

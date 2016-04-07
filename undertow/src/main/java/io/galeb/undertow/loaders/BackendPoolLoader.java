@@ -17,6 +17,7 @@
 package io.galeb.undertow.loaders;
 
 import io.galeb.core.controller.EntityController.Action;
+import io.galeb.core.model.Backend;
 import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
@@ -108,7 +109,9 @@ public class BackendPoolLoader implements Loader {
 
             case DEL:
                 if (backendPools.containsKey(backendPoolId)) {
-                    ((BackendPool) entity).getBackends().forEach(b -> backendLoader.from(b, Action.DEL));
+                    farm.getCollection(Backend.class).stream()
+                            .filter(backend -> backend.getParentId().equals(entity.getId()))
+                            .forEach(backend -> backendLoader.from(backend, Action.DEL));
                     backendPools.remove(backendPoolId);
                     isOk = true;
                 }

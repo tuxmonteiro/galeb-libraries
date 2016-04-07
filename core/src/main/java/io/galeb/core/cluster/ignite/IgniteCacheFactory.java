@@ -185,10 +185,12 @@ public class IgniteCacheFactory implements CacheFactory {
             }
 
             final EntityController entityController = farm.getController(clazz.getSimpleName());
-            List<Entity> entities = farm.getCollection(clazz).stream().filter(e -> e.getId().equals(id) &&
-                    ((parentId.get() != null && e.getParentId().equals(parentId.get())) ||
-                            parentId.get() == null) ).collect(Collectors.toList());
-            entities.forEach(entity -> {
+            farm.getCollection(clazz).stream()
+                    .filter(e -> e.getId().equals(id) &&
+                        ((parentId.get() != null && e.getParentId().equals(parentId.get())) ||
+                                parentId.get() == null))
+                    .forEach(entity ->
+            {
                 try {
                     entityController.del(entity.copy());
                 } catch (Exception e) {

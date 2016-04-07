@@ -35,20 +35,6 @@ public class BackendPoolCollection implements Collection<BackendPool, Backend> {
 
     private Set<Entity> backendPools = new ConcurrentSkipListSet<>();
 
-    private Collection<? extends Entity, ? extends Entity> backends;
-
-    @Override
-    public Collection<BackendPool, Backend> defineSetOfRelatives(Collection<? extends Entity, ? extends Entity> relatives) {
-        backends = relatives;
-        return this;
-    }
-
-    @Override
-    public Collection<BackendPool, Backend> addChild(Backend backend) {
-        backends.add(backend);
-        return this;
-    }
-
     @Override
     public List<Entity> getListByID(String entityId) {
         return backendPools.stream().filter(entity -> entity.getId().equals(entityId))
@@ -65,9 +51,6 @@ public class BackendPoolCollection implements Collection<BackendPool, Backend> {
     public boolean add(Entity backendPool) {
         final boolean result = false;
         if (!contains(backendPool)) {
-            backends.stream()
-                .filter(backend -> backend.getParentId().equals(backendPool.getId()))
-                .forEach(backend -> addChild((Backend) backend));
             backendPool.setProperties(defineLoadBalancePolicy((BackendPool) backendPool));
             backendPools.add(backendPool);
         }

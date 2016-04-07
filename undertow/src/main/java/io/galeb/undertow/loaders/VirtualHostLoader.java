@@ -21,6 +21,7 @@ import java.util.List;
 import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
+import io.galeb.core.model.Rule;
 import io.galeb.core.model.VirtualHost;
 import io.galeb.undertow.handlers.PathGlobHandler;
 import io.undertow.server.HttpHandler;
@@ -32,8 +33,13 @@ public class VirtualHostLoader implements Loader {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    private final Farm farm;
     private HttpHandler virtualHostHandler;
     private Loader ruleLoader;
+
+    public VirtualHostLoader(final Farm farm) {
+        this.farm = farm;
+    }
 
     public VirtualHostLoader setRuleLoader(final Loader ruleLoader) {
         this.ruleLoader = ruleLoader;
@@ -69,7 +75,9 @@ public class VirtualHostLoader implements Loader {
 
             case DEL:
                 if (nameVirtualHostHandler.getHosts().containsKey(virtualhostId)) {
-                    ((VirtualHost) entity).getRules().forEach(r -> ruleLoader.from(r, Action.DEL));
+                    farm.getCollection(Rule.class).stream()
+                            .filter(rule -> rule.getParentId().equals(virtualhostId))
+                            .forEach(r -> ruleLoader.from(r, Action.DEL));
                     nameVirtualHostHandler.removeHost(virtualhostId);
                     isOk = true;
                 }
