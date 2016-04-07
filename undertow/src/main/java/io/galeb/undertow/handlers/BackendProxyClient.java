@@ -20,6 +20,8 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.undertow.UndertowLogger;
 import io.undertow.client.ClientConnection;
@@ -42,14 +44,12 @@ public class BackendProxyClient implements ProxyClient {
 
     private final LoadBalancingProxyClient loadBalanceProxyClient;
     private final BackendSelector backendSelector = new BackendSelector();
+    private final Lock lock = new ReentrantLock();
 
     public BackendProxyClient() {
-        final ExclusivityChecker exclusivityChecker = new ExclusivityChecker() {
-            @Override
-            public boolean isExclusivityRequired(HttpServerExchange exchange) {
-                // we always create a new connection for upgrade requests
-                return exchange.getRequestHeaders().contains(Headers.UPGRADE);
-            }
+        final ExclusivityChecker exclusivityChecker = exchange -> {
+            // we always create a new connection for upgrade requests
+            return exchange.getRequestHeaders().contains(Headers.UPGRADE);
         };
         loadBalanceProxyClient = new LoadBalancingProxyClient(
                                         UndertowClient.getInstance(),
@@ -133,71 +133,106 @@ public class BackendProxyClient implements ProxyClient {
         return  backendSelector.contains(host);
     }
 
-    public synchronized BackendProxyClient addHost(final URI host) {
-        if (!backendSelector.contains(host)) {
-            loadBalanceProxyClient.addHost(host);
-            backendSelector.addHost(host);
-            backendSelector.reset();
+    public BackendProxyClient addHost(final URI host) {
+        lock.lock();
+        try {
+            if (!backendSelector.contains(host)) {
+                loadBalanceProxyClient.addHost(host);
+                backendSelector.addHost(host);
+                backendSelector.reset();
+            }
+        } finally {
+            lock.unlock();
         }
         return this;
     }
 
-    public synchronized BackendProxyClient addHost(final URI host, XnioSsl ssl) {
-        if (!backendSelector.contains(host)) {
-            loadBalanceProxyClient.addHost(host, ssl);
-            backendSelector.addHost(host);
-            backendSelector.reset();
+    public BackendProxyClient addHost(final URI host, XnioSsl ssl) {
+        lock.lock();
+        try {
+            if (!backendSelector.contains(host)) {
+                loadBalanceProxyClient.addHost(host, ssl);
+                backendSelector.addHost(host);
+                backendSelector.reset();
+            }
+        } finally {
+            lock.unlock();
         }
         return this;
     }
 
-    public synchronized BackendProxyClient addHost(final URI host,
+    public BackendProxyClient addHost(final URI host,
             String jvmRoute) {
-        if (!backendSelector.contains(host)) {
-            loadBalanceProxyClient.addHost(host, jvmRoute);
-            backendSelector.addHost(host);
-            backendSelector.reset();
+        lock.lock();
+        try {
+            if (!backendSelector.contains(host)) {
+                loadBalanceProxyClient.addHost(host, jvmRoute);
+                backendSelector.addHost(host);
+                backendSelector.reset();
+            }
+        } finally {
+            lock.unlock();
         }
         return this;
     }
 
-    public synchronized BackendProxyClient addHost(final URI host,
+    public BackendProxyClient addHost(final URI host,
             String jvmRoute, XnioSsl ssl) {
-        if (!backendSelector.contains(host)) {
-            loadBalanceProxyClient.addHost(host, jvmRoute, ssl);
-            backendSelector.addHost(host);
-            backendSelector.reset();
+        lock.lock();
+        try {
+            if (!backendSelector.contains(host)) {
+                loadBalanceProxyClient.addHost(host, jvmRoute, ssl);
+                backendSelector.addHost(host);
+                backendSelector.reset();
+            }
+        } finally {
+            lock.unlock();
         }
         return this;
     }
 
-    public synchronized BackendProxyClient addHost(final URI host,
+    public BackendProxyClient addHost(final URI host,
             String jvmRoute, XnioSsl ssl, OptionMap options) {
-        if (!backendSelector.contains(host)) {
-            loadBalanceProxyClient.addHost(host, jvmRoute, ssl, options);
-            backendSelector.addHost(host);
-            backendSelector.reset();
+        lock.lock();
+        try {
+            if (!backendSelector.contains(host)) {
+                loadBalanceProxyClient.addHost(host, jvmRoute, ssl, options);
+                backendSelector.addHost(host);
+                backendSelector.reset();
+            }
+        } finally {
+            lock.unlock();
         }
         return this;
     }
 
-    public synchronized BackendProxyClient addHost(
+    public BackendProxyClient addHost(
             final InetSocketAddress bindAddress, final URI host,
             String jvmRoute, XnioSsl ssl, OptionMap options) {
-        if (!backendSelector.contains(host)) {
-            loadBalanceProxyClient.addHost(bindAddress, host, jvmRoute, ssl,
-                    options);
-            backendSelector.addHost(host);
-            backendSelector.reset();
+        lock.lock();
+        try {
+            if (!backendSelector.contains(host)) {
+                loadBalanceProxyClient.addHost(bindAddress, host, jvmRoute, ssl,
+                        options);
+                backendSelector.addHost(host);
+                backendSelector.reset();
+            }
+        } finally {
+            lock.unlock();
         }
         return this;
     }
 
-    public synchronized BackendProxyClient removeHost(final URI host) {
-        if (backendSelector.contains(host)) {
-            loadBalanceProxyClient.removeHost(host);
-            backendSelector.removeHost(host);
-            backendSelector.reset();
+    public BackendProxyClient removeHost(final URI host) {
+        lock.lock();
+        try {
+            if (backendSelector.contains(host)) {
+                loadBalanceProxyClient.removeHost(host);
+                backendSelector.removeHost(host);
+                backendSelector.reset();
+            }
+        } finally {
+            lock.unlock();
         }
         return this;
     }
