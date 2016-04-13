@@ -25,6 +25,7 @@ import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
+import org.apache.ignite.cluster.ClusterNode;
 import org.apache.ignite.events.CacheEvent;
 import org.apache.ignite.events.Event;
 import org.apache.ignite.events.EventType;
@@ -39,7 +40,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import static io.galeb.core.model.Entity.SEP_COMPOUND_ID;
 import static io.galeb.core.model.Farm.ENTITY_CLASSES;
@@ -80,7 +80,8 @@ public class IgniteCacheFactory implements CacheFactory {
                 String eventsStr = EVENTS.stream().map(EventTypeResolver.EVENTS::get).reduce((t, u) -> t + " " + u).get();
 
                 IgnitePredicate<Event> listener = event -> {
-                    switch (event.type()) {
+                    final int eventType = event.type();
+                    switch (eventType) {
                         case EventType.EVT_CACHE_OBJECT_PUT:
                             putEvent(event);
                             break;
@@ -96,6 +97,9 @@ public class IgniteCacheFactory implements CacheFactory {
                         case EventType.EVT_NODE_SEGMENTED:
                         case EventType.EVT_CACHE_STOPPED:
                             registerEventDetail(event);
+                            if (eventType == EventType.EVT_CACHE_STOPPED) {
+                                System.exit(1);
+                            }
                             break;
                         default:
                             LOGGER.debug(EventTypeResolver.EVENTS.get(event.type()) + ": " + event.toString());
