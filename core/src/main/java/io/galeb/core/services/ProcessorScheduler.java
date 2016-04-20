@@ -16,14 +16,13 @@
 
 package io.galeb.core.services;
 
-import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Farm;
 
 public interface ProcessorScheduler  {
 
     String PROP_PROCESSOR_INTERVAL = ProcessorScheduler.class.getName() + ".ProcessorInterval";
 
-    void setupScheduler(Logger logger, Farm farm);
+    void setupScheduler(Farm farm);
     void startProcessorJob();
 
 }

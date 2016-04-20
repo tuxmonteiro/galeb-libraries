@@ -40,12 +40,6 @@ public class BackendCollection implements Collection<Backend, BackendPool> {
     }
 
     @Override
-    public Collection<Backend, BackendPool> addToParent(BackendPool backendPool, Backend backend) {
-        backendPool.addBackend(backend);
-        return this;
-    }
-
-    @Override
     public List<Entity> getListByID(String entityId) {
         return backends.stream().filter(entity -> entity.getId().equals(entityId))
                 .collect(Collectors.toList());
@@ -63,7 +57,7 @@ public class BackendCollection implements Collection<Backend, BackendPool> {
         if (!contains(backend)) {
             backendPools.stream()
                 .filter(backendPool -> backendPool.getId().equals(backend.getParentId()))
-                .forEach(backendPool -> addToParent((BackendPool) backendPool, (Backend) backend));
+                .forEach(backendPool -> ((BackendPool)backendPool).addBackend(backend.getId()));
             backends.add(backend);
         }
         return result;
@@ -80,18 +74,23 @@ public class BackendCollection implements Collection<Backend, BackendPool> {
 
     @Override
     public Collection<Backend, BackendPool> change(Entity backend) {
+        final String backendId = backend.getId();
         if (contains(backend)) {
-            backendPools.stream().filter(backendPool -> ((BackendPool) backendPool).containBackend(backend.getId()))
+            backendPools.stream().filter(backendPool -> ((BackendPool) backendPool).containBackend(backendId))
                 .forEach(backendPool -> {
-                    final Backend myBackend = ((BackendPool) backendPool).getBackend(backend.getId());
-                    backends.remove(myBackend);
-                    myBackend.setHealth(((Backend) backend).getHealth());
-                    myBackend.setProperties(backend.getProperties());
-                    myBackend.setVersion(backend.getVersion());
-                    myBackend.setConnections(((Backend) backend).getConnections());
-                    myBackend.updateETag();
-                    myBackend.updateModifiedAt();
-                    backends.add(backend);
+                    final Backend myBackend = backends.stream()
+                            .filter(b -> b.getId().equals(backendId) && b.getParentId().equals(backendPool.getId()))
+                            .map(b -> (Backend)b).findFirst().orElse(null);
+                    if (myBackend != null) {
+                        backends.remove(myBackend);
+                        myBackend.setHealth(((Backend) backend).getHealth());
+                        myBackend.setProperties(backend.getProperties());
+                        myBackend.setVersion(backend.getVersion());
+                        myBackend.setConnections(((Backend) backend).getConnections());
+                        myBackend.updateETag();
+                        myBackend.updateModifiedAt();
+                        backends.add(myBackend);
+                    }
                 });
         }
         return this;

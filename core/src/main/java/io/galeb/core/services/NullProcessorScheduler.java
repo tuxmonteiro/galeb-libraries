@@ -16,7 +16,6 @@
 
 package io.galeb.core.services;
 
-import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Farm;
 
 import javax.enterprise.inject.Alternative;
@@ -25,7 +24,7 @@ import javax.enterprise.inject.Alternative;
 public class NullProcessorScheduler implements ProcessorScheduler {
 
     @Override
-    public void setupScheduler(Logger logger, Farm farm) {
+    public void setupScheduler(Farm farm) {
         // NULL
     }
 

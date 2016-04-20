@@ -31,20 +31,6 @@ public class VirtualHostCollection implements Collection<VirtualHost, Rule> {
 
     private Set<Entity> virtualhosts = new ConcurrentSkipListSet<>();
 
-    private Collection<? extends Entity, ? extends Entity> rules;
-
-    @Override
-    public Collection<VirtualHost, Rule> defineSetOfRelatives(final Collection<? extends Entity, ? extends Entity> relatives) {
-        rules = relatives;
-        return this;
-    }
-
-    @Override
-    public Collection<VirtualHost, Rule> addChild(Rule child) {
-        rules.add(child);
-        return this;
-    }
-
     @Override
     public List<Entity> getListByID(String entityId) {
         return virtualhosts.stream().filter(entity -> entity.getId().equals(entityId))
@@ -61,8 +47,6 @@ public class VirtualHostCollection implements Collection<VirtualHost, Rule> {
     public boolean add(Entity virtualhost) {
         boolean result = false;
         if (!contains(virtualhost)) {
-            rules.stream().filter(rule -> rule.getParentId().equals(virtualhost.getId()))
-                          .forEach(rule -> addChild((Rule) rule));
             result = virtualhosts.add(virtualhost);
         }
         return result;

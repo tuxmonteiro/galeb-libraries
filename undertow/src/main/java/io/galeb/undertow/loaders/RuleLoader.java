@@ -19,10 +19,8 @@ package io.galeb.undertow.loaders;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import io.galeb.core.controller.EntityController.Action;
-import io.galeb.core.logging.Logger;
 import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
@@ -37,11 +35,14 @@ import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.proxy.ProxyHandler;
 import io.undertow.util.StatusCodes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class RuleLoader implements Loader {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final Farm farm;
-    private Optional<Logger> optionalLogger = Optional.empty();
     private Map<String, BackendProxyClient> backendPools = new HashMap<>();
     private HttpHandler virtualHostHandler = null;
 
@@ -56,12 +57,6 @@ public class RuleLoader implements Loader {
 
     public RuleLoader setVirtualHostHandler(final HttpHandler virtualHostHandler) {
         this.virtualHostHandler = virtualHostHandler;
-        return this;
-    }
-
-    @Override
-    public Loader setLogger(final Logger logger) {
-        optionalLogger = Optional.ofNullable(logger);
         return this;
     }
 
@@ -95,7 +90,7 @@ public class RuleLoader implements Loader {
                         if (!Integer.toString(StatusCodes.NOT_FOUND).equals(rule.getTargetId())) {
                             final BackendProxyClient backendPool = backendPools.get(rule.getTargetId());
                             if (backendPool==null) {
-                                optionalLogger.ifPresent(logger -> logger.error("addRule("+entity.getId()+"): TargetId not found"));
+                                LOGGER.error("addRule("+entity.getId()+"): TargetId not found");
                                 return;
                             }
                             HttpHandler nextHandler = hosts.get(virtualhostId);
@@ -120,7 +115,7 @@ public class RuleLoader implements Loader {
                         final String message = "Action ADD not applied - " + entity.getId() +
                                 " (" + entity.getEntityType() + "): " +
                                 rule.getTargetId() + " NOT FOUND";
-                        optionalLogger.ifPresent(logger -> logger.debug(message));
+                        LOGGER.debug(message);
                     }
                     break;
 
@@ -138,10 +133,10 @@ public class RuleLoader implements Loader {
                     break;
 
                 default:
-                    optionalLogger.ifPresent(logger -> logger.error(action.toString()+" NOT FOUND"));
+                    LOGGER.error(action.toString()+" NOT FOUND");
             }
             if (isOk) {
-                optionalLogger.ifPresent(logger -> logger.debug("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
+                LOGGER.debug("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")");
             }
         }
     }

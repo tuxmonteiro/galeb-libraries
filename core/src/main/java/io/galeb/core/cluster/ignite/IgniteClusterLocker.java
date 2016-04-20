@@ -20,17 +20,17 @@ package io.galeb.core.cluster.ignite;
 
 import io.galeb.core.cluster.ClusterLocker;
 import io.galeb.core.jcache.CacheFactory;
-import io.galeb.core.logging.Logger;
-import io.galeb.core.logging.NullLogger;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteException;
 import org.apache.ignite.IgniteSemaphore;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class IgniteClusterLocker implements ClusterLocker {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final ClusterLocker INSTANCE = new IgniteClusterLocker();
 
-    private Logger logger = new NullLogger();
     private Ignite ignite;
 
     private IgniteClusterLocker() {
@@ -49,14 +49,6 @@ public class IgniteClusterLocker implements ClusterLocker {
     }
 
     @Override
-    public ClusterLocker setLogger(Logger logger) {
-        if (logger != null) {
-            this.logger = logger;
-        }
-        return this;
-    }
-
-    @Override
     public boolean lock(String lockName) {
         IgniteSemaphore semaphore;
         boolean result = false;
@@ -64,9 +56,9 @@ public class IgniteClusterLocker implements ClusterLocker {
             semaphore = ignite.semaphore(lockName, 1, true, true);
             result = semaphore != null && semaphore.tryAcquire();
         } catch (IgniteException e) {
-            logger.debug(e);
+            LOGGER.debug(e);
         } finally {
-            logger.info("Locking " + lockName + " " + (result ? "applied" : "not possible"));
+            LOGGER.info("Locking " + lockName + " " + (result ? "applied" : "not possible"));
         }
         return result;
     }
@@ -83,9 +75,9 @@ public class IgniteClusterLocker implements ClusterLocker {
                 semaphore.close();
             }
         } catch (IgniteException e) {
-            logger.debug(e);
+            LOGGER.debug(e);
         } finally {
-            logger.info("Lock " + lockName + " released");
+            LOGGER.info("Lock " + lockName + " released");
         }
     }
 
