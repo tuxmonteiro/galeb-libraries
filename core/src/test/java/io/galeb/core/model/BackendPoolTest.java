@@ -45,7 +45,7 @@ public class BackendPoolTest {
 
     @Test
     public void containBackendIsTrueAfterAddBackendsAtBackendPool() {
-        backendPool.addBackend(backendIdJson);
+        backendPool.addBackend(backendId);
         assertThat(backendPool.containBackend(backendId)).isTrue();
     }
 
