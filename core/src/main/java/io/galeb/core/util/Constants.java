@@ -39,7 +39,6 @@ public final class Constants {
 
     public enum SysProp {
         PROP_ENABLE_ACCESSLOG  ("io.galeb.accesslog"        , Boolean.toString(false)),
-        PROP_MAXCONN           ("io.galeb.maxConn"          , String.valueOf(1000)),
         PROP_SCHEDULER_INTERVAL("io.galeb.schedulerInterval", String.valueOf(1000)),
         PROP_HOSTNAME          ("io.galeb.fqdn"             , System.getenv("HOSTNAME")),
         PROP_REUSE_XFORWARDED  ("io.galeb.reuseXForwarded"  , Boolean.toString(false)),

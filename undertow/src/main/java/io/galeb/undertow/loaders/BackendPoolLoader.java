@@ -21,7 +21,6 @@ import io.galeb.core.model.Backend;
 import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
-import io.galeb.core.util.Constants.SysProp;
 import io.galeb.undertow.handlers.BackendProxyClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,7 +37,8 @@ public class BackendPoolLoader implements Loader {
         PROP_POOL_TTL                   ("io.galeb.pool.ttl"                        , String.valueOf(-1)),
         PROP_POOL_PROBLEM_BACKEND_RETRY ("io.galeb.pool.problemBackendRetry"        , String.valueOf(0)),
         PROP_POOL_SOFT_MAX_CONN         ("io.galeb.pool.softMaxConnectionsPerThread", String.valueOf(5)),
-        PROP_POOL_MAX_QUEUE_SIZE        ("io.galeb.pool.maxQueueSize"               , String.valueOf(0));
+        PROP_POOL_MAX_QUEUE_SIZE        ("io.galeb.pool.maxQueueSize"               , String.valueOf(0)),
+        PROP_MAX_CONNECTION_PER_THREAD  ("io.galeb.pool.connectionsPerThread"       , String.valueOf(1000));
 
         private final String name;
         private final String defaultStr;
@@ -143,7 +143,7 @@ public class BackendPoolLoader implements Loader {
     }
 
     private int maxConnPerThread() {
-        final String maxConnStr = System.getProperty(SysProp.PROP_MAXCONN.toString(), SysProp.PROP_MAXCONN.def());
+        final String maxConnStr = System.getProperty(PoolProp.PROP_MAX_CONNECTION_PER_THREAD.toString(), PoolProp.PROP_MAX_CONNECTION_PER_THREAD.def());
         int maxConn = 100;
         if (maxConnStr!=null) {
             try {
