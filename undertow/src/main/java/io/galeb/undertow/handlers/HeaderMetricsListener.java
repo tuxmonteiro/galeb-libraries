@@ -22,6 +22,10 @@ import io.undertow.server.HttpServerExchange;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import static org.apache.http.HttpStatus.SC_BAD_GATEWAY;
+import static org.apache.http.HttpStatus.SC_GATEWAY_TIMEOUT;
+import static org.apache.http.HttpStatus.SC_OK;
+
 class HeaderMetricsListener implements ExchangeCompletionListener {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -35,7 +39,12 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
         String virtualhost = exchange.getHostName();
         String backend = realDest != null ? realDest : UNKNOWN + "@" + virtualhost;
         int statusCode = exchange.getResponseCode();
-        if (backend.startsWith(UNKNOWN)) {
+        final long bytesSent = exchange.getResponseBytesSent();
+        if (bytesSent == 0L && statusCode == SC_OK) {
+            exchange.setResponseCode(SC_GATEWAY_TIMEOUT);
+            statusCode = SC_GATEWAY_TIMEOUT;
+        }
+        if (backend.startsWith(UNKNOWN) || statusCode == SC_GATEWAY_TIMEOUT || statusCode == SC_BAD_GATEWAY) {
             statusCode = statusCode + 400;
         }
         String httpStatus = String.valueOf(statusCode);

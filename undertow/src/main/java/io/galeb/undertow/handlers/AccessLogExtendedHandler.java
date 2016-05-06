@@ -23,8 +23,12 @@ import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.accesslog.AccessLogReceiver;
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import static org.apache.http.HttpStatus.SC_GATEWAY_TIMEOUT;
+import static org.apache.http.HttpStatus.SC_OK;
 
 public class AccessLogExtendedHandler implements HttpHandler {
 
@@ -63,7 +67,8 @@ public class AccessLogExtendedHandler implements HttpHandler {
                 String realDest = tempRealDest != null ? tempRealDest : UNKNOWN;
                 String message = tokens.readAttribute(exchange);
                 int realStatus = exchange.getResponseCode();
-                if (UNKNOWN.equals(realDest)) {
+                if (UNKNOWN.equals(realDest) || (((realStatus == SC_OK) || (realStatus == SC_GATEWAY_TIMEOUT)) &&
+                                                (exchange.getResponseBytesSent() == 0L))) {
                     message = message.replaceAll("^([^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t)[^\t]+(\t.*)$", "$1" +
                             String.valueOf(realStatus + 400) + "$2");
                 }
