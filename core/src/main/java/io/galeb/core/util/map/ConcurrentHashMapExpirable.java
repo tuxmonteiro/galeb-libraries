@@ -29,45 +29,44 @@ import java.util.concurrent.TimeUnit;
 
 public class ConcurrentHashMapExpirable<K, V> implements ConcurrentMap<K, V> {
 
-    private final ConcurrentHashMap<K, ValueWithTimeStamp<V>> realMap;
+    private volatile ConcurrentHashMap<K, ValueWithTimeStamp> realMap;
     private final long ttl;
 
 
-    private static class ValueWithTimeStamp<V> {
+    private class ValueWithTimeStamp {
         private final V value;
         private long timestamp = System.nanoTime();
 
-        private ValueWithTimeStamp(final V value) {
+        public ValueWithTimeStamp(final V value) {
             this.value = value;
         }
 
-        private V getValue() {
+        public V getValue() {
             return value;
         }
 
-        private int getValueInt() {
+        public int getValueInt() {
             return (Integer)value;
         }
 
-        private ValueWithTimeStamp setTimestamp(long timestamp) {
+        public ValueWithTimeStamp setTimestamp(long timestamp) {
             this.timestamp = timestamp;
             return this;
         }
 
-        boolean expired(long ttl) {
+        public boolean expired(long ttl) {
             return (System.nanoTime() - this.timestamp) > ttl;
         }
 
         @Override
         public boolean equals(Object obj) {
             boolean result = false;
-            if (obj instanceof ValueWithTimeStamp) {
-                try {
-                    ValueWithTimeStamp valueWithTimeStamp = (ValueWithTimeStamp) obj;
-                    result = this.value.equals(valueWithTimeStamp.getValue());
-                } catch (Exception ignore){
-                    return false;
-                }
+            try {
+                @SuppressWarnings("unchecked")
+                ValueWithTimeStamp valueWithTimeStamp = (ValueWithTimeStamp) obj;
+                result = this.value.equals(valueWithTimeStamp.getValue());
+            } finally {
+                //
             }
             return result;
         }
@@ -90,7 +89,7 @@ public class ConcurrentHashMapExpirable<K, V> implements ConcurrentMap<K, V> {
 
     @Override
     public V get(Object key) {
-        final ValueWithTimeStamp<V> valueWithTimeStamp = realMap.get(key);
+        final ValueWithTimeStamp valueWithTimeStamp = realMap.get(key);
 
         if (valueWithTimeStamp != null && valueWithTimeStamp.expired(ttl)) {
             realMap.remove(key);
@@ -102,7 +101,7 @@ public class ConcurrentHashMapExpirable<K, V> implements ConcurrentMap<K, V> {
 
     @Override
     public V put(K key, V value) {
-        ValueWithTimeStamp<V> valueWithTimeStampStored = realMap.put(key, new ValueWithTimeStamp<>(value));
+        ValueWithTimeStamp valueWithTimeStampStored = realMap.put(key, new ValueWithTimeStamp(value));
         if (valueWithTimeStampStored!=null) {
             return valueWithTimeStampStored.value;
         } else {
@@ -126,15 +125,15 @@ public class ConcurrentHashMapExpirable<K, V> implements ConcurrentMap<K, V> {
     }
 
     @Override
-    public boolean containsValue(Object aValue) {
-        V value = (V) aValue;
-        ValueWithTimeStamp<V> valueWithTimeStamp = new ValueWithTimeStamp<>(value);
+    public boolean containsValue(Object value) {
+        @SuppressWarnings("unchecked")
+        ValueWithTimeStamp valueWithTimeStamp = new ValueWithTimeStamp((V) value);
         return realMap.containsValue(valueWithTimeStamp);
     }
 
     @Override
     public V remove(Object key) {
-        ValueWithTimeStamp<V> valueWithTimeStampStored = realMap.remove(key);
+        ValueWithTimeStamp valueWithTimeStampStored = realMap.remove(key);
         return valueWithTimeStampStored.getValue();
     }
 
@@ -182,7 +181,7 @@ public class ConcurrentHashMapExpirable<K, V> implements ConcurrentMap<K, V> {
 
     @Override
     public V putIfAbsent(K key, V value) {
-        ValueWithTimeStamp<V> valueWithTimeStampStored = realMap.putIfAbsent(key, new ValueWithTimeStamp<>(value));
+        ValueWithTimeStamp valueWithTimeStampStored = realMap.putIfAbsent(key, new ValueWithTimeStamp(value));
         if (valueWithTimeStampStored!=null) {
             return valueWithTimeStampStored.value;
         }
@@ -196,24 +195,25 @@ public class ConcurrentHashMapExpirable<K, V> implements ConcurrentMap<K, V> {
 
     @Override
     public boolean replace(K key, V oldValue, V newValue) {
-        return realMap.replace(key, new ValueWithTimeStamp<>(oldValue), new ValueWithTimeStamp<>(newValue));
+        return realMap.replace(key, new ValueWithTimeStamp(oldValue), new ValueWithTimeStamp(newValue));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public V replace(K key, V value) {
-        ValueWithTimeStamp<V> valueReturned = realMap.replace(key, new ValueWithTimeStamp<>(value));
-        if (valueReturned!=null) {
+        Object valueReturnedObj = realMap.replace(key, new ValueWithTimeStamp(value));
+        if (valueReturnedObj!=null) {
             try {
-                return valueReturned.getValue();
-            } catch (Exception ignore) {
-                return null;
+                return ((ConcurrentHashMapExpirable<K, V>.ValueWithTimeStamp) valueReturnedObj).getValue();
+            } finally {
+                // undef
             }
         }
         return null;
     }
 
     public int reduceValuesToInt() {
-        return realMap.reduceValuesToInt(10L, ValueWithTimeStamp::getValueInt, 0, (x, y) -> x + y);
+        return realMap.reduceValuesToInt(10L, v -> v.getValueInt(), 0, (x, y) -> x + y);
     }
 
 }
