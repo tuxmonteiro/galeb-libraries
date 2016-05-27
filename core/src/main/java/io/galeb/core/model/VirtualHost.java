@@ -26,11 +26,13 @@ import com.google.gson.annotations.Expose;
 
 public class VirtualHost extends Entity {
 
+    public static final String ALLOW_PROPERTY = "allow";
+
     private static final long serialVersionUID = 1L;
 
     public static final String CLASS_NAME = "VirtualHost";
 
-    @Expose private Set<Rule> rules = new ConcurrentSkipListSet<>();
+    @Expose private Set<String> rules = new ConcurrentSkipListSet<>();
 
     public VirtualHost() {
         super();
@@ -42,51 +44,27 @@ public class VirtualHost extends Entity {
         updateETag();
     }
 
-    public void setRules(Set<Rule> arules) {
-        final Set<Rule> copyRules = new HashSet<>(arules);
+    private void setRules(Set<String> arules) {
+        final Set<String> copyRules = new HashSet<>(arules);
         rules.clear();
         rules.addAll(copyRules);
     }
 
-    public Rule getRule(String ruleId) {
-        Rule rule = null;
-        for (Rule ruleTemp: rules) {
-            if (ruleId.equals(ruleTemp.getId())) {
-                rule = ruleTemp;
-                break;
-            }
-        }
-        return rule;
-    }
-
-    public Rule newRule(String json) {
-        Rule rule = (Rule) JsonObject.fromJson(json, Rule.class);
-        addRule(rule);
-        return rule;
-    }
-
-    public VirtualHost addRule(Rule rule) {
-        rules.add(rule);
+    public VirtualHost addRule(String ruleId) {
+        rules.add(ruleId);
         return this;
     }
 
     public VirtualHost delRule(String ruleId) {
-        Rule rule = getRule(ruleId);
-        if (rule!=null) {
-            rules.remove(rule);
-        }
+        rules.remove(ruleId);
         return this;
     }
 
     public boolean containRule(String ruleId) {
-        return getRule(ruleId) != null;
+        return rules.contains(ruleId);
     }
 
-    public void clearRules() {
-        rules.clear();
-    }
-
-    public Set<Rule> getRules() {
+    public Set<String> getRules() {
         return rules;
     }
 

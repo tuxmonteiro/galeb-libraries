@@ -16,9 +16,10 @@
 
 package io.galeb.undertow.scheduler.jobs;
 
-import io.galeb.core.logging.Logger;
 import io.galeb.core.services.AbstractService;
 import io.galeb.undertow.model.FarmUndertow;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -28,20 +29,17 @@ import org.quartz.JobExecutionException;
 @DisallowConcurrentExecution
 public class UndertowProcessorJob implements Job {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobDataMap jobDetailMap = context.getJobDetail().getJobDataMap();
-        Logger logger = (Logger) jobDetailMap.getOrDefault(AbstractService.LOGGER, null);
-        FarmUndertow farmUndertow = (FarmUndertow) jobDetailMap.getOrDefault(AbstractService.FARM, null);
+        FarmUndertow farmUndertow = (FarmUndertow) jobDetailMap.getOrDefault(AbstractService.FARM_KEY, null);
 
         try {
             farmUndertow.processAll();
         } catch (Exception e) {
-            if (logger != null) {
-                logger.error(e);
-            } else {
-                e.printStackTrace();
-            }
+            LOGGER.error(e);
         }
     }
 

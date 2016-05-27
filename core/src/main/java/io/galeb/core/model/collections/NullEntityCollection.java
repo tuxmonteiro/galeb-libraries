@@ -108,9 +108,4 @@ public class NullEntityCollection implements Collection<Entity, Entity> {
         return this;
     }
 
-    @Override
-    public Collection<Entity, Entity> defineSetOfRelatives(
-            Collection<? extends Entity, ? extends Entity> relatives) {
-        return this;
-    }
 }

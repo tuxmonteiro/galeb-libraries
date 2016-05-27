@@ -39,50 +39,14 @@ public class BackendPoolTest {
     }
 
     @Test
-    public void getBackendsAtBackendPool() {
-        assertThat(backendPool.getBackends()).isEmpty();
-    }
-
-    @Test
-    public void clearBackendsAtBackendPool() {
-        backendPool.addBackend(backendIdJson);
-        assertThat(backendPool.getBackends()).hasSize(1);
-        backendPool.clearBackends();
-        assertThat(backendPool.getBackends()).isEmpty();
-    }
-
-    @Test
     public void containBackendIsFalseInDefaultBackendsAtBackendPool() {
         assertThat(backendPool.containBackend(backendId)).isFalse();
     }
 
     @Test
     public void containBackendIsTrueAfterAddBackendsAtBackendPool() {
-        backendPool.addBackend(backendIdJson);
+        backendPool.addBackend(backendId);
         assertThat(backendPool.containBackend(backendId)).isTrue();
-    }
-
-    @Test
-    public void delBackendAtBackendPool() {
-        backendPool.addBackend(backendIdJson);
-        assertThat(backendPool.getBackends()).hasSize(1);
-        backendPool.delBackend(backendId);
-        assertThat(backendPool.getBackends()).isEmpty();
-    }
-
-    @Test
-    public void delNullBackendAtBackendPool() {
-        backendPool.addBackend(backendIdJson);
-        assertThat(backendPool.getBackends()).hasSize(1);
-        backendPool.delBackend(nullBackend);
-        assertThat(backendPool.getBackends()).hasSize(1);
-    }
-
-    @Test
-    public void getSingleBackendAtBackendPool() {
-        backendPool.addBackend(backendIdJson);
-        backendPool.addBackend(backendIdJson2);
-        assertThat(backendPool.getBackend(backendId)).isInstanceOf(Backend.class);
     }
 
 }

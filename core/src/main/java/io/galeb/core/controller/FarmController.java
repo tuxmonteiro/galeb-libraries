@@ -42,16 +42,16 @@ public class FarmController extends EntityController {
     public EntityController add(Entity entity) throws Exception {
         for (Entity backendPool : ((Farm) entity).getCollection(BackendPool.class)) {
             backendPoolController.add(backendPool.copy());
-            for (Entity backend : ((BackendPool) backendPool).getBackends()) {
-                backendController.add(backend.copy());
-            }
-        };
+        }
+        for (Entity backend : ((Farm) entity).getCollection(Backend.class)) {
+            backendController.add(backend.copy());
+        }
         for (Entity virtualhost : ((Farm) entity).getCollection(VirtualHost.class)) {
             virtualHostController.add(virtualhost.copy());
-            for (Entity rule : ((VirtualHost) virtualhost).getRules()) {
-                ruleController.add(rule.copy());
-            }
-        };
+        }
+        for (Entity rule : ((Farm) entity).getCollection(Rule.class)) {
+            ruleController.add(rule.copy());
+        }
         setVersion(entity.getVersion());
         return this;
     }
@@ -76,15 +76,15 @@ public class FarmController extends EntityController {
     public EntityController change(Entity entity) throws Exception {
         for (final Entity backendPool: ((Farm) entity).getCollection(BackendPool.class)) {
             backendPoolController.change(backendPool);
-            for (final Backend backend: ((BackendPool) backendPool).getBackends()) {
-                backendController.change(backend);
-            }
+        }
+        for (Entity backend : ((Farm) entity).getCollection(Backend.class)) {
+            backendController.change(backend.copy());
         }
         for (final Entity virtualhost: ((Farm) entity).getCollection(VirtualHost.class)) {
             virtualHostController.change(virtualhost);
-            for (final Rule rule: ((VirtualHost) virtualhost).getRules()) {
-                ruleController.change(rule);
-            }
+        }
+        for (Entity rule : ((Farm) entity).getCollection(Rule.class)) {
+            ruleController.change(rule.copy());
         }
         setVersion(entity.getVersion());
         return this;

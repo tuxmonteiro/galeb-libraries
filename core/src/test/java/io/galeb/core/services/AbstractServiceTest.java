@@ -21,8 +21,6 @@ import io.galeb.core.cluster.ClusterEvents;
 import io.galeb.core.cluster.DistributedMap;
 import io.galeb.core.cluster.DistributedMapListener;
 import io.galeb.core.cluster.DistributedMapStats;
-import io.galeb.core.logging.Logger;
-import io.galeb.core.logging.impl.Log4j2Logger;
 import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.VirtualHost;
@@ -97,7 +95,7 @@ public class AbstractServiceTest {
 
     static class FakeProcessorScheduler implements ProcessorScheduler {
         @Override
-        public void setupScheduler(Logger logger, Farm farm) {
+        public void setupScheduler(Farm farm) {
             // Fake
         }
 
@@ -117,7 +115,6 @@ public class AbstractServiceTest {
         return ShrinkWrap.create(JavaArchive.class)
                          .addClasses(
                                  ServiceImplemented.class,
-                                 Log4j2Logger.class,
                                  FakeFarm.class,
                                  FakeDistributedMap.class,
                                  FakeClusterEvents.class,

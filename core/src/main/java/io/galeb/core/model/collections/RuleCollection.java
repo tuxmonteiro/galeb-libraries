@@ -40,12 +40,6 @@ public class RuleCollection implements Collection<Rule, VirtualHost> {
     }
 
     @Override
-    public Collection<Rule, VirtualHost> addToParent(VirtualHost virtualHost, Rule rule) {
-        virtualHost.addRule(rule);
-        return this;
-    }
-
-    @Override
     public List<Entity> getListByID(String entityId) {
         return stream().filter(entity -> entity.getId().equals(entityId))
                 .collect(Collectors.toList());
@@ -61,9 +55,10 @@ public class RuleCollection implements Collection<Rule, VirtualHost> {
     public boolean add(Entity rule) {
         boolean result = false;
         if (!contains(rule)) {
+            final String ruleId = rule.getId();
             virtualHosts.stream()
                 .filter(virtualHost -> virtualHost.getId().equals(rule.getParentId()))
-                .forEach(virtualHost -> addToParent((VirtualHost)virtualHost, (Rule)rule));
+                .forEach(virtualHost -> ((VirtualHost)virtualHost).addRule(ruleId));
             result = rules.add(rule);
         }
         return result;
@@ -88,18 +83,17 @@ public class RuleCollection implements Collection<Rule, VirtualHost> {
             final String ruleId = rule.getId();
             virtualHosts.stream().filter(virtualHost -> ((VirtualHost) virtualHost).containRule(ruleId))
                 .forEach(virtualHost -> {
-                    final Rule myrule = ((VirtualHost) virtualHost).getRule(ruleId);
-                    myrule.setProperties(rule.getProperties());
-                    myrule.setVersion(rule.getVersion());
-                    myrule.updateETag();
-                    myrule.updateModifiedAt();
-                });
-            rules.stream().filter(myrule -> myrule.equals(rule))
-                .forEach(myrule -> {
-                    myrule.setProperties(rule.getProperties());
-                    myrule.setVersion(rule.getVersion());
-                    myrule.updateETag();
-                    myrule.updateModifiedAt();
+                    final Rule myrule = rules.stream()
+                            .filter(r -> r.getId().equals(ruleId) && r.getParentId().equals(virtualHost.getId()))
+                            .map(r -> (Rule)r).findFirst().orElse(null);
+                    if (myrule != null) {
+                        rules.remove(myrule);
+                        myrule.setProperties(rule.getProperties());
+                        myrule.setVersion(rule.getVersion());
+                        myrule.updateETag();
+                        myrule.updateModifiedAt();
+                        rules.add(myrule);
+                    }
                 });
         }
         return this;

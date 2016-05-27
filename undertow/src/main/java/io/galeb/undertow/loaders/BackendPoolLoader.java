@@ -17,19 +17,22 @@
 package io.galeb.undertow.loaders;
 
 import io.galeb.core.controller.EntityController.Action;
-import io.galeb.core.logging.Logger;
+import io.galeb.core.model.Backend;
 import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import io.galeb.core.util.Constants.SysProp;
 import io.galeb.undertow.handlers.BackendProxyClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class BackendPoolLoader implements Loader {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public enum PoolProp {
         PROP_POOL_TTL                   ("io.galeb.pool.ttl"                        , String.valueOf(-1)),
@@ -55,7 +58,6 @@ public class BackendPoolLoader implements Loader {
         }
     }
 
-    private Optional<Logger> optionalLogger = Optional.empty();
     private Map<String, BackendProxyClient> backendPools = new HashMap<>();
     private Loader backendLoader;
     private final Farm farm;
@@ -71,12 +73,6 @@ public class BackendPoolLoader implements Loader {
 
     public BackendPoolLoader setBackendLoader(final Loader backendLoader) {
         this.backendLoader = backendLoader;
-        return this;
-    }
-
-    @Override
-    public Loader setLogger(final Logger logger) {
-        optionalLogger = Optional.ofNullable(logger);
         return this;
     }
 
@@ -113,7 +109,9 @@ public class BackendPoolLoader implements Loader {
 
             case DEL:
                 if (backendPools.containsKey(backendPoolId)) {
-                    ((BackendPool) entity).getBackends().forEach(b -> backendLoader.from(b, Action.DEL));
+                    farm.getCollection(Backend.class).stream()
+                            .filter(backend -> backend.getParentId().equals(entity.getId()))
+                            .forEach(backend -> backendLoader.from(backend, Action.DEL));
                     backendPools.remove(backendPoolId);
                     isOk = true;
                 }
@@ -132,10 +130,10 @@ public class BackendPoolLoader implements Loader {
                 break;
 
             default:
-                optionalLogger.ifPresent(logger -> logger.error(action.toString()+" NOT FOUND"));
+                LOGGER.error(action.toString()+" NOT FOUND");
         }
         if (isOk) {
-            optionalLogger.ifPresent(logger -> logger.debug("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
+            LOGGER.debug("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")");
         }
     }
 

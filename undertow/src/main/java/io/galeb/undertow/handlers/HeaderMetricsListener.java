@@ -16,15 +16,17 @@
 
 package io.galeb.undertow.handlers;
 
-import io.galeb.core.logging.Logger;
 import io.galeb.core.statsd.StatsdClient;
 import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpServerExchange;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 class HeaderMetricsListener implements ExchangeCompletionListener {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
     public static final String UNKNOWN = "UNKNOWN";
-    private Logger logger;
     private StatsdClient statsdClient;
 
     @Override
@@ -32,7 +34,7 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
         final String realDest = exchange.getAttachment(BackendSelector.REAL_DEST);
         String virtualhost = exchange.getHostName();
         String backend = realDest != null ? realDest : UNKNOWN + "@" + virtualhost;
-        int statusCode = exchange.getResponseCode();
+        int statusCode = exchange.getStatusCode();
         if (backend.startsWith(UNKNOWN)) {
             statusCode = statusCode + 400;
         }
@@ -46,11 +48,6 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
 
     public HeaderMetricsListener setStatsd(StatsdClient statsdClient) {
         this.statsdClient = statsdClient;
-        return this;
-    }
-
-    public HeaderMetricsListener setLogger(Logger logger) {
-        this.logger = logger;
         return this;
     }
 

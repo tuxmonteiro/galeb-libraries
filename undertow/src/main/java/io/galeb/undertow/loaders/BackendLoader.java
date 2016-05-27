@@ -17,7 +17,6 @@
 package io.galeb.undertow.loaders;
 
 import io.galeb.core.controller.EntityController.Action;
-import io.galeb.core.logging.Logger;
 import io.galeb.core.model.Backend;
 import io.galeb.core.model.Backend.Health;
 import io.galeb.core.model.BackendPool;
@@ -25,18 +24,20 @@ import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
 import io.galeb.core.model.collections.BackendPoolCollection;
 import io.galeb.undertow.handlers.BackendProxyClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public class BackendLoader implements Loader {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final Farm farm;
-    private Optional<Logger> optionalLogger = Optional.empty();
     private Map<String, BackendProxyClient> backendPools = new HashMap<>();
 
     public BackendLoader(final Farm farm) {
@@ -45,12 +46,6 @@ public class BackendLoader implements Loader {
 
     public Loader setBackendPools(final Map<String, BackendProxyClient> backendPools) {
         this.backendPools = backendPools;
-        return this;
-    }
-
-    @Override
-    public Loader setLogger(final Logger logger) {
-        optionalLogger = Optional.ofNullable(logger);
         return this;
     }
 
@@ -78,7 +73,7 @@ public class BackendLoader implements Loader {
                             backendPool.removeHost(newURI(backendId));
                             final String message = "DEL action applied (instead of ADD action) because backend is not "
                                     + Health.HEALTHY.toString() + ": " + entity.getId() + " (" + entity.getEntityType() + ")";
-                            optionalLogger.ifPresent(logger -> logger.debug(message));
+                            LOGGER.debug(message);
                         }
                     }
                     break;
@@ -101,7 +96,7 @@ public class BackendLoader implements Loader {
                     break;
             }
             if (isOk) {
-                optionalLogger.ifPresent(logger -> logger.debug("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")"));
+                LOGGER.debug("Action "+action.toString()+" applied: "+entity.getId()+" ("+entity.getEntityType()+")");
             }
         }
     }
@@ -120,7 +115,7 @@ public class BackendLoader implements Loader {
         try {
             return new URI(uri);
         } catch (final URISyntaxException e) {
-            optionalLogger.ifPresent(logger -> logger.error(e));
+            LOGGER.error(e);
         }
         return null;
     }
