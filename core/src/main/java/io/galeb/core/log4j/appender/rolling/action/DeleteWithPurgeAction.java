@@ -1,7 +1,7 @@
 /**
  *
  */
-package io.galeb.core.log4j.appender.rolling.action.action;
+package io.galeb.core.log4j.appender.rolling.action;
 
 import org.apache.logging.log4j.core.appender.rolling.action.AbstractPathAction;
 import org.apache.logging.log4j.core.appender.rolling.action.DeletingVisitor;
@@ -28,6 +28,48 @@ import java.util.List;
 import java.util.Objects;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
+/**
+ * Example:
+ *
+ * <DefaultRolloverStrategy max="5">
+ *   <DeleteWithPurge basePath="${baseDir}" purgeTo="/tmp/purged/">
+ *     <IfFileName glob="app-*.log.gz" />
+ *     <IfAccumulatedFileCount exceeds="1" />
+ *   </DeleteWithPurge>
+ * </DefaultRolloverStrategy>
+ */
+
+/**
+ * HINT: pom.xml
+ * <plugin>
+ *   <groupId>org.apache.maven.plugins</groupId>
+ *   <artifactId>maven-shade-plugin</artifactId>
+ *   <executions>
+ *     <execution>
+ *       <phase>package</phase>
+ *       <goals>
+ *         <goal>shade</goal>
+ *       </goals>
+ *       <configuration>
+ *         ...
+ *         <transformers>
+ *           <transformer
+ *              implementation="com.github.edwgiz.mavenShadePlugin.log4j2CacheTransformer.PluginsCacheFileTransformer">
+ *           </transformer>
+ *         </transformers>
+ *       </configuration>
+ *     </execution>
+ *   </executions>
+ *   <dependencies>
+ *     <dependency>
+ *       <groupId>com.github.edwgiz</groupId>
+ *       <artifactId>maven-shade-plugin.log4j2-cachefile-transformer</artifactId>
+ *       <version>2.1</version>
+ *     </dependency>
+ *   </dependencies>
+ * </plugin>
+ */
 
 @Plugin(name = "DeleteWithPurge", category = "Core", printObject = true)
 public class DeleteWithPurgeAction extends AbstractPathAction {
