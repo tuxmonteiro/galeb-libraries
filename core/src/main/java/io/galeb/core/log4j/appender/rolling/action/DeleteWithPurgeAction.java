@@ -35,7 +35,6 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
  * <DefaultRolloverStrategy max="5">
  *   <DeleteWithPurge basePath="${baseDir}" purgeTo="/tmp/purged/">
  *     <IfFileName glob="app-*.log.gz" />
- *     <IfAccumulatedFileCount exceeds="1" />
  *   </DeleteWithPurge>
  * </DefaultRolloverStrategy>
  */
@@ -118,23 +117,15 @@ public class DeleteWithPurgeAction extends AbstractPathAction {
         trace("Paths the script selected for deletion:", selectedForDeletion);
         for (final PathWithAttributes pathWithAttributes : selectedForDeletion) {
             final Path path = pathWithAttributes == null ? null : pathWithAttributes.getPath();
-            if (isTestMode()) {
-                LOGGER.info("Deleting {} (TEST MODE: file not actually deleted)", path);
-            } else {
-                delete(path);
-            }
+            delete(path);
         }
     }
 
-    private void delete(final Path path) {
+    private void delete(final Path path) throws IOException {
         if (isTestMode()) {
             LOGGER.info("Purge {} to {} (TEST MODE: file not actually purged)", path, purgeTo);
         } else {
-            try {
-                purge(path);
-            } catch (IOException exception) {
-                LOGGER.error(exception);
-            }
+            purge(path);
         }
     }
 
@@ -149,37 +140,27 @@ public class DeleteWithPurgeAction extends AbstractPathAction {
             boolean isDir = Files.isDirectory(purgeToPath);
             boolean isDirWritable = Files.isWritable(purgeToPath);
             if (!Files.exists(path)) {
-                error("File "+path+" not exists");
+                LOGGER.warn("File "+path+" not exists");
                 return;
             }
             if (!Files.exists(purgeToPath)) {
-                error("Target "+purgeToPath+" not exists");
+                LOGGER.error("Target "+purgeToPath+" not exists. Aborting purge.");
                 return;
             }
             if (!isDir) {
-                error(purgeToPath+" is not directory");
+                LOGGER.error(purgeToPath+" is not directory. Aborting purge.");
                 return;
             }
             if (!isDirWritable) {
-                error("Directory "+purgeToPath+" is not writable");
+                LOGGER.error("Directory "+purgeToPath+" is not writable. Aborting purge.");
                 return;
             }
-            warning("Moving "+path+" to "+purgeToPath);
+            LOGGER.trace("Moving "+path+" to "+purgeToPath);
             Files.move(path, fullPurgeToPath, REPLACE_EXISTING);
         } else {
-            warning("Deleting "+path);
+            LOGGER.trace("Deleting "+path);
             Files.deleteIfExists(path);
         }
-    }
-
-    private void warning(String s) {
-        System.out.println(s);
-        LOGGER.warn(s);
-    }
-
-    private void error(String s) {
-        System.out.println(s);
-        LOGGER.error(s);
     }
 
     @Override
@@ -222,7 +203,6 @@ public class DeleteWithPurgeAction extends AbstractPathAction {
 
     @PluginFactory
     public static DeleteWithPurgeAction createDeleteCustomAction(
-            // @formatter:off
             @PluginAttribute("basePath") final String basePath, //
             @PluginAttribute("purgeTo") final String purgeTo, //
             @PluginAttribute(value = "followLinks", defaultBoolean = false) final boolean followLinks,
@@ -232,7 +212,7 @@ public class DeleteWithPurgeAction extends AbstractPathAction {
             @PluginElement("PathConditions") final PathCondition[] pathConditions,
             @PluginElement("ScriptCondition") final ScriptCondition scriptCondition,
             @PluginConfiguration final Configuration config) {
-        // @formatter:on
+
         final PathSorter sorter = sorterParameter == null ? new PathSortByModificationTime(true) : sorterParameter;
 
         return new DeleteWithPurgeAction(basePath, purgeTo, followLinks, maxDepth, testMode, sorter, pathConditions,
