@@ -19,6 +19,7 @@ package io.galeb.undertow.handlers;
 import io.galeb.core.statsd.StatsdClient;
 import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpServerExchange;
+import io.undertow.util.HttpString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,13 +36,17 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
         String virtualhost = exchange.getHostName();
         String backend = realDest != null ? realDest : UNKNOWN + "@" + virtualhost;
         int statusCode = exchange.getStatusCode();
-        if (backend.startsWith(UNKNOWN)) {
+        HttpString method = exchange.getRequestMethod();
+        if (statusCode >= 500 && backend.startsWith(UNKNOWN)) {
             statusCode = statusCode + 400;
         }
         String httpStatus = String.valueOf(statusCode);
         long requestTime = (System.nanoTime() - exchange.getRequestStartTime())/1000000L;
         sendHttpStatusCount(virtualhost, backend, httpStatus);
         sendRequestTime(virtualhost, backend, requestTime);
+        if (method != null) {
+            sendHttpMethodCount(virtualhost, backend, method.toString());
+        }
 
         nextListener.proceed();
     }
@@ -51,10 +56,17 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
         return this;
     }
 
+    private void sendHttpMethodCount(String virtualhostId, String backendId, String method) {
+        final String virtualhost = StatsdClient.cleanUpKey(virtualhostId);
+        final String backend = StatsdClient.cleanUpKey(backendId);
+        final String key = virtualhost + StatsdClient.STATSD_SEP + backend + StatsdClient.STATSD_SEP + StatsdClient.PROP_METHOD_PREFIX + StatsdClient.STATSD_SEP + method;
+        statsdClient.incr(key);
+    }
+
     private void sendHttpStatusCount(String virtualhostId, String backendId, String httpStatus) {
         final String virtualhost = StatsdClient.cleanUpKey(virtualhostId);
         final String backend = StatsdClient.cleanUpKey(backendId);
-        final String key = virtualhost + "." + backend + "." + StatsdClient.PROP_HTTPCODE_PREFIX+httpStatus;
+        final String key = virtualhost + StatsdClient.STATSD_SEP + backend + StatsdClient.STATSD_SEP + StatsdClient.PROP_HTTPCODE_PREFIX+httpStatus;
         statsdClient.incr(key);
     }
 
@@ -62,7 +74,7 @@ class HeaderMetricsListener implements ExchangeCompletionListener {
     private void sendRequestTime(String virtualhostId, String backendId, long requestTime) {
         final String virtualhost = StatsdClient.cleanUpKey(virtualhostId);
         final String backend = StatsdClient.cleanUpKey(backendId);
-        final String key = virtualhost + "." + backend + "." + StatsdClient.PROP_REQUESTTIME;
+        final String key = virtualhost + StatsdClient.STATSD_SEP + backend + StatsdClient.STATSD_SEP + StatsdClient.PROP_REQUESTTIME;
         statsdClient.timing(key, requestTime);
     }
 
