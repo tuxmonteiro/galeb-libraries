@@ -50,15 +50,19 @@ public class IgniteClusterLocker implements ClusterLocker {
 
     @Override
     public boolean lock(String lockName) {
-        IgniteSemaphore semaphore;
+        IgniteSemaphore semaphore = null;
         boolean result = false;
         try {
             semaphore = ignite.semaphore(lockName, 1, true, true);
             result = semaphore != null && semaphore.tryAcquire();
         } catch (IgniteException e) {
-            LOGGER.debug(e);
+            LOGGER.error(e);
         } finally {
-            LOGGER.info("Locking " + lockName + " " + (result ? "applied" : "not possible"));
+            if (result) {
+                LOGGER.info("Locking " + lockName + " applied");
+            } else {
+                LOGGER.warn("Locking " + lockName + " not possible (" + semaphore + ")");
+            }
         }
         return result;
     }
