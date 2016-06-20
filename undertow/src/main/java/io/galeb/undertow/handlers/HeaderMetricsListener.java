@@ -23,22 +23,23 @@ import io.undertow.util.HttpString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-class HeaderMetricsListener implements ExchangeCompletionListener {
+class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLocalStatusCode {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static final String UNKNOWN = "UNKNOWN";
     private StatsdClient statsdClient;
 
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
         final String realDest = exchange.getAttachment(BackendSelector.REAL_DEST);
         String virtualhost = exchange.getHostName();
-        String backend = realDest != null ? realDest : UNKNOWN + "@" + virtualhost;
+        String backend = realDest != null ? realDest : "UNKNOWN@" + virtualhost;
         int statusCode = exchange.getStatusCode();
-        HttpString method = exchange.getRequestMethod();
-        if (statusCode >= 500 && backend.startsWith(UNKNOWN)) {
-            statusCode = statusCode + 400;
+        long responseBytesSent = exchange.getResponseBytesSent();
+        final HttpString method = exchange.getRequestMethod();
+        int fakeStatusCode = getFakeStatusCode(realDest, statusCode, responseBytesSent);
+        if (fakeStatusCode != NOT_MODIFIED) {
+            statusCode = fakeStatusCode;
         }
         String httpStatus = String.valueOf(statusCode);
         long requestTime = (System.nanoTime() - exchange.getRequestStartTime())/1000000L;

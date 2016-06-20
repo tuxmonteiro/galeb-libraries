@@ -26,7 +26,7 @@ import io.undertow.server.handlers.accesslog.AccessLogReceiver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class AccessLogExtendedHandler implements HttpHandler {
+public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStatusCode {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -62,10 +62,12 @@ public class AccessLogExtendedHandler implements HttpHandler {
                 final String tempRealDest = exchange.getAttachment(BackendSelector.REAL_DEST);
                 String realDest = tempRealDest != null ? tempRealDest : UNKNOWN;
                 String message = tokens.readAttribute(exchange);
-                int realStatus = exchange.getResponseCode();
-                if (UNKNOWN.equals(realDest)) {
-                    message = message.replaceAll("^([^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t)[^\t]+(\t.*)$", "$1" +
-                            String.valueOf(realStatus + 400) + "$2");
+                int realStatus = exchange.getStatusCode();
+                long responseBytesSent = exchange.getResponseBytesSent();
+                int fakeStatusCode = getFakeStatusCode(tempRealDest, realStatus, responseBytesSent);
+                if (fakeStatusCode != NOT_MODIFIED) {
+                    message = message.replaceAll("^([^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t)[^\t]+(\t.*)$",
+                            "$1" + String.valueOf(fakeStatusCode) + "$2");
                 }
                 accessLogReceiver.logMessage(message.replaceAll(REAL_DEST, realDest));
             } finally {
