@@ -103,7 +103,7 @@ public class RuleLoader implements Loader {
 
                             if (pathHandler instanceof PathGlobHandler && !((PathGlobHandler) pathHandler).contains(rule)) {
                                 final HttpHandler targetHandler =
-                                        new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_404, false, reuseXForwarded());
+                                        new ProxyHandler(backendPool, maxRequestTime, ResponseCodeHandler.HANDLE_500, false, reuseXForwarded());
                                 ((PathGlobHandler) pathHandler).addRule(rule, targetHandler);
                                 if (rule.isDefault()) {
                                     ((PathGlobHandler)pathHandler).setDefaultHandler(targetHandler);
