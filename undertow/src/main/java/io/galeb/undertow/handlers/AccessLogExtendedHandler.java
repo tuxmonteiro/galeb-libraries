@@ -18,6 +18,7 @@ package io.galeb.undertow.handlers;
 
 import io.undertow.attribute.ExchangeAttribute;
 import io.undertow.attribute.ExchangeAttributes;
+import io.undertow.attribute.ResponseTimeAttribute;
 import io.undertow.attribute.SubstituteEmptyWrapper;
 import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpHandler;
@@ -26,6 +27,8 @@ import io.undertow.server.handlers.accesslog.AccessLogReceiver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.concurrent.TimeUnit;
+
 public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStatusCode {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -33,10 +36,12 @@ public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStat
     public static final String REAL_DEST = "#REAL_DEST#";
     public static final String UNKNOWN = "UNKNOWN";
 
+    private final ResponseTimeAttribute responseTimeAttribute = new ResponseTimeAttribute(TimeUnit.SECONDS);
     private final ExchangeCompletionListener exchangeCompletionListener = new AccessLogCompletionListener();
     private final AccessLogReceiver accessLogReceiver;
     private final ExchangeAttribute tokens;
     private final HttpHandler next;
+    private int maxRequestTime;
 
     public AccessLogExtendedHandler(HttpHandler next,
                                     AccessLogReceiver accessLogReceiver,
@@ -64,7 +69,8 @@ public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStat
                 String message = tokens.readAttribute(exchange);
                 int realStatus = exchange.getStatusCode();
                 long responseBytesSent = exchange.getResponseBytesSent();
-                int fakeStatusCode = getFakeStatusCode(tempRealDest, realStatus, responseBytesSent);
+                final String responseTime = responseTimeAttribute.readAttribute(exchange);
+                int fakeStatusCode = getFakeStatusCode(tempRealDest, realStatus, responseBytesSent, responseTime, maxRequestTime);
                 if (fakeStatusCode != NOT_MODIFIED) {
                     message = message.replaceAll("^([^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t)[^\t]+(\t.*)$",
                             "$1" + String.valueOf(fakeStatusCode) + "$2");
@@ -74,6 +80,11 @@ public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStat
                 nextListener.proceed();
             }
         }
+    }
+
+    public AccessLogExtendedHandler setMaxRequestTime(int maxRequestTime) {
+        this.maxRequestTime = maxRequestTime;
+        return this;
     }
 
 }

@@ -17,17 +17,24 @@
 package io.galeb.undertow.handlers;
 
 import io.galeb.core.statsd.StatsdClient;
+import io.undertow.attribute.ResponseTimeAttribute;
 import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HttpString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.concurrent.TimeUnit;
+
 class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLocalStatusCode {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    private final ResponseTimeAttribute responseTimeAttribute = new ResponseTimeAttribute(TimeUnit.SECONDS);
+
     private StatsdClient statsdClient;
+
+    private int maxRequestTime = 0;
 
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
@@ -37,7 +44,8 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
         int statusCode = exchange.getStatusCode();
         long responseBytesSent = exchange.getResponseBytesSent();
         final HttpString method = exchange.getRequestMethod();
-        int fakeStatusCode = getFakeStatusCode(realDest, statusCode, responseBytesSent);
+        final String responseTime = responseTimeAttribute.readAttribute(exchange);
+        int fakeStatusCode = getFakeStatusCode(realDest, statusCode, responseBytesSent, responseTime, maxRequestTime);
         if (fakeStatusCode != NOT_MODIFIED) {
             statusCode = fakeStatusCode;
         }
@@ -51,6 +59,12 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
 
         nextListener.proceed();
     }
+
+    public HeaderMetricsListener setMaxRequestTime(int maxRequestTime) {
+        this.maxRequestTime = maxRequestTime;
+        return this;
+    }
+
 
     public HeaderMetricsListener setStatsd(StatsdClient statsdClient) {
         this.statsdClient = statsdClient;

@@ -77,7 +77,8 @@ public class FarmUndertow extends Farm {
 
     private void setRootHandler() {
         virtualHostHandler.setDefaultHandler(ResponseCodeHandler.HANDLE_500);
-        final HttpHandler hostMetricsHandler = new MonitorHeadersHandler(virtualHostHandler).setStatsd(statsdClient);
+        final HttpHandler hostMetricsHandler =
+                new MonitorHeadersHandler(virtualHostHandler).setStatsd(statsdClient).setMaxRequestTime(maxRequestTime);
 
         final String enableAccessLogProperty = System.getProperty(SysProp.PROP_ENABLE_ACCESSLOG.toString(),
                                                                   SysProp.PROP_ENABLE_ACCESSLOG.def());
@@ -101,7 +102,7 @@ public class FarmUndertow extends Farm {
                 new AccessLogExtendedHandler(hostMetricsHandler,
                                              accessLogReceiver,
                                              LOGPATTERN,
-                                             FarmUndertow.class.getClassLoader()) :
+                                             FarmUndertow.class.getClassLoader()).setMaxRequestTime(maxRequestTime) :
                 hostMetricsHandler;
     }
 

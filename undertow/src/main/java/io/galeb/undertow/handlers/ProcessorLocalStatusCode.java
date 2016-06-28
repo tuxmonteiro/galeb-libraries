@@ -23,9 +23,10 @@ interface ProcessorLocalStatusCode {
     int OFFSET_LOCAL_ERROR = 400;
     int NOT_MODIFIED       = 0;
 
-    default int getFakeStatusCode(final String backend, int statusCode, long responseBytesSent) {
+    default int getFakeStatusCode(final String backend, int statusCode, long responseBytesSent, String responseTime, long maxRequestTime) {
         int statusLogged = NOT_MODIFIED;
-        if (statusCode == HttpStatus.SC_OK && responseBytesSent <= 0) {
+        long rt = Long.parseLong(responseTime);
+        if (statusCode == HttpStatus.SC_OK && responseBytesSent <= 0 && rt > maxRequestTime) {
             statusLogged = HttpStatus.SC_GATEWAY_TIMEOUT + OFFSET_LOCAL_ERROR;
         } else if (statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR && backend == null) {
             statusLogged = statusCode + OFFSET_LOCAL_ERROR;
