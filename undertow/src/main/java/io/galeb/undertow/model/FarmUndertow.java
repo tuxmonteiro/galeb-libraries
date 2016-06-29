@@ -79,8 +79,8 @@ public class FarmUndertow extends Farm {
     }
 
     private void setRootHandler() {
-        this.maxRequestTime = Integer.valueOf(STATIC_PROPERTIES.getOrDefault("maxRequestTime", String.valueOf(Integer.MAX_VALUE - 1)));
-        this.forceChangeStatus = Boolean.valueOf(STATIC_PROPERTIES.getOrDefault("forceChangeStatus", String.valueOf(false)));
+        this.maxRequestTime = Integer.valueOf(STATIC_PROPERTIES.getOrDefault(MAX_REQUEST_TIME_FARM_PROP, String.valueOf(Integer.MAX_VALUE - 1)));
+        this.forceChangeStatus = Boolean.valueOf(STATIC_PROPERTIES.getOrDefault(FORCE_CHANGE_STATUS_FARM_PROP, String.valueOf(false)));
 
         virtualHostHandler.setDefaultHandler(ResponseCodeHandler.HANDLE_500);
         final HttpHandler hostMetricsHandler =

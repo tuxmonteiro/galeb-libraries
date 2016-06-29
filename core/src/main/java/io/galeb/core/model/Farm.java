@@ -47,6 +47,9 @@ public class Farm extends Entity {
 
     public static final String CLASS_NAME = "Farm";
 
+    public static final String MAX_REQUEST_TIME_FARM_PROP    = "maxRequestTime";
+    public static final String FORCE_CHANGE_STATUS_FARM_PROP = "forceChangeStatus";
+
     public static final Map<String, String> STATIC_PROPERTIES = Collections.synchronizedMap(new HashMap<>());
 
     public static final Map<String, Class<? extends Entity>> ENTITY_CLASSES = new ConcurrentHashMap<>();
