@@ -29,6 +29,8 @@ import io.galeb.core.model.collections.NullEntityCollection;
 import io.galeb.core.model.collections.RuleCollection;
 import io.galeb.core.model.collections.VirtualHostCollection;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +46,8 @@ public class Farm extends Entity {
     private static final long serialVersionUID = 1L;
 
     public static final String CLASS_NAME = "Farm";
+
+    public static final Map<String, String> STATIC_PROPERTIES = Collections.synchronizedMap(new HashMap<>());
 
     public static final Map<String, Class<? extends Entity>> ENTITY_CLASSES = new ConcurrentHashMap<>();
     static {
