@@ -27,17 +27,15 @@ interface ProcessorLocalStatusCode {
                                   int statusCode,
                                   long responseBytesSent,
                                   Integer responseTime,
-                                  int maxRequestTime,
-                                  boolean forceChangeStatus) {
+                                  int maxRequestTime) {
         int statusLogged = NOT_MODIFIED;
         if (responseTime != null &&
-                forceChangeStatus &&
                 statusCode == HttpStatus.SC_OK &&
                 responseBytesSent <= 0 &&
                 maxRequestTime > 0 &&
                 responseTime > maxRequestTime) {
 
-            statusLogged = HttpStatus.SC_GATEWAY_TIMEOUT + OFFSET_LOCAL_ERROR;
+            statusLogged = HttpStatus.SC_BAD_GATEWAY + OFFSET_LOCAL_ERROR;
 
         } else if (statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR && backend == null) {
 

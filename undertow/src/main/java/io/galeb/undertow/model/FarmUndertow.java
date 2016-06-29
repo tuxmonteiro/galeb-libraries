@@ -111,8 +111,7 @@ public class FarmUndertow extends Farm {
                                              accessLogReceiver,
                                              LOGPATTERN,
                                              FarmUndertow.class.getClassLoader())
-                        .setMaxRequestTime(maxRequestTime)
-                        .forceChangeStatus(forceChangeStatus) :
+                        .setMaxRequestTime(maxRequestTime) :
                 hostMetricsHandler;
     }
 

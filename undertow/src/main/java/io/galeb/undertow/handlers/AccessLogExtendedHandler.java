@@ -42,7 +42,6 @@ public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStat
     private final ExchangeAttribute tokens;
     private final HttpHandler next;
     private int maxRequestTime = Integer.MAX_VALUE - 1;
-    private boolean forceChangeStatus = false;
 
     public AccessLogExtendedHandler(HttpHandler next,
                                     AccessLogReceiver accessLogReceiver,
@@ -71,7 +70,7 @@ public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStat
                 int realStatus = exchange.getStatusCode();
                 long responseBytesSent = exchange.getResponseBytesSent();
                 final Integer responseTime = Integer.valueOf(responseTimeAttribute.readAttribute(exchange));
-                int fakeStatusCode = getFakeStatusCode(tempRealDest, realStatus, responseBytesSent, responseTime, maxRequestTime, forceChangeStatus);
+                int fakeStatusCode = getFakeStatusCode(tempRealDest, realStatus, responseBytesSent, responseTime, maxRequestTime);
                 if (fakeStatusCode != NOT_MODIFIED) {
                     message = message.replaceAll("^([^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t)[^\t]+(\t.*)$",
                             "$1" + String.valueOf(fakeStatusCode) + "$2");
@@ -87,10 +86,4 @@ public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStat
         this.maxRequestTime = maxRequestTime;
         return this;
     }
-
-    public AccessLogExtendedHandler forceChangeStatus(boolean forceChangeStatus) {
-        this.forceChangeStatus = forceChangeStatus;
-        return this;
-    }
-
 }

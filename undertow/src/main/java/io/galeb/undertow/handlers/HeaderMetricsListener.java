@@ -22,6 +22,7 @@ import io.undertow.attribute.ResponseTimeAttribute;
 import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HttpString;
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -46,15 +47,19 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
         long responseBytesSent = exchange.getResponseBytesSent();
         final HttpString method = exchange.getRequestMethod();
         final Integer responseTime = Integer.valueOf(responseTimeAttribute.readAttribute(exchange));
-        int fakeStatusCode = getFakeStatusCode(realDest, statusCode, responseBytesSent, responseTime, maxRequestTime, forceChangeStatus);
+        int fakeStatusCode = getFakeStatusCode(realDest, statusCode, responseBytesSent, responseTime, maxRequestTime);
+        int statusCodeLogged = statusCode;
         if (fakeStatusCode != NOT_MODIFIED) {
-            int statusCodeLogged = fakeStatusCode - ProcessorLocalStatusCode.OFFSET_LOCAL_ERROR;
+            statusCodeLogged = fakeStatusCode - ProcessorLocalStatusCode.OFFSET_LOCAL_ERROR;
             if (statusCodeLogged != statusCode) {
                 exchange.setStatusCode(statusCodeLogged);
             }
             statusCode = fakeStatusCode;
         }
-        String httpStatus = String.valueOf(statusCode);
+        String httpStatus = String.valueOf(HttpStatus.SC_OK);
+        if (forceChangeStatus || statusCodeLogged != HttpStatus.SC_BAD_GATEWAY) {
+            httpStatus = String.valueOf(statusCode);
+        }
         sendHttpStatusCount(virtualhost, backend, httpStatus);
         sendRequestTime(virtualhost, backend, responseTime);
         if (method != null) {
