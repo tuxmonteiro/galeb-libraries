@@ -65,6 +65,9 @@ public class FarmUndertow extends Farm {
     private final NameVirtualHostHandler virtualHostHandler = new NameVirtualHostHandler();
     private final Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
 
+    private int maxRequestTime = Integer.MAX_VALUE - 1;
+    private boolean forceChangeStatus = false;
+
     public FarmUndertow() {
         super();
     }
@@ -76,9 +79,14 @@ public class FarmUndertow extends Farm {
     }
 
     private void setRootHandler() {
+        this.maxRequestTime = Integer.valueOf(STATIC_PROPERTIES.getOrDefault("maxRequestTime", String.valueOf(Integer.MAX_VALUE - 1)));
+        this.forceChangeStatus = Boolean.valueOf(STATIC_PROPERTIES.getOrDefault("forceChangeStatus", String.valueOf(false)));
+
         virtualHostHandler.setDefaultHandler(ResponseCodeHandler.HANDLE_500);
         final HttpHandler hostMetricsHandler =
-                new MonitorHeadersHandler(virtualHostHandler).setStatsd(statsdClient).setMaxRequestTime(maxRequestTime);
+                new MonitorHeadersHandler(virtualHostHandler).setStatsd(statsdClient)
+                                                             .setMaxRequestTime(maxRequestTime)
+                                                             .forceChangeStatus(forceChangeStatus);
 
         final String enableAccessLogProperty = System.getProperty(SysProp.PROP_ENABLE_ACCESSLOG.toString(),
                                                                   SysProp.PROP_ENABLE_ACCESSLOG.def());
@@ -102,7 +110,9 @@ public class FarmUndertow extends Farm {
                 new AccessLogExtendedHandler(hostMetricsHandler,
                                              accessLogReceiver,
                                              LOGPATTERN,
-                                             FarmUndertow.class.getClassLoader()).setMaxRequestTime(maxRequestTime) :
+                                             FarmUndertow.class.getClassLoader())
+                        .setMaxRequestTime(maxRequestTime)
+                        .forceChangeStatus(forceChangeStatus) :
                 hostMetricsHandler;
     }
 

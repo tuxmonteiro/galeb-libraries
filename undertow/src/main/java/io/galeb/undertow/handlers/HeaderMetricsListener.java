@@ -16,6 +16,7 @@
 
 package io.galeb.undertow.handlers;
 
+import io.galeb.core.statsd.NullStatsdClient;
 import io.galeb.core.statsd.StatsdClient;
 import io.undertow.attribute.ResponseTimeAttribute;
 import io.undertow.server.ExchangeCompletionListener;
@@ -32,9 +33,9 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
 
     private final ResponseTimeAttribute responseTimeAttribute = new ResponseTimeAttribute(TimeUnit.SECONDS);
 
-    private StatsdClient statsdClient;
-
-    private int maxRequestTime = 0;
+    private StatsdClient statsdClient = new NullStatsdClient();
+    private int maxRequestTime = Integer.MAX_VALUE - 1;
+    private boolean forceChangeStatus = false;
 
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
@@ -44,15 +45,18 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
         int statusCode = exchange.getStatusCode();
         long responseBytesSent = exchange.getResponseBytesSent();
         final HttpString method = exchange.getRequestMethod();
-        final String responseTime = responseTimeAttribute.readAttribute(exchange);
-        int fakeStatusCode = getFakeStatusCode(realDest, statusCode, responseBytesSent, responseTime, maxRequestTime);
+        final Integer responseTime = Integer.valueOf(responseTimeAttribute.readAttribute(exchange));
+        int fakeStatusCode = getFakeStatusCode(realDest, statusCode, responseBytesSent, responseTime, maxRequestTime, forceChangeStatus);
         if (fakeStatusCode != NOT_MODIFIED) {
+            int statusCodeLogged = fakeStatusCode - ProcessorLocalStatusCode.OFFSET_LOCAL_ERROR;
+            if (statusCodeLogged != statusCode) {
+                exchange.setStatusCode(statusCodeLogged);
+            }
             statusCode = fakeStatusCode;
         }
         String httpStatus = String.valueOf(statusCode);
-        long requestTime = (System.nanoTime() - exchange.getRequestStartTime())/1000000L;
         sendHttpStatusCount(virtualhost, backend, httpStatus);
-        sendRequestTime(virtualhost, backend, requestTime);
+        sendRequestTime(virtualhost, backend, responseTime);
         if (method != null) {
             sendHttpMethodCount(virtualhost, backend, method.toString());
         }
@@ -62,6 +66,11 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
 
     public HeaderMetricsListener setMaxRequestTime(int maxRequestTime) {
         this.maxRequestTime = maxRequestTime;
+        return this;
+    }
+
+    public HeaderMetricsListener forceChangeStatus(boolean forceChangeStatus) {
+        this.forceChangeStatus = forceChangeStatus;
         return this;
     }
 
