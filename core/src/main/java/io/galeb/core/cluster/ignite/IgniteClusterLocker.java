@@ -26,6 +26,9 @@ import org.apache.ignite.IgniteSemaphore;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class IgniteClusterLocker implements ClusterLocker {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -46,6 +49,18 @@ public class IgniteClusterLocker implements ClusterLocker {
         CacheFactory cacheFactory = IgniteCacheFactory.getInstance().start();
         ignite = (Ignite) cacheFactory.getClusterInstance();
         return this;
+    }
+
+    @Override
+    public String name() {
+        StringBuilder name = new StringBuilder();
+        try {
+            name.append(InetAddress.getLocalHost().getCanonicalHostName());
+        } catch (UnknownHostException e) {
+            name.append("UNKNOW");
+            LOGGER.error(e);
+        }
+        return name.append("|").append(ignite.cluster().localNode().id()).toString();
     }
 
     @Override
