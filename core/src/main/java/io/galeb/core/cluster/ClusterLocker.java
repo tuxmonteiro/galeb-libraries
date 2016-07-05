@@ -25,4 +25,6 @@ public interface ClusterLocker {
     void release(String lockName);
 
     ClusterLocker start();
+
+    String name();
 }
