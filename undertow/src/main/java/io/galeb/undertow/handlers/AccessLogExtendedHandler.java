@@ -76,6 +76,8 @@ public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStat
                             "$1" + String.valueOf(fakeStatusCode) + "$2");
                 }
                 accessLogReceiver.logMessage(message.replaceAll(REAL_DEST, realDest));
+            } catch (Exception e) {
+                LOGGER.error(e);
             } finally {
                 nextListener.proceed();
             }

@@ -40,33 +40,37 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
 
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
-        final String realDest = exchange.getAttachment(BackendSelector.REAL_DEST);
-        String virtualhost = exchange.getHostName();
-        String backend = realDest != null ? realDest : "UNKNOWN@" + virtualhost;
-        int statusCode = exchange.getStatusCode();
-        long responseBytesSent = exchange.getResponseBytesSent();
-        final HttpString method = exchange.getRequestMethod();
-        final Integer responseTime = Integer.valueOf(responseTimeAttribute.readAttribute(exchange));
-        int fakeStatusCode = getFakeStatusCode(realDest, statusCode, responseBytesSent, responseTime, maxRequestTime);
-        int statusCodeLogged = statusCode;
-        if (fakeStatusCode != NOT_MODIFIED) {
-            statusCodeLogged = fakeStatusCode - ProcessorLocalStatusCode.OFFSET_LOCAL_ERROR;
-            if (statusCodeLogged != statusCode) {
-                exchange.setStatusCode(statusCodeLogged);
+        try {
+            final String realDest = exchange.getAttachment(BackendSelector.REAL_DEST);
+            String virtualhost = exchange.getHostName();
+            String backend = realDest != null ? realDest : "UNKNOWN@" + virtualhost;
+            int statusCode = exchange.getStatusCode();
+            long responseBytesSent = exchange.getResponseBytesSent();
+            final HttpString method = exchange.getRequestMethod();
+            final Integer responseTime = Integer.valueOf(responseTimeAttribute.readAttribute(exchange));
+            int fakeStatusCode = getFakeStatusCode(realDest, statusCode, responseBytesSent, responseTime, maxRequestTime);
+            int statusCodeLogged = statusCode;
+            if (fakeStatusCode != NOT_MODIFIED) {
+                statusCodeLogged = fakeStatusCode - ProcessorLocalStatusCode.OFFSET_LOCAL_ERROR;
+                if (statusCodeLogged != statusCode) {
+                    exchange.setStatusCode(statusCodeLogged);
+                }
+                statusCode = fakeStatusCode;
             }
-            statusCode = fakeStatusCode;
+            String httpStatus = String.valueOf(HttpStatus.SC_OK);
+            if (forceChangeStatus || statusCodeLogged != HttpStatus.SC_BAD_GATEWAY) {
+                httpStatus = String.valueOf(statusCode);
+            }
+            sendHttpStatusCount(virtualhost, backend, httpStatus);
+            sendRequestTime(virtualhost, backend, responseTime);
+            if (method != null) {
+                sendHttpMethodCount(virtualhost, backend, method.toString());
+            }
+        } catch (Exception e) {
+            LOGGER.error(e);
+        } finally {
+            nextListener.proceed();
         }
-        String httpStatus = String.valueOf(HttpStatus.SC_OK);
-        if (forceChangeStatus || statusCodeLogged != HttpStatus.SC_BAD_GATEWAY) {
-            httpStatus = String.valueOf(statusCode);
-        }
-        sendHttpStatusCount(virtualhost, backend, httpStatus);
-        sendRequestTime(virtualhost, backend, responseTime);
-        if (method != null) {
-            sendHttpMethodCount(virtualhost, backend, method.toString());
-        }
-
-        nextListener.proceed();
     }
 
     public HeaderMetricsListener setMaxRequestTime(int maxRequestTime) {
