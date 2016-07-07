@@ -47,7 +47,7 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
             int statusCode = exchange.getStatusCode();
             long responseBytesSent = exchange.getResponseBytesSent();
             final HttpString method = exchange.getRequestMethod();
-            final Integer responseTime = Integer.valueOf(responseTimeAttribute.readAttribute(exchange));
+            final Integer responseTime = Math.round(Float.parseFloat(responseTimeAttribute.readAttribute(exchange)));
             int fakeStatusCode = getFakeStatusCode(realDest, statusCode, responseBytesSent, responseTime, maxRequestTime);
             int statusCodeLogged = statusCode;
             if (fakeStatusCode != NOT_MODIFIED) {

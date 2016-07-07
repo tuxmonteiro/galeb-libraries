@@ -69,7 +69,7 @@ public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStat
                 String message = tokens.readAttribute(exchange);
                 int realStatus = exchange.getStatusCode();
                 long responseBytesSent = exchange.getResponseBytesSent();
-                final Integer responseTime = Integer.valueOf(responseTimeAttribute.readAttribute(exchange));
+                final Integer responseTime = Math.round(Float.parseFloat(responseTimeAttribute.readAttribute(exchange)));
                 int fakeStatusCode = getFakeStatusCode(tempRealDest, realStatus, responseBytesSent, responseTime, maxRequestTime);
                 if (fakeStatusCode != NOT_MODIFIED) {
                     message = message.replaceAll("^([^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t)[^\t]+(\t.*)$",
