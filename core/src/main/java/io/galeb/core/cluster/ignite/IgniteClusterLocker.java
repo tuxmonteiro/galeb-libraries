@@ -89,8 +89,6 @@ public class IgniteClusterLocker implements ClusterLocker {
             semaphore = ignite.semaphore(lockName, 1, true, false);
             if (semaphore != null) {
                 semaphore.release();
-            }
-            if (semaphore != null) {
                 semaphore.close();
             }
         } catch (IgniteException e) {
@@ -98,6 +96,19 @@ public class IgniteClusterLocker implements ClusterLocker {
         } finally {
             LOGGER.info("Lock " + lockName + " released");
         }
+    }
+
+
+    @Override
+    public Boolean contains(String lockName) {
+        IgniteSemaphore semaphore;
+        try {
+            semaphore = ignite.semaphore(lockName, 1, true, false);
+            return semaphore != null;
+        } catch (IgniteException e) {
+            LOGGER.debug(e);
+        }
+        return null;
     }
 
 }
