@@ -36,7 +36,7 @@ public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStat
     public static final String REAL_DEST = "#REAL_DEST#";
     public static final String UNKNOWN = "UNKNOWN";
 
-    private final ResponseTimeAttribute responseTimeAttribute = new ResponseTimeAttribute(TimeUnit.SECONDS);
+    private final ResponseTimeAttribute responseTimeAttribute = new ResponseTimeAttribute(TimeUnit.MILLISECONDS);
     private final ExchangeCompletionListener exchangeCompletionListener = new AccessLogCompletionListener();
     private final AccessLogReceiver accessLogReceiver;
     private final ExchangeAttribute tokens;

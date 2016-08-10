@@ -32,7 +32,7 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final ResponseTimeAttribute responseTimeAttribute = new ResponseTimeAttribute(TimeUnit.SECONDS);
+    private final ResponseTimeAttribute responseTimeAttribute = new ResponseTimeAttribute(TimeUnit.MILLISECONDS);
 
     private StatsdClient statsdClient = new NullStatsdClient();
     private int maxRequestTime = Integer.MAX_VALUE - 1;
@@ -47,7 +47,7 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
             int statusCode = exchange.getStatusCode();
             long responseBytesSent = exchange.getResponseBytesSent();
             final HttpString method = exchange.getRequestMethod();
-            final Integer responseTime = Math.round(Float.parseFloat(responseTimeAttribute.readAttribute(exchange)));
+            final Integer responseTime = getResponseTime(exchange);
             int fakeStatusCode = getFakeStatusCode(realDest, statusCode, responseBytesSent, responseTime, maxRequestTime);
             int statusCodeLogged = statusCode;
             if (fakeStatusCode != NOT_MODIFIED) {
@@ -71,6 +71,10 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
         } finally {
             nextListener.proceed();
         }
+    }
+
+    public int getResponseTime(HttpServerExchange exchange) {
+        return Math.round(Float.parseFloat(responseTimeAttribute.readAttribute(exchange)));
     }
 
     public HeaderMetricsListener setMaxRequestTime(int maxRequestTime) {
