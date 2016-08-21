@@ -34,6 +34,7 @@ import io.galeb.undertow.loaders.Loader;
 import io.galeb.undertow.loaders.RuleLoader;
 import io.galeb.undertow.loaders.VirtualHostLoader;
 import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.accesslog.AccessLogReceiver;
@@ -47,6 +48,7 @@ import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 
 import io.undertow.util.CopyOnWriteMap;
+import io.undertow.util.Headers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.ExtendedLogger;
@@ -62,7 +64,16 @@ public class FarmUndertow extends Farm {
     private StatsdClient statsdClient;
 
     private HttpHandler rootHandler;
-    private final NameVirtualHostHandler virtualHostHandler = new NameVirtualHostHandler();
+    private final NameVirtualHostHandler virtualHostHandler = new NameVirtualHostHandler().addHost("__ping__", healthCheckHandler());
+
+    private HttpHandler healthCheckHandler() {
+        return httpServerExchange -> {
+            httpServerExchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+            httpServerExchange.getResponseHeaders().put(Headers.SERVER, "Galeb");
+            httpServerExchange.getResponseSender().send("WORKING");
+        };
+    }
+
     private final Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
 
     private int maxRequestTime = Integer.MAX_VALUE - 1;
