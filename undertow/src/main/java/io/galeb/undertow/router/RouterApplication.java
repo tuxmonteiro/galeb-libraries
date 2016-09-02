@@ -16,75 +16,25 @@
 
 package io.galeb.undertow.router;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.xnio.Options;
-
 import io.galeb.core.model.Farm;
-import io.undertow.Undertow;
-import io.undertow.UndertowOptions;
 import io.undertow.server.HttpHandler;
 
-public class RouterApplication {
+public class RouterApplication extends Server {
 
-    private int port = 8080;
-    private String host = "0.0.0.0";
-    private final Map<String, String> options = new HashMap<>();
-    private Farm farm = null;
+    private final Farm farm;
 
-    public RouterApplication setHost(String host) {
-        this.host = host;
-        return this;
-    }
-
-    public RouterApplication setPort(int port) {
-        this.port = port;
-        return this;
-    }
-
-    public RouterApplication setOptions(Map<String, String> options) {
-        this.options.putAll(options);
-        return this;
-    }
-
-    public RouterApplication setFarm(Farm farm) {
+    public RouterApplication(Farm farm) {
         this.farm = farm;
-        farm.setOptions(options);
-        return this;
     }
 
+    @Override
     public void start() {
-        if (farm==null) {
-            return;
-        }
-
         final Object rootHandlerObj = farm.getRootHandler();
-        HttpHandler rootHandler = null;
-
         if (rootHandlerObj instanceof HttpHandler) {
-            rootHandler = (HttpHandler) rootHandlerObj;
-        } else {
-            return;
+            farm.setOptions(undertowBuilder.getOptions());
+            HttpHandler rootHandler = (HttpHandler) rootHandlerObj;
+            undertowBuilder.getBuilder().setHandler(rootHandler).build().start();
         }
-        final int iothreads = options.containsKey("IoThreads") ? Integer.parseInt(options.get("IoThreads")) : 4;
-        final int works = options.containsKey("workers") ? Integer.parseInt(options.get("workers")) : Runtime.getRuntime().availableProcessors()*8;
-        final int maxWorks = options.containsKey("max_workers") ? Integer.parseInt(options.get("max_workers")) : works;
-        final int backlog = options.containsKey("backlog") ? Integer.parseInt(options.get("backlog")) : 1000;
-        final int idleTimeout = options.containsKey("idleTimeout") ? Integer.parseInt(options.get("idleTimeout")) : -1;
-
-        final Undertow router = Undertow.builder().addHttpListener(port, host)
-                .setServerOption(UndertowOptions.RECORD_REQUEST_START_TIME, true)
-                .setServerOption(UndertowOptions.IDLE_TIMEOUT, idleTimeout)
-                .setIoThreads(iothreads)
-                .setWorkerThreads(works)
-                .setWorkerOption(Options.WORKER_TASK_MAX_THREADS, maxWorks)
-                .setSocketOption(Options.BACKLOG, backlog)
-                .setHandler(rootHandler)
-                .build();
-
-        router.start();
-
     }
 
 }
