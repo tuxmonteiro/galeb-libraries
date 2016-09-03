@@ -20,7 +20,7 @@ import java.util.Map;
 
 public abstract class Server {
 
-    protected final UndertowBuilder undertowBuilder = new UndertowBuilder();
+    protected final BuilderFactory undertowBuilder = new BuilderFactory();
 
     public Server setHost(String host) {
         undertowBuilder.setHost(host);

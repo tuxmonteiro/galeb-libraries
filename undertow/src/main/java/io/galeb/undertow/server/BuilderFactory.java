@@ -24,7 +24,7 @@ import org.xnio.Options;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UndertowBuilder {
+public class BuilderFactory {
 
     public static final int DEFAULT_IO_THREADS = 4;
     public static final int DEFAULT_NUM_WORKS = Runtime.getRuntime().availableProcessors() * 8;
@@ -35,22 +35,22 @@ public class UndertowBuilder {
     private int    port = 8080;
     private String host = "0.0.0.0";
 
-    public UndertowBuilder setHost(String host) {
+    public BuilderFactory setHost(String host) {
         this.host = host;
         return this;
     }
 
-    public UndertowBuilder setPort(int port) {
+    public BuilderFactory setPort(int port) {
         this.port = port;
         return this;
     }
 
-    public UndertowBuilder setOptions(final Map<String, String> options) {
+    public BuilderFactory setOptions(final Map<String, String> options) {
         this.options.putAll(options);
         return this;
     }
 
-    public UndertowBuilder clearOptions() {
+    public BuilderFactory clearOptions() {
         this.options.clear();
         return this;
     }
