@@ -19,7 +19,7 @@ package io.galeb.undertow.server;
 import io.undertow.Undertow.Builder;
 import java.util.Map;
 
-abstract class Server {
+public abstract class Server {
 
     private final BuilderFactory builderFactory = new BuilderFactory();
 
