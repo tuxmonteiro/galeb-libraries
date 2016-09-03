@@ -17,8 +17,6 @@
 package io.galeb.undertow.server;
 
 import javax.ws.rs.core.Application;
-
-import io.galeb.undertow.server.Server;
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
 
 public class JaxrsServer extends Server {
@@ -28,11 +26,14 @@ public class JaxrsServer extends Server {
 
     public JaxrsServer(Application application) {
         this.application = application;
+        if (application == null) {
+            throw new NullPointerException();
+        }
     }
 
     @Override
     public void start() {
-        undertowJaxrsServer.deploy(application).start(undertowBuilder.getBuilder());
+        undertowJaxrsServer.deploy(application).start(getBuilder());
     }
 
 }

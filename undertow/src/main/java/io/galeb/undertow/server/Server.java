@@ -16,26 +16,35 @@
 
 package io.galeb.undertow.server;
 
+import io.undertow.Undertow.Builder;
 import java.util.Map;
 
-public abstract class Server {
+abstract class Server {
 
-    protected final BuilderFactory undertowBuilder = new BuilderFactory();
+    private final BuilderFactory builderFactory = new BuilderFactory();
 
     public Server setHost(String host) {
-        undertowBuilder.setHost(host);
+        builderFactory.setHost(host);
         return this;
     }
 
     public Server setPort(int port) {
-        undertowBuilder.setPort(port);
+        builderFactory.setPort(port);
         return this;
     }
 
     public Server setOptions(Map<String, String> options) {
-        undertowBuilder.clearOptions();
-        undertowBuilder.setOptions(options);
+        builderFactory.clearOptions();
+        builderFactory.setOptions(options);
         return this;
+    }
+
+    protected Map<String, String> getOptions() {
+        return builderFactory.getOptions();
+    }
+
+    protected Builder getBuilder() {
+        return builderFactory.getBuilder();
     }
 
     public abstract void start();

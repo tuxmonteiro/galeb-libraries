@@ -25,15 +25,18 @@ public class RouterServer extends Server {
 
     public RouterServer(Farm farm) {
         this.farm = farm;
+        if (farm == null) {
+            throw new NullPointerException();
+        }
     }
 
     @Override
     public void start() {
         final Object rootHandlerObj = farm.getRootHandler();
         if (rootHandlerObj instanceof HttpHandler) {
-            farm.setOptions(undertowBuilder.getOptions());
+            farm.setOptions(getOptions());
             HttpHandler rootHandler = (HttpHandler) rootHandlerObj;
-            undertowBuilder.getBuilder().setHandler(rootHandler).build().start();
+            getBuilder().setHandler(rootHandler).build().start();
         }
     }
 
