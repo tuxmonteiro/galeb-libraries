@@ -28,7 +28,7 @@ import jodd.util.Wildcard;
 
 public class PathGlobHandler implements HttpHandler {
 
-    private HttpHandler defaultHandler = ResponseCodeHandler.HANDLE_404;
+    private HttpHandler defaultHandler = ResponseCodeHandler.HANDLE_500;
     private final Map<Rule, HttpHandler> rules = new CopyOnWriteMap<>();
 
     private Comparator<Map.Entry<Rule, HttpHandler>> ruleOrderComparator() {
