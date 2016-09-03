@@ -24,12 +24,13 @@ import org.xnio.Options;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BuilderFactory {
+class BuilderFactory {
 
-    public static final int DEFAULT_IO_THREADS = 4;
-    public static final int DEFAULT_NUM_WORKS = Runtime.getRuntime().availableProcessors() * 8;
-    public static final int DEFAULT_BACKLOG = 1000;
-    public static final int DEFAULT_IDLE_TIMEOUT = 0;
+    private static final int DEFAULT_IO_THREADS   = 4;
+    private static final int DEFAULT_NUM_WORKS    = Runtime.getRuntime().availableProcessors() * 8;
+    private static final int DEFAULT_BACKLOG      = 1000;
+    private static final int DEFAULT_IDLE_TIMEOUT = 0;
+
     private final Map<String, String> options = new HashMap<>();
 
     private int    port = 8080;
