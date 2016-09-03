@@ -18,7 +18,7 @@ package io.galeb.undertow.jaxrs;
 
 import javax.ws.rs.core.Application;
 
-import io.galeb.undertow.router.Server;
+import io.galeb.undertow.server.Server;
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
 
 public class Deployer extends Server {

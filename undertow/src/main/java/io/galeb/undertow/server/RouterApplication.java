@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.galeb.undertow.router;
+package io.galeb.undertow.server;
 
 import io.galeb.core.model.Farm;
 import io.undertow.server.HttpHandler;
