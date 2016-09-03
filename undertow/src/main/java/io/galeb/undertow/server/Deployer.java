@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.galeb.undertow.jaxrs;
+package io.galeb.undertow.server;
 
 import javax.ws.rs.core.Application;
 
