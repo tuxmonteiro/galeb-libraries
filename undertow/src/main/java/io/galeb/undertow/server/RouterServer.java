@@ -19,11 +19,11 @@ package io.galeb.undertow.server;
 import io.galeb.core.model.Farm;
 import io.undertow.server.HttpHandler;
 
-public class RouterApplication extends Server {
+public class RouterServer extends Server {
 
     private final Farm farm;
 
-    public RouterApplication(Farm farm) {
+    public RouterServer(Farm farm) {
         this.farm = farm;
     }
 
