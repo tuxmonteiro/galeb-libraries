@@ -21,12 +21,12 @@ import javax.ws.rs.core.Application;
 import io.galeb.undertow.server.Server;
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
 
-public class Deployer extends Server {
+public class JaxrsServer extends Server {
 
     private final UndertowJaxrsServer undertowJaxrsServer = new UndertowJaxrsServer();
     private final Application application;
 
-    public Deployer(Application application) {
+    public JaxrsServer(Application application) {
         this.application = application;
     }
 
