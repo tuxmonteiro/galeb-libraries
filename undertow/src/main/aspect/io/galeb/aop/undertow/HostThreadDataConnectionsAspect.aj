@@ -23,15 +23,15 @@ public aspect HostThreadDataConnectionsAspect {
 
     private final ConnectionMapManager connectionMapManager = ConnectionMapManager.INSTANCE;
 
-    pointcut myPointcut() : set(* io.undertow.server.handlers.proxy.ProxyConnectionPool.HostThreadData.connections);
+    pointcut myPointcut() : execution(* io.undertow.server.handlers.proxy.ProxyConnectionPool.handleClosedConnection(*,*)) || execution(* io.undertow.server.handlers.proxy.ProxyConnectionPool.openConnection(*,*,*,*));
 
     after() : myPointcut() {
         if (thisJoinPoint.getThis() instanceof ProxyConnectionPool) {
             synchronized (this) {
-                final String threadId = thisJoinPoint.getTarget().toString();
-                final String uri = ((ProxyConnectionPool)thisJoinPoint.getThis()).getUri().toString();
-                final int numConnectionsPerThread = ((Integer)thisJoinPoint.getArgs()[0]);
-                connectionMapManager.putOnCounterMap(uri, threadId, numConnectionsPerThread);
+                final ProxyConnectionPool proxyConnectionPool = (ProxyConnectionPool)thisJoinPoint.getThis();
+                final String uri = proxyConnectionPool.getUri().toString();
+                final int numConnections = proxyConnectionPool.getOpenConnections();
+                connectionMapManager.putOnCounterMap(uri, numConnections);
             }
         }
     }

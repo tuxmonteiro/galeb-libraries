@@ -22,33 +22,35 @@ public interface StatsdClient {
     String STATSD_PORT   = "port";
     String STATSD_PREFIX = "prefix";
 
+    String STATSD_SEP    = ".";
+
     String PREFIX = StatsdClient.class.getPackage().getName();
 
     static void setup() {
-        if (System.getProperty(PREFIX + "." + STATSD_HOST)==null) {
-            System.setProperty(PREFIX + "." + STATSD_HOST, "127.0.0.1");
+        if (System.getProperty(PREFIX + STATSD_SEP + STATSD_HOST)==null) {
+            System.setProperty(PREFIX + STATSD_SEP + STATSD_HOST, "127.0.0.1");
         }
-        if (System.getProperty(PREFIX + "." + STATSD_PORT)==null) {
-            System.setProperty(PREFIX + "." + STATSD_PORT, "8125");
+        if (System.getProperty(PREFIX + STATSD_SEP + STATSD_PORT)==null) {
+            System.setProperty(PREFIX + STATSD_SEP + STATSD_PORT, "8125");
         }
-        if (System.getProperty(PREFIX + "." + STATSD_PREFIX)==null) {
-            System.setProperty(PREFIX + "." + STATSD_PREFIX, "galeb");
+        if (System.getProperty(PREFIX + STATSD_SEP + STATSD_PREFIX)==null) {
+            System.setProperty(PREFIX + STATSD_SEP + STATSD_PREFIX, "galeb");
         }
     }
 
     static String getHost() {
         setup();
-        return System.getProperty(PREFIX + "." + STATSD_HOST);
+        return System.getProperty(PREFIX + STATSD_SEP + STATSD_HOST);
     }
 
     static String getPort() {
         setup();
-        return System.getProperty(PREFIX + "." + STATSD_PORT);
+        return System.getProperty(PREFIX + STATSD_SEP + STATSD_PORT);
     }
 
     static String getPrefix() {
         setup();
-        return System.getProperty(PREFIX + "." + STATSD_PREFIX);
+        return System.getProperty(PREFIX + STATSD_SEP + STATSD_PREFIX);
     }
 
     static String cleanUpKey(String key) {
@@ -57,6 +59,7 @@ public interface StatsdClient {
 
     String PROP_STATUSCODE = "status";
     String PROP_HTTPCODE_PREFIX = "httpCode";
+    String PROP_METHOD_PREFIX = "httpMethod";
     String PROP_REQUESTTIME = "requestTime";
     String PROP_REQUESTTIME_AVG = "requestTimeAvg";
 

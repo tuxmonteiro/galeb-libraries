@@ -22,12 +22,10 @@ public class ConnectionMapManagerTest {
 
     @Test
     public void reduceTest() {
-        int z = 0;
+        int z, x;
+        z = x = 10;
         String uri = "UNDEF";
-        for (int x=0; x<10; x++) {
-            connectionMapManager.putOnCounterMap(uri, Integer.toString(x), x);
-            z = z + x;
-        }
+        connectionMapManager.putOnCounterMap(uri, x);
         assertThat(connectionMapManager.reduce().get(uri)).isEqualTo(z);
     }
 

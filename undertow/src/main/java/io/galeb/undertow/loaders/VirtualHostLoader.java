@@ -16,7 +16,10 @@
 
 package io.galeb.undertow.loaders;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.galeb.core.controller.EntityController.Action;
 import io.galeb.core.model.Entity;
@@ -25,7 +28,9 @@ import io.galeb.core.model.Rule;
 import io.galeb.core.model.VirtualHost;
 import io.galeb.undertow.handlers.PathGlobHandler;
 import io.undertow.server.HttpHandler;
+import io.undertow.server.handlers.IPAddressAccessControlHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
+import io.undertow.util.StatusCodes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -68,7 +73,18 @@ public class VirtualHostLoader implements Loader {
             case ADD:
                 if (!nameVirtualHostHandler.getHosts().containsKey(virtualhostId)) {
                     final HttpHandler pathHandler = new PathGlobHandler();
-                    nameVirtualHostHandler.addHost(virtualhostId, pathHandler);
+                    final AtomicReference<HttpHandler> nextHandler = new AtomicReference<>(pathHandler);
+                    Map<String, Object> properties = entity.getProperties();
+                    if (properties != null) {
+                        String ipACL = (String) properties.get(VirtualHost.ALLOW_PROPERTY);
+                        if (ipACL != null) {
+                            nextHandler.set(new IPAddressAccessControlHandler(pathHandler, StatusCodes.FORBIDDEN));
+                            Arrays.asList(ipACL.split(",")).stream().forEach(ip -> {
+                                ((IPAddressAccessControlHandler) nextHandler.get()).addAllow(ip);
+                            });
+                        }
+                    }
+                    nameVirtualHostHandler.addHost(virtualhostId, nextHandler.get());
                     isOk = true;
                 }
                 break;

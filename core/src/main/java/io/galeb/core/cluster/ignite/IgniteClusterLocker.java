@@ -26,6 +26,9 @@ import org.apache.ignite.IgniteSemaphore;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class IgniteClusterLocker implements ClusterLocker {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -49,16 +52,32 @@ public class IgniteClusterLocker implements ClusterLocker {
     }
 
     @Override
+    public String name() {
+        StringBuilder name = new StringBuilder();
+        try {
+            name.append(InetAddress.getLocalHost().getCanonicalHostName());
+        } catch (UnknownHostException e) {
+            name.append("UNKNOW");
+            LOGGER.error(e);
+        }
+        return name.append("|").append(ignite.cluster().localNode().id()).toString();
+    }
+
+    @Override
     public boolean lock(String lockName) {
-        IgniteSemaphore semaphore;
+        IgniteSemaphore semaphore = null;
         boolean result = false;
         try {
             semaphore = ignite.semaphore(lockName, 1, true, true);
             result = semaphore != null && semaphore.tryAcquire();
         } catch (IgniteException e) {
-            LOGGER.debug(e);
+            LOGGER.error(e);
         } finally {
-            LOGGER.info("Locking " + lockName + " " + (result ? "applied" : "not possible"));
+            if (result) {
+                LOGGER.info("Locking " + lockName + " applied");
+            } else {
+                LOGGER.warn("Locking " + lockName + " not possible (" + semaphore + ")");
+            }
         }
         return result;
     }
@@ -70,8 +89,6 @@ public class IgniteClusterLocker implements ClusterLocker {
             semaphore = ignite.semaphore(lockName, 1, true, false);
             if (semaphore != null) {
                 semaphore.release();
-            }
-            if (semaphore != null) {
                 semaphore.close();
             }
         } catch (IgniteException e) {
@@ -79,6 +96,19 @@ public class IgniteClusterLocker implements ClusterLocker {
         } finally {
             LOGGER.info("Lock " + lockName + " released");
         }
+    }
+
+
+    @Override
+    public Boolean contains(String lockName) {
+        IgniteSemaphore semaphore;
+        try {
+            semaphore = ignite.semaphore(lockName, 1, true, false);
+            return semaphore != null;
+        } catch (IgniteException e) {
+            LOGGER.debug(e);
+        }
+        return null;
     }
 
 }
