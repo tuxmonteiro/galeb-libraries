@@ -16,34 +16,28 @@
 
 package io.galeb.core.services;
 
-import java.util.Arrays;
-
-import javax.cache.Cache;
 import javax.inject.Inject;
 
-import io.galeb.core.cluster.ClusterEvents;
-import io.galeb.core.cluster.ClusterListener;
-import io.galeb.core.cluster.DistributedMap;
-import io.galeb.core.cluster.DistributedMapListener;
+import io.galeb.core.cluster.ClusterLocker;
 import io.galeb.core.controller.EntityController;
+import io.galeb.core.jcache.CacheFactory;
 import io.galeb.core.json.JsonObject;
-import io.galeb.core.logging.Logger;
-import io.galeb.core.model.Backend;
-import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
-import io.galeb.core.model.Rule;
-import io.galeb.core.model.VirtualHost;
 import io.galeb.core.statsd.StatsdClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import static io.galeb.core.model.Farm.getClassNameFromEntityType;
 
-public abstract class AbstractService implements DistributedMapListener,
-                                                 ClusterListener {
+public abstract class AbstractService {
 
-    public static final String LOGGER          = "logger";
-    public static final String FARM            = "farm";
-    public static final String DISTRIBUTEDMAP  = "distributedMap";
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    public static final String LOGGER_KEY      = "logger";
+    public static final String FARM_KEY        = "farm";
+    public static final String CACHEFACTORY    = "cacheFactory";
+    public static final String CLUSTERLOCKER   = "clusterLocker";
     public static final String STATSD          = "statsd";
     public static final String CLUSTER_EVENTS  = "clusterEvents";
     public static final String INTERVAL        = "interval";
@@ -52,130 +46,48 @@ public abstract class AbstractService implements DistributedMapListener,
     protected Farm farm;
 
     @Inject
-    protected DistributedMap<String, String> distributedMap;
-
-    @Inject
-    protected Logger logger;
-
-    @Inject
-    protected ClusterEvents clusterEvents;
-
-    @Inject
     protected StatsdClient statsdClient;
 
     @Inject
     protected ProcessorScheduler processorScheduler;
 
-    private boolean clusterListenerRegistered = false;
+    protected CacheFactory cacheFactory;
+
+    protected ClusterLocker clusterLocker;
 
     public AbstractService() {
         super();
     }
 
-    private void entityAdd(Entity entity) {
+    protected void entityAdd(String entityStr, Class<?> clazz) {
+        Entity entity = (Entity) JsonObject.fromJson(entityStr, clazz);
+        entity.setEntityType(clazz.getSimpleName().toLowerCase());
         EntityController entityController = farm.getController(
                 getClassNameFromEntityType(entity.getEntityType()));
         try {
             entityController.add(entity.copy());
+            LOGGER.warn("Loading entity " + entity + ": " + entityStr );
         } catch (Exception e) {
-            logger.error(e);
+            LOGGER.error(e);
         }
     }
 
-    private void registerCluster() {
-        clusterEvents.registerListener(this);
-        if (clusterEvents.isReady() && !clusterListenerRegistered) {
-            onClusterReady();
-        }
-    }
-
-    protected void prelaunch() {
-        registerCluster();
+    protected void startProcessorScheduler() {
+        processorScheduler.setupScheduler(farm);
+        processorScheduler.startProcessorJob();
+        LOGGER.info("ProcessorScheduler started");
     }
 
     public Farm getFarm() {
         return farm;
     }
 
-    public Logger getLogger() {
-        return logger;
+    public CacheFactory getCacheFactory() {
+        return cacheFactory;
     }
 
-    public DistributedMap<String, String> getDistributedMap() {
-        return distributedMap;
-    }
-
-    @Override
-    public void entryAdded(Entity entity) {
-        logger.info("entryAdded: "+entity.getId()+" ("+entity.getEntityType()+")");
-        entityAdd(entity);
-    }
-
-    @Override
-    public void entryRemoved(Entity entity) {
-        logger.info("entryRemoved: "+entity.getId()+" ("+entity.getEntityType()+")");
-        EntityController entityController = farm.getController(
-                getClassNameFromEntityType(entity.getEntityType()));
-        try {
-            entityController.del(entity.copy());
-        } catch (Exception e) {
-            logger.error(e);
-        }
-    }
-
-    @Override
-    public void entryUpdated(Entity entity) {
-        logger.info("entryUpdated: "+entity.getId()+" ("+entity.getEntityType()+")");
-        EntityController entityController = farm.getController(
-                getClassNameFromEntityType(entity.getEntityType()));
-        try {
-            entityController.change(entity.copy());
-        } catch (Exception e) {
-            logger.error(e);
-        }
-    }
-
-    @Override
-    public void mapCleared(String mapName) {
-        logger.info("mapCleared: "+mapName);
-        EntityController entityController = farm.getController(
-                getClassNameFromEntityType(mapName.toLowerCase()));
-        try {
-            entityController.delAll();
-        } catch (Exception e) {
-            logger.error(e);
-        }
-    }
-
-    @Override
-    public void entryEvicted(Entity entity) {
-        logger.info("entryEvicted: "+entity.getId()+" ("+entity.getEntityType()+")");
-        entryRemoved(entity);
-    }
-
-    @Override
-    public void mapEvicted(String mapName) {
-        logger.info("mapEvicted: "+mapName);
-        mapCleared(mapName);
-    }
-
-    @Override
-    public void onClusterReady() {
-        logger.info("== Cluster ready");
-        processorScheduler.setupScheduler(logger, farm);
-        processorScheduler.startProcessorJob();
-        distributedMap.registerListener(this);
-        Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class).stream()
-            .forEach(clazz -> {
-                Cache<String, String> map = distributedMap.getMap(clazz.getName());
-                map.forEach( entry -> {
-                    String value = entry.getValue();
-                    Entity entity = (Entity) JsonObject.fromJson(value, clazz);
-                    entity.setEntityType(clazz.getSimpleName().toLowerCase());
-                    entityAdd(entity);
-                });
-            });
-        clusterListenerRegistered = true;
+    public ClusterLocker getClusterLocker() {
+        return clusterLocker;
     }
 
 }

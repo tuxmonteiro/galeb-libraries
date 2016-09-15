@@ -16,13 +16,17 @@
  *  limitations under the License.
  */
 
-package io.galeb.ignite;
+package io.galeb.core.cluster;
 
-import io.galeb.core.cluster.DistributedMapStats;
+public interface ClusterLocker {
 
-public class IgniteDistributedMapStats implements DistributedMapStats {
-    @Override
-    public String getStats() {
-        return null;
-    }
+    boolean lock(String lockName);
+
+    void release(String lockName);
+
+    ClusterLocker start();
+
+    String name();
+
+    Boolean contains(String lockName);
 }

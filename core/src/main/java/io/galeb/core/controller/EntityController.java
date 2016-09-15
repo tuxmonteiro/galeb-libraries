@@ -48,6 +48,35 @@ public abstract class EntityController {
             return this;
         }
 
+        @Override
+        public EntityController add(Entity entity) throws Exception {
+            return this;
+        }
+
+        @Override
+        public EntityController del(Entity entity) throws Exception {
+            return this;
+        }
+
+        @Override
+        public EntityController delAll(Class<? extends Entity> clazz) {
+            return this;
+        }
+
+        @Override
+        public EntityController change(Entity entity) throws Exception {
+            return this;
+        }
+
+        @Override
+        public String get(Class<? extends Entity> clazz, String id) {
+            return JsonObject.NULL;
+        }
+
+        @Override
+        void setVersion(int version) {
+            // NO-OP
+        }
     };
 
     public EntityController(Farm farm) {

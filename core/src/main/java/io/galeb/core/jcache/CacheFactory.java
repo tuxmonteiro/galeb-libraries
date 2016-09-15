@@ -16,25 +16,29 @@
  *  limitations under the License.
  */
 
-package io.galeb.ignite;
+package io.galeb.core.jcache;
 
-import org.apache.ignite.*;
+import io.galeb.core.cluster.ClusterListener;
+import io.galeb.core.model.Farm;
 
-import java.util.concurrent.atomic.AtomicReference;
+import javax.cache.Cache;
 
-public class IgniteInstance {
+public interface CacheFactory {
 
-    public static Ignite INSTANCE = null;
-    static {
-        try {
-            INSTANCE = Ignition.start(System.getProperty("ignite.configuration.file", "ignite.xml"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    Object getClusterInstance();
+
+    default CacheFactory setFarm(final Farm farm) {
+        return this;
     }
 
-    public static void stop() {
-        INSTANCE.cluster().localNode().
-    }
+    Cache<String, String> getCache(String key);
+
+    default CacheFactory setListener(ClusterListener clusterListener) { return  this; }
+
+    default CacheFactory start() { return this; }
+
+    default CacheFactory listeningPutEvent() { return this; }
+
+    default CacheFactory listeningRemoveEvent() { return this; }
 
 }

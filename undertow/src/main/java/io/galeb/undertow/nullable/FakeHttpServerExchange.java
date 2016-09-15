@@ -16,6 +16,8 @@
 
 package io.galeb.undertow.nullable;
 
+import io.undertow.connector.ByteBufferPool;
+import io.undertow.connector.PooledByteBuffer;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.HttpUpgradeListener;
 import io.undertow.server.SSLSessionInfo;
@@ -220,5 +222,26 @@ public class FakeHttpServerExchange {
         public String getTransportProtocol() {
             return null;
         }
+
+        @Override
+        public ByteBufferPool getByteBufferPool() {
+            return new ByteBufferPool() {
+                @Override
+                public PooledByteBuffer allocate() {
+                    return null;
+                }
+
+                @Override
+                public void close() {
+
+                }
+
+                @Override
+                public int getBufferSize() {
+                    return 0;
+                }
+            };
+        }
+
     });
 }

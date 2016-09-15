@@ -27,8 +27,7 @@ public class Entity implements Serializable, Comparable<Entity> {
 
     private static final long serialVersionUID = 1L;
 
-    protected static final String SEP_COMPOUND_ID = "#";
-
+    public static final String SEP_COMPOUND_ID = "#";
 
     /** The primary key */
     @Expose private int                        pk            = -1;

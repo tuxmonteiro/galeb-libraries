@@ -28,7 +28,7 @@ import jodd.util.Wildcard;
 
 public class PathGlobHandler implements HttpHandler {
 
-    private HttpHandler defaultHandler = ResponseCodeHandler.HANDLE_404;
+    private HttpHandler defaultHandler = ResponseCodeHandler.HANDLE_500;
     private final Map<Rule, HttpHandler> rules = new CopyOnWriteMap<>();
 
     private Comparator<Map.Entry<Rule, HttpHandler>> ruleOrderComparator() {
@@ -63,6 +63,10 @@ public class PathGlobHandler implements HttpHandler {
         if (!hit.get()) {
             defaultHandler.handleRequest(exchange);
         }
+    }
+
+    public synchronized boolean contains(final Rule rule) {
+        return rules.containsKey(rule);
     }
 
     public synchronized PathGlobHandler addRule(final Rule rule, final HttpHandler handler) {

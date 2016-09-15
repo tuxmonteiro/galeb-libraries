@@ -29,6 +29,8 @@ import io.galeb.core.model.collections.NullEntityCollection;
 import io.galeb.core.model.collections.RuleCollection;
 import io.galeb.core.model.collections.VirtualHostCollection;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +46,20 @@ public class Farm extends Entity {
     private static final long serialVersionUID = 1L;
 
     public static final String CLASS_NAME = "Farm";
+
+    public static final String MAX_REQUEST_TIME_FARM_PROP    = "maxRequestTime";
+    public static final String FORCE_CHANGE_STATUS_FARM_PROP = "forceChangeStatus";
+
+    public static final Map<String, String> STATIC_PROPERTIES = Collections.synchronizedMap(new HashMap<>());
+
+    public static final Map<String, Class<? extends Entity>> ENTITY_CLASSES = new ConcurrentHashMap<>();
+    static {
+        ENTITY_CLASSES.put(Backend.class.getSimpleName().toLowerCase(), Backend.class);
+        ENTITY_CLASSES.put(BackendPool.class.getSimpleName().toLowerCase(), BackendPool.class);
+        ENTITY_CLASSES.put(Rule.class.getSimpleName().toLowerCase(), Rule.class);
+        ENTITY_CLASSES.put(VirtualHost.class.getSimpleName().toLowerCase(), VirtualHost.class);
+        ENTITY_CLASSES.put(Farm.class.getSimpleName().toLowerCase(), Farm.class);
+    }
 
     @Expose private final Collection<VirtualHost, Rule> virtualHosts = new VirtualHostCollection();
     @Expose private final Collection<BackendPool, Backend> backendPools = new BackendPoolCollection();
@@ -98,7 +114,7 @@ public class Farm extends Entity {
         }
     }
 
-    public static Class<?> getClassFromEntityType(String entityType) {
+    public static Class<? extends Entity> getClassFromEntityType(String entityType) {
         switch (entityType) {
             case "virtualhost":
                 return VirtualHost.class;
@@ -164,6 +180,15 @@ public class Farm extends Entity {
 
     public void clear(Class<? extends Entity> entityClass) {
         getCollection(entityClass).clear();
+    }
+
+    public boolean contains(final Entity entity) {
+        final Class<? extends Entity> entityType = getClassFromEntityType(entity.getEntityType());
+        if (entityType == null) {
+            return false;
+        }
+        return getCollection(entityType).stream()
+                .filter(e -> e.compoundId().equals(entity.compoundId())).count() > 0;
     }
 
     public Object getRootHandler() {

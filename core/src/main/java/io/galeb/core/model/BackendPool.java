@@ -40,7 +40,7 @@ public class BackendPool extends Entity {
 
     public static final String PROP_LOADBALANCE_POLICY = "loadBalancePolicy";
 
-    @Expose private final Set<Backend> backends = new ConcurrentSkipListSet<>();
+    @Expose private final Set<String> backends = new ConcurrentSkipListSet<>();
 
     public BackendPool() {
         super();
@@ -52,55 +52,28 @@ public class BackendPool extends Entity {
         updateETag();
     }
 
-    public Backend getBackend(String backendId) {
-        Backend backend = null;
-        for (final Backend backendTemp : backends) {
-            if (backendId.equals(backendTemp.getId())) {
-                backend = backendTemp;
-                break;
-            }
-        }
-        return backend;
+    private void setBackends(final Set<String> myBackends) {
+        final Set<String> copyBackends = new HashSet<>(myBackends);
+        backends.clear();
+        backends.addAll(copyBackends);
     }
 
-    public BackendPool addBackend(String json) {
-        final Backend backend = (Backend) JsonObject.fromJson(json, Backend.class);
-        return addBackend(backend);
+    private Set<String> getBackends() {
+        return backends;
     }
 
-    public BackendPool addBackend(Backend backend) {
-        backends.add(backend);
+    public BackendPool addBackend(String backendId) {
+        backends.add(backendId);
         return this;
     }
 
     public BackendPool delBackend(String backendId) {
-        final Backend backend = getBackend(backendId);
-        return delBackend(backend);
-    }
-
-    public BackendPool delBackend(Backend backend) {
-        if (backend!=null) {
-            backends.remove(backend);
-        }
+        backends.remove(backendId);
         return this;
     }
 
     public boolean containBackend(String backendId) {
-        return getBackend(backendId) != null;
-    }
-
-    public void clearBackends() {
-        backends.clear();
-    }
-
-    public Set<Backend> getBackends() {
-        return backends;
-    }
-
-    public void setBackends(final Set<Backend> myBackends) {
-        final Set<Backend> copyBackends = new HashSet<>(myBackends);
-        backends.clear();
-        backends.addAll(copyBackends);
+        return backends.contains(backendId);
     }
 
     @Override

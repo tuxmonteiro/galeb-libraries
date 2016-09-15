@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.xnio.OptionMap;
+import org.xnio.XnioExecutor;
 import org.xnio.XnioIoThread;
 import org.xnio.XnioWorker;
 
@@ -71,6 +72,11 @@ public class FakeXnioWorker {
         @Override
         protected XnioIoThread chooseThread() {
             return FakeXnioIoThread.NULL;
+        }
+
+        @Override
+        public XnioIoThread getIoThread(int i) {
+            return XnioIoThread.currentThread();
         }
     };
 }

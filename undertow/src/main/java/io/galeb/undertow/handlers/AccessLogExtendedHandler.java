@@ -16,36 +16,41 @@
 
 package io.galeb.undertow.handlers;
 
-import io.galeb.core.logging.*;
 import io.undertow.attribute.ExchangeAttribute;
 import io.undertow.attribute.ExchangeAttributes;
+import io.undertow.attribute.ResponseTimeAttribute;
 import io.undertow.attribute.SubstituteEmptyWrapper;
 import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.handlers.accesslog.AccessLogReceiver;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-public class AccessLogExtendedHandler implements HttpHandler {
+import java.util.concurrent.TimeUnit;
+
+public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStatusCode {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static final String REAL_DEST = "#REAL_DEST#";
     public static final String UNKNOWN = "UNKNOWN";
 
+    private final ResponseTimeAttribute responseTimeAttribute = new ResponseTimeAttribute(TimeUnit.MILLISECONDS);
     private final ExchangeCompletionListener exchangeCompletionListener = new AccessLogCompletionListener();
     private final AccessLogReceiver accessLogReceiver;
     private final ExchangeAttribute tokens;
     private final HttpHandler next;
-    private final Logger log;
+    private int maxRequestTime = Integer.MAX_VALUE - 1;
 
     public AccessLogExtendedHandler(HttpHandler next,
                                     AccessLogReceiver accessLogReceiver,
                                     String formatString,
-                                    ClassLoader classLoader,
-                                    Logger log) {
-        this.log = log;
+                                    ClassLoader classLoader) {
         this.next = next;
         this.accessLogReceiver = accessLogReceiver;
         tokens = ExchangeAttributes.parser(classLoader, new SubstituteEmptyWrapper("-")).parse(formatString);
-        log.info("AccessLogExtendedHandler enabled");
+        LOGGER.info("AccessLogExtendedHandler enabled");
     }
 
     @Override
@@ -62,16 +67,25 @@ public class AccessLogExtendedHandler implements HttpHandler {
                 final String tempRealDest = exchange.getAttachment(BackendSelector.REAL_DEST);
                 String realDest = tempRealDest != null ? tempRealDest : UNKNOWN;
                 String message = tokens.readAttribute(exchange);
-                int realStatus = exchange.getResponseCode();
-                if (UNKNOWN.equals(realDest)) {
-                    message = message.replaceAll("^([^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t)[^\t]+(\t.*)$", "$1" +
-                            String.valueOf(realStatus + 400) + "$2");
+                int realStatus = exchange.getStatusCode();
+                long responseBytesSent = exchange.getResponseBytesSent();
+                final Integer responseTime = Math.round(Float.parseFloat(responseTimeAttribute.readAttribute(exchange)));
+                int fakeStatusCode = getFakeStatusCode(tempRealDest, realStatus, responseBytesSent, responseTime, maxRequestTime);
+                if (fakeStatusCode != NOT_MODIFIED) {
+                    message = message.replaceAll("^([^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t[^\t]*\t)[^\t]+(\t.*)$",
+                            "$1" + String.valueOf(fakeStatusCode) + "$2");
                 }
                 accessLogReceiver.logMessage(message.replaceAll(REAL_DEST, realDest));
+            } catch (Exception e) {
+                LOGGER.error(e);
             } finally {
                 nextListener.proceed();
             }
         }
     }
 
+    public AccessLogExtendedHandler setMaxRequestTime(int maxRequestTime) {
+        this.maxRequestTime = maxRequestTime;
+        return this;
+    }
 }

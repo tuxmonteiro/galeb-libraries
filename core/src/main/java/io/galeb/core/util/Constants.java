@@ -16,14 +16,34 @@
 
 package io.galeb.core.util;
 
+import io.galeb.core.model.Backend;
+import io.galeb.core.model.BackendPool;
+import io.galeb.core.model.Entity;
+import io.galeb.core.model.Rule;
+import io.galeb.core.model.VirtualHost;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 public final class Constants {
+
+    public static final List<Class<? extends Entity>> ENTITY_CLASSES = Collections.unmodifiableList(
+            Arrays.asList(Backend.class, BackendPool.class, Rule.class, VirtualHost.class));
+
+    public static final Map<String, Class<? extends Entity>> ENTITY_MAP = Collections.unmodifiableMap(
+            ENTITY_CLASSES.stream().collect(Collectors.toMap(clazz -> clazz.getSimpleName().toLowerCase(),
+                                                             clazz -> clazz)));
 
     public enum SysProp {
         PROP_ENABLE_ACCESSLOG  ("io.galeb.accesslog"        , Boolean.toString(false)),
         PROP_MAXCONN           ("io.galeb.maxConn"          , String.valueOf(1000)),
         PROP_SCHEDULER_INTERVAL("io.galeb.schedulerInterval", String.valueOf(1000)),
         PROP_HOSTNAME          ("io.galeb.fqdn"             , System.getenv("HOSTNAME")),
-        PROP_REUSE_XFORWARDED  ("io.galeb.reuseXForwarded"  , Boolean.toString(false));
+        PROP_REUSE_XFORWARDED  ("io.galeb.reuseXForwarded"  , Boolean.toString(false)),
+        PROP_CLUSTER_CONF      ("io.galeb.cluster.conf"     , "cluster.xml");
 
         private final String name;
         private final String defaultStr;

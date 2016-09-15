@@ -16,7 +16,6 @@
 
 package io.galeb.core.controller;
 
-import io.galeb.core.json.JsonObject;
 import io.galeb.core.model.Backend;
 import io.galeb.core.model.Farm;
 

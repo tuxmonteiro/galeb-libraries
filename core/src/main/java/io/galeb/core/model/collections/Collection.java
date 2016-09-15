@@ -24,19 +24,12 @@ import java.util.Set;
 
 public interface Collection<T extends Entity, R extends Entity> extends Set<Entity> {
 
-    public List<Entity> getListByID(String entityId);
+    List<Entity> getListByID(String entityId);
 
-    public List<Entity> getListByJson(JsonObject json);
+    List<Entity> getListByJson(JsonObject json);
 
-    public Collection<T, R> change(Entity entity);
+    Collection<T, R> change(Entity entity);
 
-    public Collection<T, R> defineSetOfRelatives(Collection<? extends Entity, ? extends Entity> relatives);
+    default Collection<T, R> defineSetOfRelatives(Collection<? extends Entity, ? extends Entity> relatives) { return this; }
 
-    public default Collection<T, R> addChild(R child) {
-        return this;
-    }
-
-    public default Collection<T, R> addToParent(R parent, T child) {
-        return this;
-    }
 }
