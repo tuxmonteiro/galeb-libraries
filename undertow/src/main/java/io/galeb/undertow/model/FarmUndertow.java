@@ -47,6 +47,7 @@ import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 
 import io.undertow.util.CopyOnWriteMap;
+import io.undertow.util.Headers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.ExtendedLogger;
@@ -62,7 +63,16 @@ public class FarmUndertow extends Farm {
     private StatsdClient statsdClient;
 
     private HttpHandler rootHandler;
-    private final NameVirtualHostHandler virtualHostHandler = new NameVirtualHostHandler();
+    private final NameVirtualHostHandler virtualHostHandler = new NameVirtualHostHandler().addHost("__ping__", healthCheckHandler());
+
+    private HttpHandler healthCheckHandler() {
+        return httpServerExchange -> {
+            httpServerExchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+            httpServerExchange.getResponseHeaders().put(Headers.SERVER, "Galeb");
+            httpServerExchange.getResponseSender().send("WORKING");
+        };
+    }
+
     private final Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
 
     private int maxRequestTime = Integer.MAX_VALUE - 1;
