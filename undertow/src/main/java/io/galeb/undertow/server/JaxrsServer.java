@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
-package io.galeb.undertow.jaxrs;
+package io.galeb.undertow.server;
 
 import javax.ws.rs.core.Application;
-
-import io.galeb.undertow.router.Server;
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
 
-public class Deployer extends Server {
+public class JaxrsServer extends Server {
 
     private final UndertowJaxrsServer undertowJaxrsServer = new UndertowJaxrsServer();
     private final Application application;
 
-    public Deployer(Application application) {
+    public JaxrsServer(Application application) {
         this.application = application;
+        if (application == null) {
+            throw new NullPointerException();
+        }
     }
 
     @Override
     public void start() {
-        undertowJaxrsServer.deploy(application).start(undertowBuilder.getBuilder());
+        undertowJaxrsServer.deploy(application).start(getBuilder());
     }
 
 }

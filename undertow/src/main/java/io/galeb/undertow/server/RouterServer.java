@@ -14,26 +14,29 @@
  * limitations under the License.
  */
 
-package io.galeb.undertow.router;
+package io.galeb.undertow.server;
 
 import io.galeb.core.model.Farm;
 import io.undertow.server.HttpHandler;
 
-public class RouterApplication extends Server {
+public class RouterServer extends Server {
 
     private final Farm farm;
 
-    public RouterApplication(Farm farm) {
+    public RouterServer(Farm farm) {
         this.farm = farm;
+        if (farm == null) {
+            throw new NullPointerException();
+        }
     }
 
     @Override
     public void start() {
         final Object rootHandlerObj = farm.getRootHandler();
         if (rootHandlerObj instanceof HttpHandler) {
-            farm.setOptions(undertowBuilder.getOptions());
+            farm.setOptions(getOptions());
             HttpHandler rootHandler = (HttpHandler) rootHandlerObj;
-            undertowBuilder.getBuilder().setHandler(rootHandler).build().start();
+            getBuilder().setHandler(rootHandler).build().start();
         }
     }
 

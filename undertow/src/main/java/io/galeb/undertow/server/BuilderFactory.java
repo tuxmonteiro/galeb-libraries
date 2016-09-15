@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.galeb.undertow.router;
+package io.galeb.undertow.server;
 
 import io.undertow.Undertow;
 import io.undertow.Undertow.Builder;
@@ -24,33 +24,34 @@ import org.xnio.Options;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UndertowBuilder {
+class BuilderFactory {
 
-    public static final int DEFAULT_IO_THREADS = 4;
-    public static final int DEFAULT_NUM_WORKS = Runtime.getRuntime().availableProcessors() * 8;
-    public static final int DEFAULT_BACKLOG = 1000;
-    public static final int DEFAULT_IDLE_TIMEOUT = 0;
+    private static final int DEFAULT_IO_THREADS   = 4;
+    private static final int DEFAULT_NUM_WORKS    = Runtime.getRuntime().availableProcessors() * 8;
+    private static final int DEFAULT_BACKLOG      = 1000;
+    private static final int DEFAULT_IDLE_TIMEOUT = 0;
+
     private final Map<String, String> options = new HashMap<>();
 
     private int    port = 8080;
     private String host = "0.0.0.0";
 
-    public UndertowBuilder setHost(String host) {
+    public BuilderFactory setHost(String host) {
         this.host = host;
         return this;
     }
 
-    public UndertowBuilder setPort(int port) {
+    public BuilderFactory setPort(int port) {
         this.port = port;
         return this;
     }
 
-    public UndertowBuilder setOptions(final Map<String, String> options) {
+    public BuilderFactory setOptions(final Map<String, String> options) {
         this.options.putAll(options);
         return this;
     }
 
-    public UndertowBuilder clearOptions() {
+    public BuilderFactory clearOptions() {
         this.options.clear();
         return this;
     }
