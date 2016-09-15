@@ -64,7 +64,15 @@ public class FarmUndertow extends Farm {
     private StatsdClient statsdClient;
 
     private HttpHandler rootHandler;
-    private final NameVirtualHostHandler virtualHostHandler = new NameVirtualHostHandler();
+    private final NameVirtualHostHandler virtualHostHandler = new NameVirtualHostHandler().addHost("__ping__", healthCheckHandler());
+
+    private HttpHandler healthCheckHandler() {
+        return httpServerExchange -> {
+            httpServerExchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+            httpServerExchange.getResponseHeaders().put(Headers.SERVER, "Galeb");
+            httpServerExchange.getResponseSender().send("WORKING");
+        };
+    }
 
     private final Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
 
