@@ -55,6 +55,12 @@ import org.apache.logging.log4j.spi.ExtendedLogger;
 @Default
 public class FarmUndertow extends Farm {
 
+    private enum HEALTHCHECK_CONTENT {
+        WORKING,
+        EMPTY,
+        FAIL
+    }
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final long serialVersionUID = 1L;
@@ -69,7 +75,9 @@ public class FarmUndertow extends Farm {
         return httpServerExchange -> {
             httpServerExchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
             httpServerExchange.getResponseHeaders().put(Headers.SERVER, "Galeb");
-            httpServerExchange.getResponseSender().send("WORKING");
+            String healthCheckContent = isFarmFailed() ? HEALTHCHECK_CONTENT.FAIL.toString() :
+                                        isVirtualhostsNotEmpty() ? HEALTHCHECK_CONTENT.WORKING.toString() : HEALTHCHECK_CONTENT.EMPTY.toString();
+            httpServerExchange.getResponseSender().send(healthCheckContent);
         };
     }
 
