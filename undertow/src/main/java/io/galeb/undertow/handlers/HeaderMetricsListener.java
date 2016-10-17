@@ -98,6 +98,8 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
         final String backend = StatsdClient.cleanUpKey(backendId);
         final String key = virtualhost + StatsdClient.STATSD_SEP + backend + StatsdClient.STATSD_SEP + StatsdClient.PROP_METHOD_PREFIX + StatsdClient.STATSD_SEP + method;
         statsdClient.incr(key);
+        final String vhKey = virtualhost + StatsdClient.STATSD_SEP + StatsdClient.PROP_METHOD_PREFIX + StatsdClient.STATSD_SEP + method;
+        statsdClient.incr(vhKey);
     }
 
     private void sendHttpStatusCount(String virtualhostId, String backendId, String httpStatus) {
@@ -105,6 +107,8 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
         final String backend = StatsdClient.cleanUpKey(backendId);
         final String key = virtualhost + StatsdClient.STATSD_SEP + backend + StatsdClient.STATSD_SEP + StatsdClient.PROP_HTTPCODE_PREFIX+httpStatus;
         statsdClient.incr(key);
+        final String vhKey = virtualhost + StatsdClient.STATSD_SEP + StatsdClient.PROP_HTTPCODE_PREFIX + httpStatus;
+        statsdClient.incr(vhKey);
     }
 
 
@@ -113,6 +117,8 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
         final String backend = StatsdClient.cleanUpKey(backendId);
         final String key = virtualhost + StatsdClient.STATSD_SEP + backend + StatsdClient.STATSD_SEP + StatsdClient.PROP_REQUESTTIME;
         statsdClient.timing(key, requestTime);
+        final String vhKey = virtualhost + StatsdClient.STATSD_SEP + StatsdClient.PROP_REQUESTTIME;
+        statsdClient.timing(vhKey, requestTime);
     }
 
 }
