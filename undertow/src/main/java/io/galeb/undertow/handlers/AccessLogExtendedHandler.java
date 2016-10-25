@@ -73,10 +73,9 @@ public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStat
                 int fakeStatusCode = getFakeStatusCode(tempRealDest, realStatus, responseBytesSent, responseTime, maxRequestTime);
                 if (fakeStatusCode != NOT_MODIFIED) {
                     message = message.replaceAll("^(.*Local:\t)\\d{3}(\t.*Proxy:\t)\\d{3}(\t.*)$",
-                            "$1" + String.valueOf(fakeStatusCode) + "$2" + String.valueOf(fakeStatusCode) + "$3")
-                            .replaceAll("( )+", "\t");
+                            "$1" + String.valueOf(fakeStatusCode) + "$2" + String.valueOf(fakeStatusCode) + "$3");
                 }
-                accessLogReceiver.logMessage(message.replaceAll(REAL_DEST, realDest));
+                accessLogReceiver.logMessage(message.replaceAll(REAL_DEST, realDest).replaceAll("( )+", "\t"));
             } catch (Exception e) {
                 LOGGER.error(e);
             } finally {
