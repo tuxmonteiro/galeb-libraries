@@ -101,7 +101,7 @@ public class FarmUndertow extends Farm {
         final String enableAccessLogProperty = System.getProperty(SysProp.PROP_ENABLE_ACCESSLOG.toString(),
                                                                   SysProp.PROP_ENABLE_ACCESSLOG.def());
 
-        final String LOGPATTERN = "%a\t%v\t%r\t-\t-\tLocal:\t%s\t%B\t%T\tProxy:\t%s\t-\t%b\t-\t"
+        final String LOGPATTERN = "%a\t%v\t%r\t-\t-\tLocal:\t%s\t%B\t%D\tProxy:\t%s\t-\t%b\t-\t"
                 + AccessLogExtendedHandler.REAL_DEST + "\tAgent:\t%{i,User-Agent}\tFwd:\t%{i,X-Forwarded-For}";
 
         final AccessLogReceiver accessLogReceiver  = new AccessLogReceiver() {
