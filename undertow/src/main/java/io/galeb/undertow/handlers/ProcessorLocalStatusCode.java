@@ -37,7 +37,7 @@ interface ProcessorLocalStatusCode {
 
             statusLogged = HttpStatus.SC_BAD_GATEWAY + OFFSET_LOCAL_ERROR;
 
-        } else if (statusCode >= HttpStatus.SC_INTERNAL_SERVER_ERROR && backend == null) {
+        } else if (backend == null) {
 
             statusLogged = statusCode + OFFSET_LOCAL_ERROR;
 
