@@ -23,6 +23,7 @@ import io.galeb.core.jcache.CacheFactory;
 import io.galeb.core.json.JsonObject;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
+import org.apache.commons.collections.map.UnmodifiableMap;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.events.CacheEvent;
@@ -33,11 +34,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.cache.Cache;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static io.galeb.core.model.Entity.SEP_COMPOUND_ID;
@@ -87,12 +84,19 @@ public class IgniteCacheFactory implements CacheFactory {
                         case EventType.EVT_CACHE_OBJECT_REMOVED:
                             removedEvent(event);
                             break;
+                        case EventType.EVT_NODE_JOINED:
+                            nodeJoinedEvent(event);
+                            registerEventDetail(event);
+                            break;
+                        case EventType.EVT_NODE_LEFT:
+                            nodeLeftEvent(event);
+                            registerEventDetail(event);
+                            break;
                         case EventType.EVT_NODE_FAILED:
+                            nodeLeftEvent(event);
                         case EventType.EVT_CACHE_NODES_LEFT:
                         case EventType.EVT_CACHE_REBALANCE_STARTED:
                         case EventType.EVT_CACHE_REBALANCE_STOPPED:
-                        case EventType.EVT_NODE_JOINED:
-                        case EventType.EVT_NODE_LEFT:
                         case EventType.EVT_NODE_SEGMENTED:
                         case EventType.EVT_CACHE_STOPPED:
                             registerEventDetail(event);
@@ -116,6 +120,26 @@ public class IgniteCacheFactory implements CacheFactory {
         return this;
     }
 
+    private void nodeLeftEvent(Event event) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("eventMessage", event.message());
+        map.put("eventType", EventTypeResolver.EVENTS.get(event.type()));
+        map.put("eventHostnames", event.node().hostNames());
+        map.put("currentNodes", getNodesHostname());
+
+        farm.nodeLeftEvent(Collections.unmodifiableMap(map));
+    }
+
+    private void nodeJoinedEvent(Event event) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("eventMessage", event.message());
+        map.put("eventType", EventTypeResolver.EVENTS.get(event.type()));
+        map.put("eventHostnames", event.node().hostNames());
+        map.put("currentNodes", getNodesHostname());
+
+        farm.nodeJoinedEvent(Collections.unmodifiableMap(map));
+    }
+
     private void registerEventDetail(Event event) {
         LOGGER.warn(EventTypeResolver.EVENTS.get(event.type()) + ": " + event.toString());
         showActiveNodes();
@@ -128,7 +152,7 @@ public class IgniteCacheFactory implements CacheFactory {
 
     private String[] getNodesHostname() {
         final String[] hostnames = new String[1];
-        ignite.cluster().nodes().stream().forEach(node -> {
+        ignite.cluster().nodes().forEach(node -> {
             hostnames[0] = (hostnames[0] != null ? hostnames[0] : "") + " " + node.hostNames().stream().reduce((t, u) -> t + " " + u).get();
         });
         return hostnames;

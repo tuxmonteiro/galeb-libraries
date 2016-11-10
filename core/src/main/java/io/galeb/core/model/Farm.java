@@ -16,6 +16,7 @@
 
 package io.galeb.core.model;
 
+import io.galeb.core.cluster.ignite.NodeEventListener;
 import io.galeb.core.controller.BackendController;
 import io.galeb.core.controller.BackendPoolController;
 import io.galeb.core.controller.EntityController;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import javax.enterprise.inject.Alternative;
@@ -41,7 +43,7 @@ import javax.enterprise.inject.Alternative;
 import com.google.gson.annotations.Expose;
 
 @Alternative
-public class Farm extends Entity {
+public class Farm extends Entity implements NodeEventListener {
 
     private static final long serialVersionUID = 1L;
 
@@ -77,6 +79,8 @@ public class Farm extends Entity {
                                                     .setRuleController(ruleController);
 
     private final Map<String, String> options = new ConcurrentHashMap<>();
+
+    private final List<FarmListener> farmListeners = new CopyOnWriteArrayList<>();
 
     public Farm() {
         setEntityType(Farm.class.getSimpleName().toLowerCase());
@@ -209,5 +213,23 @@ public class Farm extends Entity {
                    )
             )
             .collect(Collectors.toList());
+    }
+
+    public synchronized void registerFarmListener(FarmListener farmListener) {
+        farmListeners.add(farmListener);
+    }
+
+    public synchronized void unregisterFarmListener(FarmListener farmListener) {
+        farmListeners.remove(farmListener);
+    }
+
+    @Override
+    public void nodeLeftEvent(final Map map) {
+        farmListeners.forEach(farmListener -> farmListener.nodeLeftEvent(map));
+    }
+
+    @Override
+    public void nodeJoinedEvent(Map map) {
+        farmListeners.forEach(farmListener -> farmListener.nodeJoinedEvent(map));
     }
 }
