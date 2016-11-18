@@ -61,8 +61,8 @@ public class Farm extends Entity {
         ENTITY_CLASSES.put(Farm.class.getSimpleName().toLowerCase(), Farm.class);
     }
 
-    @Expose private final Collection<VirtualHost, Rule> virtualHosts = new VirtualHostCollection();
-    @Expose private final Collection<BackendPool, Backend> backendPools = new BackendPoolCollection();
+    private final Collection<VirtualHost, Rule> virtualHosts = new VirtualHostCollection();
+    private final Collection<BackendPool, Backend> backendPools = new BackendPoolCollection();
     private final Collection<Backend, BackendPool> backends = new BackendCollection();
     private final Collection<Rule, VirtualHost> rules = new RuleCollection();
 
@@ -164,6 +164,15 @@ public class Farm extends Entity {
             default:
                 return new NullEntityCollection();
         }
+    }
+
+    protected boolean isVirtualhostsNotEmpty() {
+        return !virtualHosts.isEmpty();
+    }
+
+    // TODO: Check FAIL state
+    protected boolean isFarmFailed() {
+        return false;
     }
 
     public void add(Entity entity) {
