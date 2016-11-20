@@ -28,6 +28,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStatusCode {
 
@@ -72,8 +74,15 @@ public class AccessLogExtendedHandler implements HttpHandler, ProcessorLocalStat
                 final Integer responseTime = Math.round(Float.parseFloat(responseTimeAttribute.readAttribute(exchange)));
                 int fakeStatusCode = getFakeStatusCode(tempRealDest, realStatus, responseBytesSent, responseTime, maxRequestTime);
                 if (fakeStatusCode != NOT_MODIFIED) {
-                    message = message.replaceAll("^(.*Local: )\\d{3}(\t.*Proxy: )\\d{3}(\t.*)$",
+                    message = message.replaceAll("^(.*Local:\t)\\d{3}(\t.*Proxy:\t)\\d{3}(\t.*)$",
                             "$1" + String.valueOf(fakeStatusCode) + "$2" + String.valueOf(fakeStatusCode) + "$3");
+                }
+                Pattern compile = Pattern.compile("([^\\t]*\\t[^\\t]*\\t)([^\\t]+)(\\t.*)$");
+                Matcher match = compile.matcher(message);
+                if (match.find()) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(match.group(1)).append(match.group(2).replace(" ", "\t")).append(match.group(3));
+                    message = sb.toString();
                 }
                 accessLogReceiver.logMessage(message.replaceAll(REAL_DEST, realDest));
             } catch (Exception e) {
