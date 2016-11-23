@@ -61,7 +61,7 @@ public class RuleLoader implements Loader {
     }
 
     @Override
-    public void from(Entity entity, Action action) {
+    public synchronized void from(Entity entity, Action action) {
         if (action.equals(Action.DEL_ALL)) {
             farm.getCollection(Rule.class).stream().forEach(rule -> from(rule, Action.DEL));
             return;
@@ -142,7 +142,7 @@ public class RuleLoader implements Loader {
     }
 
     @Override
-    public void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
+    public synchronized void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
         from(entity, Action.CHANGE);
     }
 
