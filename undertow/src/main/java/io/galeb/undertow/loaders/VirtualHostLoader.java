@@ -58,7 +58,7 @@ public class VirtualHostLoader implements Loader {
     }
 
     @Override
-    public void from(Entity entity, Action action) {
+    public synchronized void from(Entity entity, Action action) {
         if (action.equals(Action.DEL_ALL)) {
             final Farm farm = (Farm) entity;
             farm.getCollection(VirtualHost.class).forEach(virtualhost -> from(virtualhost, Action.DEL));
@@ -116,7 +116,7 @@ public class VirtualHostLoader implements Loader {
     }
 
     @Override
-    public void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
+    public synchronized void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
         from(entity, Action.CHANGE);
     }
 
