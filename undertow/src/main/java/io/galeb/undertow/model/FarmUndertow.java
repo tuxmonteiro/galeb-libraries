@@ -38,6 +38,7 @@ import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.accesslog.AccessLogReceiver;
 
+import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,9 @@ import javax.inject.Inject;
 
 import io.undertow.util.CopyOnWriteMap;
 import io.undertow.util.Headers;
+import net.sf.json.JSONObject;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.ExtendedLogger;
@@ -69,7 +73,9 @@ public class FarmUndertow extends Farm {
     private StatsdClient statsdClient;
 
     private HttpHandler rootHandler;
-    private final NameVirtualHostHandler virtualHostHandler = new NameVirtualHostHandler().addHost("__ping__", healthCheckHandler());
+    private final NameVirtualHostHandler virtualHostHandler = new NameVirtualHostHandler()
+            .addHost("__ping__", healthCheckHandler())
+            .addHost("__info__", infoHandler());
 
     private HttpHandler healthCheckHandler() {
         return httpServerExchange -> {
@@ -79,6 +85,30 @@ public class FarmUndertow extends Farm {
                                         isVirtualhostsNotEmpty() ? HEALTHCHECK_CONTENT.WORKING.toString() : HEALTHCHECK_CONTENT.EMPTY.toString();
             httpServerExchange.getResponseSender().send(healthCheckContent);
         };
+    }
+
+    private HttpHandler infoHandler() {
+        return infoExchange -> {
+            long uptimeJVM = ManagementFactory.getRuntimeMXBean().getUptime();
+            String uptime = getUptimeSO();
+            String version = getClass().getPackage().getImplementationVersion();
+            String infoJson = new JSONObject().accumulate("uptime-so", uptime).accumulate("uptime-jvm", uptimeJVM).accumulate("version", version).toString();
+            infoExchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+            infoExchange.getResponseHeaders().put(Headers.SERVER, "Galeb");
+            infoExchange.getResponseSender().send(infoJson);
+        };
+    }
+
+    private String getUptimeSO() {
+        ProcessBuilder processBuilder = new ProcessBuilder("uptime");
+        processBuilder.redirectErrorStream(true);
+        try {
+            Process process = processBuilder.start();
+            return IOUtils.toString(process.getInputStream()).replace("\n", "");
+        } catch (Exception e) {
+            LOGGER.error(ExceptionUtils.getStackTrace(e));
+            return "";
+        }
     }
 
     private final Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
