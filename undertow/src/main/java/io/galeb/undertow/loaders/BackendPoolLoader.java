@@ -77,7 +77,7 @@ public class BackendPoolLoader implements Loader {
     }
 
     @Override
-    public void from(Entity entity, Action action) {
+    public synchronized void from(Entity entity, Action action) {
         if (action.equals(Action.DEL_ALL)) {
             final Farm farmAsEntity = (Farm) entity;
             farmAsEntity.getCollection(BackendPool.class).stream()
@@ -138,7 +138,7 @@ public class BackendPoolLoader implements Loader {
     }
 
     @Override
-    public void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
+    public synchronized void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
         from(entity, Action.CHANGE);
     }
 

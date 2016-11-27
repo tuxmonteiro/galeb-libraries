@@ -38,6 +38,7 @@ import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
 import io.undertow.server.handlers.accesslog.AccessLogReceiver;
 
+import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,12 +49,21 @@ import javax.inject.Inject;
 
 import io.undertow.util.CopyOnWriteMap;
 import io.undertow.util.Headers;
+import net.sf.json.JSONObject;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.spi.ExtendedLogger;
 
 @Default
 public class FarmUndertow extends Farm {
+
+    private enum HEALTHCHECK_CONTENT {
+        WORKING,
+        EMPTY,
+        FAIL
+    }
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -63,14 +73,42 @@ public class FarmUndertow extends Farm {
     private StatsdClient statsdClient;
 
     private HttpHandler rootHandler;
-    private final NameVirtualHostHandler virtualHostHandler = new NameVirtualHostHandler().addHost("__ping__", healthCheckHandler());
+    private final NameVirtualHostHandler virtualHostHandler = new NameVirtualHostHandler()
+            .addHost("__ping__", healthCheckHandler())
+            .addHost("__info__", infoHandler());
 
     private HttpHandler healthCheckHandler() {
         return httpServerExchange -> {
             httpServerExchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
             httpServerExchange.getResponseHeaders().put(Headers.SERVER, "Galeb");
-            httpServerExchange.getResponseSender().send("WORKING");
+            String healthCheckContent = isFarmFailed() ? HEALTHCHECK_CONTENT.FAIL.toString() :
+                                        isVirtualhostsNotEmpty() ? HEALTHCHECK_CONTENT.WORKING.toString() : HEALTHCHECK_CONTENT.EMPTY.toString();
+            httpServerExchange.getResponseSender().send(healthCheckContent);
         };
+    }
+
+    private HttpHandler infoHandler() {
+        return infoExchange -> {
+            long uptimeJVM = ManagementFactory.getRuntimeMXBean().getUptime();
+            String uptime = getUptimeSO();
+            String version = getClass().getPackage().getImplementationVersion();
+            String infoJson = new JSONObject().accumulate("uptime-so", uptime).accumulate("uptime-jvm", uptimeJVM).accumulate("version", version).toString();
+            infoExchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "text/plain");
+            infoExchange.getResponseHeaders().put(Headers.SERVER, "Galeb");
+            infoExchange.getResponseSender().send(infoJson);
+        };
+    }
+
+    private String getUptimeSO() {
+        ProcessBuilder processBuilder = new ProcessBuilder("uptime");
+        processBuilder.redirectErrorStream(true);
+        try {
+            Process process = processBuilder.start();
+            return IOUtils.toString(process.getInputStream()).replace("\n", "");
+        } catch (Exception e) {
+            LOGGER.error(ExceptionUtils.getStackTrace(e));
+            return "";
+        }
     }
 
     private final Map<Class<? extends Entity>, Loader> mapOfLoaders = new HashMap<>();
@@ -101,10 +139,8 @@ public class FarmUndertow extends Farm {
         final String enableAccessLogProperty = System.getProperty(SysProp.PROP_ENABLE_ACCESSLOG.toString(),
                                                                   SysProp.PROP_ENABLE_ACCESSLOG.def());
 
-        final String EXTENDED_LOGPATTERN = "(%v -> " + AccessLogExtendedHandler.REAL_DEST
-                                           + " [%D]ms \"X-Real-IP: %{i,X-Real-IP}\""
-                                           + " \"X-Forwarded-For: %{i,X-Forwarded-For}\")";
-        final String LOGPATTERN = "%h\t%l\t%u\t%t\t%r\t%s\t%b\t" + EXTENDED_LOGPATTERN;
+        final String LOGPATTERN = "%a\t%v\t%r\t-\t-\tLocal:\t%s\t*-\t%B\t%D\tProxy:\t"+ AccessLogExtendedHandler.REAL_DEST +"\t%s\t-\t%b\t-\t-"+
+                 "\tAgent:\t%{i,User-Agent}\tFwd:\t%{i,X-Forwarded-For}";
 
         final AccessLogReceiver accessLogReceiver  = new AccessLogReceiver() {
             private final ExtendedLogger logger =

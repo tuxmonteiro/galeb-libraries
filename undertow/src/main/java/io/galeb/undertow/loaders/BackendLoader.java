@@ -50,7 +50,7 @@ public class BackendLoader implements Loader {
     }
 
     @Override
-    public void from(Entity entity, Action action) {
+    public synchronized void from(Entity entity, Action action) {
         if (action.equals(Action.DEL_ALL)) {
             farm.getCollection(Backend.class).stream().forEach(backend -> from(backend, Action.DEL));
             return;
@@ -102,7 +102,7 @@ public class BackendLoader implements Loader {
     }
 
     @Override
-    public void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
+    public synchronized void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
         from(entity, Action.CHANGE);
     }
 
