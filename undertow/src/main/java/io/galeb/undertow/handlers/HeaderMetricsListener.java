@@ -18,6 +18,7 @@ package io.galeb.undertow.handlers;
 
 import io.galeb.core.statsd.NullStatsdClient;
 import io.galeb.core.statsd.StatsdClient;
+import io.galeb.core.util.Constants;
 import io.undertow.attribute.ResponseTimeAttribute;
 import io.undertow.server.ExchangeCompletionListener;
 import io.undertow.server.HttpServerExchange;
@@ -27,16 +28,27 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+
+import static io.galeb.core.statsd.StatsdClient.PROP_HTTPCODE_PREFIX;
+import static io.galeb.core.statsd.StatsdClient.PROP_METHOD_PREFIX;
+import static io.galeb.core.statsd.StatsdClient.PROP_REQUESTTIME;
+import static io.galeb.core.statsd.StatsdClient.STATSD_SEP;
 
 class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLocalStatusCode {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final String CLUSTER_ID_PREFIX = "_";
 
     private final ResponseTimeAttribute responseTimeAttribute = new ResponseTimeAttribute(TimeUnit.MILLISECONDS);
 
     private StatsdClient statsdClient = new NullStatsdClient();
     private int maxRequestTime = Integer.MAX_VALUE - 1;
     private boolean forceChangeStatus = false;
+    private final String clusterId = System.getProperty(Constants.SysProp.PROP_CLUSTER_ID.toString(),
+                                                        Constants.SysProp.PROP_CLUSTER_ID.def())
+                                            .replaceAll("[-_](blue|green)$","");
 
     @Override
     public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
@@ -93,32 +105,34 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
         return this;
     }
 
-    private void sendHttpMethodCount(String virtualhostId, String backendId, String method) {
+    private void sendHttpMethodCount(final String virtualhostId, final String backendId, final String method) {
         final String virtualhost = StatsdClient.cleanUpKey(virtualhostId);
         final String backend = StatsdClient.cleanUpKey(backendId);
-        final String key = virtualhost + StatsdClient.STATSD_SEP + backend + StatsdClient.STATSD_SEP + StatsdClient.PROP_METHOD_PREFIX + StatsdClient.STATSD_SEP + method;
-        statsdClient.incr(key);
-        final String vhKey = virtualhost + StatsdClient.STATSD_SEP + StatsdClient.PROP_METHOD_PREFIX + StatsdClient.STATSD_SEP + method;
-        statsdClient.incr(vhKey);
+        final Stream<String> keys = Stream.of(
+                virtualhost + STATSD_SEP + backend + STATSD_SEP + PROP_METHOD_PREFIX + STATSD_SEP + method,
+                virtualhost + STATSD_SEP + PROP_METHOD_PREFIX + STATSD_SEP + method,
+                CLUSTER_ID_PREFIX + clusterId + STATSD_SEP + PROP_METHOD_PREFIX + STATSD_SEP + method);
+        keys.forEach(k -> statsdClient.incr(k));
     }
 
     private void sendHttpStatusCount(String virtualhostId, String backendId, String httpStatus) {
         final String virtualhost = StatsdClient.cleanUpKey(virtualhostId);
         final String backend = StatsdClient.cleanUpKey(backendId);
-        final String key = virtualhost + StatsdClient.STATSD_SEP + backend + StatsdClient.STATSD_SEP + StatsdClient.PROP_HTTPCODE_PREFIX+httpStatus;
-        statsdClient.incr(key);
-        final String vhKey = virtualhost + StatsdClient.STATSD_SEP + StatsdClient.PROP_HTTPCODE_PREFIX + httpStatus;
-        statsdClient.incr(vhKey);
+        final Stream<String> keys = Stream.of(
+                virtualhost + STATSD_SEP + backend + STATSD_SEP + PROP_HTTPCODE_PREFIX + httpStatus,
+                virtualhost + STATSD_SEP + PROP_HTTPCODE_PREFIX + httpStatus,
+                CLUSTER_ID_PREFIX + clusterId + STATSD_SEP + PROP_HTTPCODE_PREFIX + STATSD_SEP + httpStatus);
+        keys.forEach(k -> statsdClient.incr(k));
     }
-
 
     private void sendRequestTime(String virtualhostId, String backendId, long requestTime) {
         final String virtualhost = StatsdClient.cleanUpKey(virtualhostId);
         final String backend = StatsdClient.cleanUpKey(backendId);
-        final String key = virtualhost + StatsdClient.STATSD_SEP + backend + StatsdClient.STATSD_SEP + StatsdClient.PROP_REQUESTTIME;
-        statsdClient.timing(key, requestTime);
-        final String vhKey = virtualhost + StatsdClient.STATSD_SEP + StatsdClient.PROP_REQUESTTIME;
-        statsdClient.timing(vhKey, requestTime);
+        final Stream<String> keys = Stream.of(
+                virtualhost + STATSD_SEP + backend + STATSD_SEP + PROP_REQUESTTIME,
+                virtualhost + STATSD_SEP + PROP_REQUESTTIME,
+                CLUSTER_ID_PREFIX + clusterId + STATSD_SEP + PROP_REQUESTTIME);
+        keys.forEach(k -> statsdClient.timing(k, requestTime));
     }
 
 }

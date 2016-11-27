@@ -43,7 +43,8 @@ public final class Constants {
         PROP_SCHEDULER_INTERVAL("io.galeb.schedulerInterval", String.valueOf(1000)),
         PROP_HOSTNAME          ("io.galeb.fqdn"             , System.getenv("HOSTNAME")),
         PROP_REUSE_XFORWARDED  ("io.galeb.reuseXForwarded"  , Boolean.toString(false)),
-        PROP_CLUSTER_CONF      ("io.galeb.cluster.conf"     , "cluster.xml");
+        PROP_CLUSTER_CONF      ("io.galeb.cluster.conf"     , "cluster.xml"),
+        PROP_CLUSTER_ID        ("io.galeb.cluster.id"       , "UNDEF");
 
         private final String name;
         private final String defaultStr;
