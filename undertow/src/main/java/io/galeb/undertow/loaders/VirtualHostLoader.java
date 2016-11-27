@@ -31,6 +31,7 @@ import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.IPAddressAccessControlHandler;
 import io.undertow.server.handlers.NameVirtualHostHandler;
 import io.undertow.util.StatusCodes;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -57,11 +58,10 @@ public class VirtualHostLoader implements Loader {
     }
 
     @Override
-    public void from(Entity entity, Action action) {
+    public synchronized void from(Entity entity, Action action) {
         if (action.equals(Action.DEL_ALL)) {
             final Farm farm = (Farm) entity;
-            farm.getCollection(VirtualHost.class).stream()
-                    .forEach(virtualhost -> from(virtualhost, Action.DEL));
+            farm.getCollection(VirtualHost.class).forEach(virtualhost -> from(virtualhost, Action.DEL));
             return;
         }
 
@@ -79,7 +79,7 @@ public class VirtualHostLoader implements Loader {
                         String ipACL = (String) properties.get(VirtualHost.ALLOW_PROPERTY);
                         if (ipACL != null) {
                             nextHandler.set(new IPAddressAccessControlHandler(pathHandler, StatusCodes.FORBIDDEN));
-                            Arrays.asList(ipACL.split(",")).stream().forEach(ip -> {
+                            Arrays.stream(StringUtils.remove(ipACL, " ").split(",")).forEach(ip -> {
                                 ((IPAddressAccessControlHandler) nextHandler.get()).addAllow(ip);
                             });
                         }
@@ -116,7 +116,7 @@ public class VirtualHostLoader implements Loader {
     }
 
     @Override
-    public void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
+    public synchronized void changeIfNecessary(List<Entity> oldEntities, Entity entity) {
         from(entity, Action.CHANGE);
     }
 
