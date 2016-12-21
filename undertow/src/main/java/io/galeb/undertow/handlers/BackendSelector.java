@@ -81,7 +81,8 @@ public class BackendSelector implements HostSelector {
                 if (enabledStickCookie) {
                     setStickCookie(host.getUri().toString());
                 }
-                trace(host.getUri().toString());
+                final URI uri = host.getUri();
+                trace(uri != null ? uri.toString() : "UNDEF");
             }
         } catch (final IndexOutOfBoundsException e) {
             LOGGER.error(e);
