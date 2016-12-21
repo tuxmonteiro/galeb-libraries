@@ -27,6 +27,7 @@ import io.galeb.core.statsd.StatsdClient;
 import io.galeb.core.util.Constants.SysProp;
 import io.galeb.undertow.handlers.AccessLogExtendedHandler;
 import io.galeb.undertow.handlers.BackendProxyClient;
+import io.galeb.undertow.handlers.InternalServerErrorHandler;
 import io.galeb.undertow.handlers.MonitorHeadersHandler;
 import io.galeb.undertow.loaders.BackendLoader;
 import io.galeb.undertow.loaders.BackendPoolLoader;
@@ -131,8 +132,11 @@ public class FarmUndertow extends Farm {
         this.forceChangeStatus = Boolean.valueOf(STATIC_PROPERTIES.getOrDefault(FORCE_CHANGE_STATUS_FARM_PROP, String.valueOf(false)));
 
         virtualHostHandler.setDefaultHandler(ResponseCodeHandler.HANDLE_500);
+
+        final HttpHandler internalServerErrorHandler = new InternalServerErrorHandler(virtualHostHandler);
+
         final HttpHandler hostMetricsHandler =
-                new MonitorHeadersHandler(virtualHostHandler).setStatsd(statsdClient)
+                new MonitorHeadersHandler(internalServerErrorHandler).setStatsd(statsdClient)
                                                              .setMaxRequestTime(maxRequestTime)
                                                              .forceChangeStatus(forceChangeStatus);
 
