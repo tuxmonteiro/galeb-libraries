@@ -72,14 +72,18 @@ public class RouterApplication {
         final int maxWorks = options.containsKey("max_workers") ? Integer.parseInt(options.get("max_workers")) : works;
         final int backlog = options.containsKey("backlog") ? Integer.parseInt(options.get("backlog")) : 1000;
         final int idleTimeout = options.containsKey("idleTimeout") ? Integer.parseInt(options.get("idleTimeout")) : -1;
+        final int readTimeout = options.containsKey("readTimeout") ? Integer.parseInt(options.get("readTimeout")) : 120000;
+        final int noRequestTimeout = options.containsKey("noRequestTimeout") ? Integer.parseInt(options.get("noRequestTimeout")) : 120000;
 
         final Undertow router = Undertow.builder().addHttpListener(port, host)
                 .setServerOption(UndertowOptions.RECORD_REQUEST_START_TIME, true)
                 .setServerOption(UndertowOptions.IDLE_TIMEOUT, idleTimeout)
+                .setServerOption(UndertowOptions.NO_REQUEST_TIMEOUT, noRequestTimeout)
                 .setIoThreads(iothreads)
                 .setWorkerThreads(works)
                 .setWorkerOption(Options.WORKER_TASK_MAX_THREADS, maxWorks)
                 .setSocketOption(Options.BACKLOG, backlog)
+                .setSocketOption(Options.READ_TIMEOUT, readTimeout)
                 .setHandler(rootHandler)
                 .build();
 
