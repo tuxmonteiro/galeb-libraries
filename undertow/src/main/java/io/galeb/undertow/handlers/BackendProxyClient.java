@@ -43,7 +43,7 @@ import io.undertow.server.handlers.proxy.ProxyConnection;
 public class BackendProxyClient implements ProxyClient {
 
     private final LoadBalancingProxyClient loadBalanceProxyClient;
-    private final BackendSelector backendSelector = new BackendSelector();
+    private final BackendSelector backendSelector = new BackendSelector().setTimeOutExpirableURI(60000);
     private final Lock lock = new ReentrantLock();
 
     public BackendProxyClient() {
@@ -130,6 +130,7 @@ public class BackendProxyClient implements ProxyClient {
     }
 
     public synchronized boolean contains(final URI host) {
+        backendSelector.cleanUpMapExpirableURI();
         return  backendSelector.contains(host);
     }
 
@@ -212,8 +213,7 @@ public class BackendProxyClient implements ProxyClient {
         lock.lock();
         try {
             if (!backendSelector.contains(host)) {
-                loadBalanceProxyClient.addHost(bindAddress, host, jvmRoute, ssl,
-                        options);
+                loadBalanceProxyClient.addHost(bindAddress, host, jvmRoute, ssl, options);
                 backendSelector.addHost(host);
                 backendSelector.reset();
             }
