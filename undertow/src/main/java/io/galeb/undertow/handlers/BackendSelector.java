@@ -129,11 +129,21 @@ public class BackendSelector implements HostSelector {
             enabledStickCookie = params.get(LoadBalancePolicy.PROP_STICK) != null;
         }
         int hostID = -1;
+        int hostIDCopied = -1;
         final Host[] availableHostsCopy = filterAvaliableHosts(availableHosts);
         if (enabledStickCookie) {
-            hostID = findStickHostID(availableHostsCopy);
+            hostIDCopied = findStickHostID(availableHostsCopy);
         }
-        hostID = hostID > -1 ? hostID : getChoice(availableHostsCopy);
+        hostIDCopied = hostIDCopied > -1 ? hostIDCopied : getChoice(availableHostsCopy);
+        if (hostIDCopied > -1) {
+            String uriStrChoosen = (availableHostsCopy[hostIDCopied]).getUri().toString();
+            for (int x = 0; x < availableHosts.length; x++) {
+                if ((availableHosts[x]).getUri().toString().equals(uriStrChoosen)) {
+                    hostID = x;
+                    break;
+                }
+            }
+        }
         try {
             final Host host = availableHostsCopy[hostID > -1 ? hostID : 0];
             if (host!=null) {
