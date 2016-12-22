@@ -130,7 +130,6 @@ public class BackendProxyClient implements ProxyClient {
     }
 
     public synchronized boolean contains(final URI host) {
-        backendSelector.cleanUpMapExpirableURI();
         return  backendSelector.contains(host);
     }
 

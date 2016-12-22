@@ -255,6 +255,7 @@ public class BackendSelector implements HostSelector {
     }
 
     public boolean contains(URI host) {
+        cleanUpMapExpirableURI();
         final String hash = hashAlgorithm.hash(host.toString()).asString();
         return hosts.containsKey(hash);
     }
