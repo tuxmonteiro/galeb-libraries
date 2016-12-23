@@ -45,6 +45,7 @@ public class RuleLoader implements Loader {
     private final Farm farm;
     private Map<String, BackendProxyClient> backendPools = new HashMap<>();
     private HttpHandler virtualHostHandler = null;
+    private int maxRequestTime = Integer.MAX_VALUE - 1;
 
     public RuleLoader(final Farm farm) {
         this.farm = farm;
@@ -85,8 +86,6 @@ public class RuleLoader implements Loader {
             switch (action) {
                 case ADD:
                     if (hasTarget(rule.getTargetId())) {
-                        final int maxRequestTime = 0;
-
                         if (!Integer.toString(StatusCodes.NOT_FOUND).equals(rule.getTargetId())) {
                             final BackendProxyClient backendPool = backendPools.get(rule.getTargetId());
                             if (backendPool==null) {
@@ -160,4 +159,8 @@ public class RuleLoader implements Loader {
         return Boolean.valueOf(reuseXForwardedStr);
     }
 
+    public RuleLoader setMaxRequestTime(int maxRequestTime) {
+        this.maxRequestTime = maxRequestTime;
+        return this;
+    }
 }

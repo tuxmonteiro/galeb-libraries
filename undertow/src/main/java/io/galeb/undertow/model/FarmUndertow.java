@@ -175,6 +175,7 @@ public class FarmUndertow extends Farm {
                                                 .setBackendLoader(backendLoader));
 
         mapOfLoaders.put(Rule.class, ruleLoader = new RuleLoader(this)
+                                                .setMaxRequestTime(maxRequestTime)
                                                 .setBackendPools(backendPoolsUndertow)
                                                 .setVirtualHostHandler(virtualHostHandler));
 
