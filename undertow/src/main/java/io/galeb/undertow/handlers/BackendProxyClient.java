@@ -55,6 +55,8 @@ public class BackendProxyClient implements ProxyClient {
                                         UndertowClient.getInstance(),
                                         exclusivityChecker,
                                         backendSelector);
+
+        backendSelector.setLoadBalancingProxyClient(loadBalanceProxyClient);
     }
 
     @Override
@@ -227,7 +229,7 @@ public class BackendProxyClient implements ProxyClient {
         lock.lock();
         try {
             if (backendSelector.contains(host)) {
-                loadBalanceProxyClient.removeHost(host);
+//                loadBalanceProxyClient.removeHost(host);
                 backendSelector.removeHost(host);
                 backendSelector.reset();
             }

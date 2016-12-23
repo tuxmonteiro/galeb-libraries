@@ -26,12 +26,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class BackendCollection implements Collection<Backend, BackendPool> {
 
     private final Set<Entity> backends = new ConcurrentSkipListSet<>();
 
     private Collection<? extends Entity, ? extends Entity> backendPools;
+    private ConcurrentSkipListSet<Backend> backendsHealth = new ConcurrentSkipListSet<>();
 
     @Override
     public Collection<Backend, BackendPool> defineSetOfRelatives(Collection<? extends Entity, ? extends Entity> relatives) {
@@ -59,6 +61,9 @@ public class BackendCollection implements Collection<Backend, BackendPool> {
                 .filter(backendPool -> backendPool.getId().equals(backend.getParentId()))
                 .forEach(backendPool -> ((BackendPool)backendPool).addBackend(backend.getId()));
             backends.add(backend);
+            if (((Backend)backend).getHealth() == Backend.Health.HEALTHY) {
+                backendsHealth.add((Backend) backend);
+            }
         }
         return result;
     }
@@ -69,6 +74,9 @@ public class BackendCollection implements Collection<Backend, BackendPool> {
         backendPools.stream()
             .filter(backendPool -> ((BackendPool) backendPool).containBackend(backendId))
             .forEach(backendPool -> ((BackendPool) backendPool).delBackend(backendId));
+        if (((Backend)backend).getHealth() == Backend.Health.HEALTHY) {
+            backendsHealth.remove(backend);
+        }
         return backends.remove(backend);
     }
 
@@ -83,6 +91,9 @@ public class BackendCollection implements Collection<Backend, BackendPool> {
                             .map(b -> (Backend)b).findFirst().orElse(null);
                     if (myBackend != null) {
                         backends.remove(myBackend);
+                        if (((Backend)backend).getHealth() == Backend.Health.HEALTHY) {
+                            backendsHealth.remove(backend);
+                        }
                         myBackend.setHealth(((Backend) backend).getHealth());
                         myBackend.setProperties(backend.getProperties());
                         myBackend.setVersion(backend.getVersion());
@@ -90,6 +101,9 @@ public class BackendCollection implements Collection<Backend, BackendPool> {
                         myBackend.updateETag();
                         myBackend.updateModifiedAt();
                         backends.add(myBackend);
+                        if (((Backend)backend).getHealth() == Backend.Health.HEALTHY) {
+                            backendsHealth.add((Backend) backend);
+                        }
                     }
                 });
         }
@@ -98,7 +112,7 @@ public class BackendCollection implements Collection<Backend, BackendPool> {
 
     @Override
     public void clear() {
-        backends.stream().forEach(backend -> backends.remove(backend));
+        backends.forEach(this::remove);
     }
 
     @Override
@@ -151,4 +165,7 @@ public class BackendCollection implements Collection<Backend, BackendPool> {
         return backends.removeAll(c);
     }
 
+    public Stream<Backend> streamHealthy() {
+        return backendsHealth.stream();
+    }
 }

@@ -21,6 +21,7 @@ import io.galeb.core.model.Backend;
 import io.galeb.core.model.BackendPool;
 import io.galeb.core.model.Entity;
 import io.galeb.core.model.Farm;
+import io.galeb.core.model.collections.BackendCollection;
 
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -41,21 +42,20 @@ public class LeastConnPolicy extends LoadBalancePolicy {
     public int getChoice() {
         if (farm!=null && backendPoolId!=null && backends.isEmpty()) {
 
-            Comparator<? super Entity> backendComparator = (b1, b2) ->
-                Integer.compare(((Backend) b1).getConnections(), ((Backend) b2).getConnections());
+            Comparator<? super Entity> backendComparator = Comparator.comparingInt(b -> ((Backend) b).getConnections());
 
-            backends.addAll(farm.getCollection(Backend.class).stream()
+            backends.addAll(((BackendCollection)farm.getCollection(Backend.class)).streamHealthy()
                                 .filter(backend -> backend.getParentId().equals(backendPoolId))
                                 .sorted(backendComparator)
                                 .limit(Integer.toUnsignedLong((int) ((uris.size()*cuttingLine) - Float.MIN_VALUE)))
-                                .map(backend -> backend.getId())
+                                .map(Entity::getId)
                                 .collect(Collectors.toCollection(LinkedList::new)));
         }
 
         int pos = 0;
         String choice = backends.poll();
         if (choice!=null) {
-            pos = uris.indexOf(choice);
+            pos = expirableURIS.stream().map(e -> e.getUri().toString()).collect(Collectors.toCollection(LinkedList::new)).indexOf(choice);
         }
         return pos >= 0 ? pos : 0;
     }

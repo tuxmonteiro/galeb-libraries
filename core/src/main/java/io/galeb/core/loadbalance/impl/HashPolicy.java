@@ -16,11 +16,13 @@
 
 package io.galeb.core.loadbalance.impl;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.IntPredicate;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import com.google.common.primitives.Ints;
+import io.galeb.core.loadbalance.ExpirableURI;
 import io.galeb.core.loadbalance.LoadBalancePolicy;
 import io.galeb.core.util.consistenthash.ConsistentHash;
 import io.galeb.core.util.consistenthash.HashAlgorithm;
@@ -40,14 +42,13 @@ public class HashPolicy extends LoadBalancePolicy {
 
     private int numReplicas = 1;
 
-    private final ConsistentHash<Integer> consistentHash =
-            new ConsistentHash<Integer>(hashAlgorithm, numReplicas, new ArrayList<Integer>());
+    private final ConsistentHash<Integer> consistentHash = new ConsistentHash<>(hashAlgorithm, numReplicas, new ArrayList<>());
 
     private void reloadPos() {
         listPos.clear();
-        for (final String uri: uris) {
-            listPos.add(uris.indexOf(uri));
-        }
+        IntPredicate isNotQuarantine = i -> expirableURIS.get(i) != null && !expirableURIS.get(i).isQuarantine();
+        List<Integer> posExpirableURIS = IntStream.range(0, expirableURIS.size() - 1).filter(isNotQuarantine).boxed().collect(Collectors.toCollection(LinkedList::new));
+        listPos.addAll(posExpirableURIS);
     }
 
     @Override

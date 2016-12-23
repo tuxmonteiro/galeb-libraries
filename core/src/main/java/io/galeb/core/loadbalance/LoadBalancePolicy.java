@@ -72,6 +72,8 @@ public abstract class LoadBalancePolicy {
 
     protected LinkedList<String> uris = new LinkedList<>();
 
+    protected LinkedList<ExpirableURI> expirableURIS;
+
     protected volatile Optional<String> aKey = Optional.empty();
 
     protected KeyTypeLocator keyTypeLocator = KeyTypeLocator.NULL;
@@ -115,9 +117,9 @@ public abstract class LoadBalancePolicy {
         return this;
     }
 
-    public LoadBalancePolicy mapOfHosts(final LinkedList<String> uris) {
+    public LoadBalancePolicy mapOfHosts(final LinkedList<ExpirableURI> expirableURIS) {
         if (isReseted()) {
-            this.uris = uris;
+            this.expirableURIS = expirableURIS;
         }
         return this;
     }

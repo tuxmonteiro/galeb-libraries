@@ -15,17 +15,17 @@ public class CloseConnectionIfNecessaryListener implements ExchangeCompletionLis
 
     @Override
     public void exchangeEvent(HttpServerExchange exchange, NextListener nextListener) {
-        try {
-            int statusCode = exchange.getStatusCode();
-            if (statusCode >= SC_INTERNAL_SERVER_ERROR) {
-                LOGGER.error("Calling CloseConnectionIfNecessaryListener: statusCode = " + Integer.toString(statusCode));
-                IoUtils.safeClose(exchange.getConnection());
-            }
-        } catch (Exception e) {
-            LOGGER.error(ExceptionUtils.getStackTrace(e));
-        }
-        finally {
+//        try {
+//            int statusCode = exchange.getStatusCode();
+//            if (statusCode >= SC_INTERNAL_SERVER_ERROR) {
+//                LOGGER.error("Calling CloseConnectionIfNecessaryListener: statusCode = " + Integer.toString(statusCode));
+//                IoUtils.safeClose(exchange.getConnection());
+//            }
+//        } catch (Exception e) {
+//            LOGGER.error(ExceptionUtils.getStackTrace(e));
+//        }
+//        finally {
             nextListener.proceed();
-        }
+//        }
     }
 }
