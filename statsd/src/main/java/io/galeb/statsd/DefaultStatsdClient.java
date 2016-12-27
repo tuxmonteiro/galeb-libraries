@@ -24,9 +24,6 @@ import javax.enterprise.inject.Produces;
 import javax.inject.Singleton;
 
 import com.timgroup.statsd.NonBlockingStatsDClient;
-import com.timgroup.statsd.StatsDClient;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 @Default
 @Singleton
@@ -34,11 +31,8 @@ public class DefaultStatsdClient implements StatsdClient {
 
     private static final StatsdClient INSTANCE = new DefaultStatsdClient();
 
-    private final ThreadLocal<AtomicReference<StatsDClient>> client = ThreadLocal.withInitial(() -> new AtomicReference<>(null));
-
-    private String server = StatsdClient.getHost();
-    private int port = Integer.valueOf(StatsdClient.getPort());
-    private String prefix = StatsdClient.getPrefix();
+    private final NonBlockingStatsDClient client =
+            new NonBlockingStatsDClient(StatsdClient.getPrefix(), StatsdClient.getHost(), Integer.valueOf(StatsdClient.getPort()));
 
     private DefaultStatsdClient() {
         // SINGLETON
@@ -47,28 +41,6 @@ public class DefaultStatsdClient implements StatsdClient {
     @Produces @StatsdClientSingletoneProducer
     public static StatsdClient getInstance() {
         return INSTANCE;
-    }
-
-    private synchronized void prepare() {
-        client.get().compareAndSet(null, new NonBlockingStatsDClient(prefix, server, port));
-    }
-
-    @Override
-    public StatsdClient host(String server) {
-        this.server = server;
-        return this;
-    }
-
-    @Override
-    public StatsdClient port(int port) {
-        this.port = port;
-        return this;
-    }
-
-    @Override
-    public StatsdClient prefix(String prefix) {
-        this.prefix= prefix;
-        return this;
     }
 
     @Override
@@ -93,8 +65,7 @@ public class DefaultStatsdClient implements StatsdClient {
 
     @Override
     public void decr(String metricName, int step, double rate) {
-        prepare();
-        client.get().get().count(metricName, -1*step, rate);
+        client.count(metricName, -1*step, rate);
     }
 
     @Override
@@ -114,8 +85,7 @@ public class DefaultStatsdClient implements StatsdClient {
 
     @Override
     public void count(String metricName, int value, double rate) {
-        prepare();
-        client.get().get().count(metricName, value, rate);
+        client.count(metricName, value, rate);
     }
 
     @Override
@@ -125,8 +95,7 @@ public class DefaultStatsdClient implements StatsdClient {
 
     @Override
     public void gauge(String metricName, double value, double rate) {
-        prepare();
-        client.get().get().recordGaugeValue(metricName, value);
+        client.recordGaugeValue(metricName, value);
     }
 
     @Override
@@ -136,8 +105,7 @@ public class DefaultStatsdClient implements StatsdClient {
 
     @Override
     public void set(String metricName, String value, double rate) {
-        prepare();
-        client.get().get().recordSetEvent(metricName, value);
+        client.recordSetEvent(metricName, value);
     }
 
     @Override
@@ -147,8 +115,7 @@ public class DefaultStatsdClient implements StatsdClient {
 
     @Override
     public void timing(String metricName, long value, double rate) {
-        prepare();
-        client.get().get().recordExecutionTime(metricName, value, rate);
+        client.recordExecutionTime(metricName, value, rate);
     }
 
     @Override

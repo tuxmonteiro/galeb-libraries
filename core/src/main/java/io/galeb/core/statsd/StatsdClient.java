@@ -21,36 +21,19 @@ public interface StatsdClient {
     String STATSD_HOST   = "host";
     String STATSD_PORT   = "port";
     String STATSD_PREFIX = "prefix";
-
     String STATSD_SEP    = ".";
-
-    String PREFIX = StatsdClient.class.getPackage().getName();
-
-    static void setup() {
-        if (System.getProperty(PREFIX + STATSD_SEP + STATSD_HOST)==null) {
-            System.setProperty(PREFIX + STATSD_SEP + STATSD_HOST, "127.0.0.1");
-        }
-        if (System.getProperty(PREFIX + STATSD_SEP + STATSD_PORT)==null) {
-            System.setProperty(PREFIX + STATSD_SEP + STATSD_PORT, "8125");
-        }
-        if (System.getProperty(PREFIX + STATSD_SEP + STATSD_PREFIX)==null) {
-            System.setProperty(PREFIX + STATSD_SEP + STATSD_PREFIX, "galeb");
-        }
-    }
+    String STATSD_PACKAGE = StatsdClient.class.getPackage().getName();
 
     static String getHost() {
-        setup();
-        return System.getProperty(PREFIX + STATSD_SEP + STATSD_HOST);
+        return System.getProperty(STATSD_PACKAGE + STATSD_SEP + STATSD_HOST);
     }
 
     static String getPort() {
-        setup();
-        return System.getProperty(PREFIX + STATSD_SEP + STATSD_PORT);
+        return System.getProperty(STATSD_PACKAGE + STATSD_SEP + STATSD_PORT);
     }
 
     static String getPrefix() {
-        setup();
-        return System.getProperty(PREFIX + STATSD_SEP + STATSD_PREFIX);
+        return System.getProperty(STATSD_PACKAGE + STATSD_SEP + STATSD_PREFIX);
     }
 
     static String cleanUpKey(String key) {
