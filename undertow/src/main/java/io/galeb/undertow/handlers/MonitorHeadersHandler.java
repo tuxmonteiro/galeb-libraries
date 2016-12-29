@@ -40,7 +40,7 @@ public class MonitorHeadersHandler implements HttpHandler {
         next.handleRequest(exchange);
     }
 
-    public MonitorHeadersHandler setStatsd(StatsdClient statsdClient) {
+    public MonitorHeadersHandler setStatsd(final StatsdClient statsdClient) {
         this.statsdClient = statsdClient;
         return this;
     }
