@@ -21,20 +21,18 @@ import io.galeb.core.statsd.annotation.StatsdClientSingletoneProducer;
 
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Produces;
+import javax.inject.Singleton;
 
 import com.timgroup.statsd.NonBlockingStatsDClient;
-import com.timgroup.statsd.StatsDClient;
 
 @Default
+@Singleton
 public class DefaultStatsdClient implements StatsdClient {
 
     private static final StatsdClient INSTANCE = new DefaultStatsdClient();
 
-    private StatsDClient client = null;
-
-    private String server = StatsdClient.getHost();
-    private int port = Integer.valueOf(StatsdClient.getPort());
-    private String prefix = StatsdClient.getPrefix();
+    private final NonBlockingStatsDClient client =
+            new NonBlockingStatsDClient(StatsdClient.getPrefix(), StatsdClient.getHost(), Integer.valueOf(StatsdClient.getPort()));
 
     private DefaultStatsdClient() {
         // SINGLETON
@@ -43,30 +41,6 @@ public class DefaultStatsdClient implements StatsdClient {
     @Produces @StatsdClientSingletoneProducer
     public static StatsdClient getInstance() {
         return INSTANCE;
-    }
-
-    private synchronized void prepare() {
-        if (client==null) {
-            client = new NonBlockingStatsDClient(prefix, server, port);
-        }
-    }
-
-    @Override
-    public StatsdClient host(String server) {
-        this.server = server;
-        return this;
-    }
-
-    @Override
-    public StatsdClient port(int port) {
-        this.port = port;
-        return this;
-    }
-
-    @Override
-    public StatsdClient prefix(String prefix) {
-        this.prefix= prefix;
-        return this;
     }
 
     @Override
@@ -91,7 +65,6 @@ public class DefaultStatsdClient implements StatsdClient {
 
     @Override
     public void decr(String metricName, int step, double rate) {
-        prepare();
         client.count(metricName, -1*step, rate);
     }
 
@@ -112,7 +85,6 @@ public class DefaultStatsdClient implements StatsdClient {
 
     @Override
     public void count(String metricName, int value, double rate) {
-        prepare();
         client.count(metricName, value, rate);
     }
 
@@ -123,7 +95,6 @@ public class DefaultStatsdClient implements StatsdClient {
 
     @Override
     public void gauge(String metricName, double value, double rate) {
-        prepare();
         client.recordGaugeValue(metricName, value);
     }
 
@@ -134,7 +105,6 @@ public class DefaultStatsdClient implements StatsdClient {
 
     @Override
     public void set(String metricName, String value, double rate) {
-        prepare();
         client.recordSetEvent(metricName, value);
     }
 
@@ -145,7 +115,6 @@ public class DefaultStatsdClient implements StatsdClient {
 
     @Override
     public void timing(String metricName, long value, double rate) {
-        prepare();
         client.recordExecutionTime(metricName, value, rate);
     }
 

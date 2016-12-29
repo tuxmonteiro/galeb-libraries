@@ -21,36 +21,19 @@ public interface StatsdClient {
     String STATSD_HOST   = "host";
     String STATSD_PORT   = "port";
     String STATSD_PREFIX = "prefix";
-
     String STATSD_SEP    = ".";
-
-    String PREFIX = StatsdClient.class.getPackage().getName();
-
-    static void setup() {
-        if (System.getProperty(PREFIX + STATSD_SEP + STATSD_HOST)==null) {
-            System.setProperty(PREFIX + STATSD_SEP + STATSD_HOST, "127.0.0.1");
-        }
-        if (System.getProperty(PREFIX + STATSD_SEP + STATSD_PORT)==null) {
-            System.setProperty(PREFIX + STATSD_SEP + STATSD_PORT, "8125");
-        }
-        if (System.getProperty(PREFIX + STATSD_SEP + STATSD_PREFIX)==null) {
-            System.setProperty(PREFIX + STATSD_SEP + STATSD_PREFIX, "galeb");
-        }
-    }
+    String STATSD_PACKAGE = StatsdClient.class.getPackage().getName();
 
     static String getHost() {
-        setup();
-        return System.getProperty(PREFIX + STATSD_SEP + STATSD_HOST);
+        return System.getProperty(STATSD_PACKAGE + STATSD_SEP + STATSD_HOST, "127.0.0.1");
     }
 
     static String getPort() {
-        setup();
-        return System.getProperty(PREFIX + STATSD_SEP + STATSD_PORT);
+        return System.getProperty(STATSD_PACKAGE + STATSD_SEP + STATSD_PORT, "8125");
     }
 
     static String getPrefix() {
-        setup();
-        return System.getProperty(PREFIX + STATSD_SEP + STATSD_PREFIX);
+        return System.getProperty(STATSD_PACKAGE + STATSD_SEP + STATSD_PREFIX, "galeb");
     }
 
     static String cleanUpKey(String key) {
@@ -62,18 +45,6 @@ public interface StatsdClient {
     String PROP_METHOD_PREFIX = "httpMethod";
     String PROP_REQUESTTIME = "requestTime";
     String PROP_REQUESTTIME_AVG = "requestTimeAvg";
-
-    default StatsdClient host(String server) {
-        return this;
-    }
-
-    default StatsdClient port(int port) {
-        return this;
-    }
-
-    default StatsdClient prefix(String prefix) {
-        return this;
-    }
 
     default void incr(String metricName) {
         // default

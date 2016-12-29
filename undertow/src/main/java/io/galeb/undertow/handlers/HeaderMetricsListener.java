@@ -16,7 +16,6 @@
 
 package io.galeb.undertow.handlers;
 
-import io.galeb.core.statsd.NullStatsdClient;
 import io.galeb.core.statsd.StatsdClient;
 import io.galeb.core.util.Constants;
 import io.undertow.attribute.ResponseTimeAttribute;
@@ -30,10 +29,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import static io.galeb.core.statsd.StatsdClient.PROP_HTTPCODE_PREFIX;
-import static io.galeb.core.statsd.StatsdClient.PROP_METHOD_PREFIX;
-import static io.galeb.core.statsd.StatsdClient.PROP_REQUESTTIME;
-import static io.galeb.core.statsd.StatsdClient.STATSD_SEP;
+import static io.galeb.core.statsd.StatsdClient.*;
 
 class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLocalStatusCode {
 
@@ -43,7 +39,8 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
 
     private final ResponseTimeAttribute responseTimeAttribute = new ResponseTimeAttribute(TimeUnit.MILLISECONDS);
 
-    private StatsdClient statsdClient = new NullStatsdClient();
+    private StatsdClient statsdClient;
+
     private int maxRequestTime = Integer.MAX_VALUE - 1;
     private boolean forceChangeStatus = false;
     private final String clusterId = System.getProperty(Constants.SysProp.PROP_CLUSTER_ID.toString(),
@@ -100,7 +97,7 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
     }
 
 
-    public HeaderMetricsListener setStatsd(StatsdClient statsdClient) {
+    public HeaderMetricsListener setStatsd(final StatsdClient statsdClient) {
         this.statsdClient = statsdClient;
         return this;
     }
