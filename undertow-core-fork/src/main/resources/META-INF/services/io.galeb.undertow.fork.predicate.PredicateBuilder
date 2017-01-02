@@ -1,0 +1,13 @@
+io.galeb.fork.undertow.predicate.PathMatchPredicate$Builder
+io.galeb.fork.undertow.predicate.PathPrefixPredicate$Builder
+io.galeb.fork.undertow.predicate.ContainsPredicate$Builder
+io.galeb.fork.undertow.predicate.ExistsPredicate$Builder
+io.galeb.fork.undertow.predicate.RegularExpressionPredicate$Builder
+io.galeb.fork.undertow.predicate.PathSuffixPredicate$Builder
+io.galeb.fork.undertow.predicate.EqualsPredicate$Builder
+io.galeb.fork.undertow.predicate.PathTemplatePredicate$Builder
+io.galeb.fork.undertow.predicate.MethodPredicate$Builder
+io.galeb.fork.undertow.predicate.AuthenticationRequiredPredicate$Builder
+io.galeb.fork.undertow.predicate.MaxContentSizePredicate$Builder
+io.galeb.fork.undertow.predicate.MinContentSizePredicate$Builder
+io.galeb.fork.undertow.predicate.SecurePredicate$Builder
