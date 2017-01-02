@@ -1,7 +1,7 @@
 package io.galeb.undertow.handlers;
 
-import io.galeb.fork.undertow.server.HttpHandler;
-import io.galeb.fork.undertow.server.HttpServerExchange;
+import io.galeb.undertow.fork.server.HttpHandler;
+import io.galeb.undertow.fork.server.HttpServerExchange;
 
 public class InternalServerErrorHandler implements HttpHandler {
 

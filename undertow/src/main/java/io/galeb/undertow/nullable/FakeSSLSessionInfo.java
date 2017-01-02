@@ -16,8 +16,8 @@
 
 package io.galeb.undertow.nullable;
 
-import io.galeb.fork.undertow.server.HttpServerExchange;
-import io.galeb.fork.undertow.server.SSLSessionInfo;
+import io.galeb.undertow.fork.server.HttpServerExchange;
+import io.galeb.undertow.fork.server.SSLSessionInfo;
 
 import java.security.cert.Certificate;
 

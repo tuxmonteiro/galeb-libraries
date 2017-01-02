@@ -4,7 +4,7 @@ import java.util.EnumSet;
 
 import io.galeb.core.extractable.RequestURI;
 import io.galeb.core.loadbalance.hash.ExtractableKey;
-import io.galeb.fork.undertow.server.HttpServerExchange;
+import io.galeb.undertow.fork.server.HttpServerExchange;
 
 public class UndertowURI implements RequestURI {
 

@@ -12,7 +12,6 @@
     <module>core</module>
     <module>undertow</module>
     <module>statsd</module>
-    <module>undertow-core-fork</module>
   </modules>
 
   <organization>

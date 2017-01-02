@@ -22,9 +22,9 @@ import java.util.Map;
 import org.xnio.Options;
 
 import io.galeb.core.model.Farm;
-import io.galeb.fork.undertow.Undertow;
-import io.galeb.fork.undertow.UndertowOptions;
-import io.galeb.fork.undertow.server.HttpHandler;
+import io.galeb.undertow.fork.Undertow;
+import io.galeb.undertow.fork.UndertowOptions;
+import io.galeb.undertow.fork.server.HttpHandler;
 
 public class RouterApplication {
 

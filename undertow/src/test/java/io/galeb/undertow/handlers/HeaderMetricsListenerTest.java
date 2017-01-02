@@ -1,8 +1,8 @@
 package io.galeb.undertow.handlers;
 
-import io.galeb.fork.undertow.server.Connectors;
-import io.galeb.fork.undertow.server.HttpServerExchange;
-import io.galeb.fork.undertow.server.ServerConnection;
+import io.galeb.undertow.fork.server.Connectors;
+import io.galeb.undertow.fork.server.HttpServerExchange;
+import io.galeb.undertow.fork.server.ServerConnection;
 import org.junit.Test;
 import org.springframework.util.Assert;
 
