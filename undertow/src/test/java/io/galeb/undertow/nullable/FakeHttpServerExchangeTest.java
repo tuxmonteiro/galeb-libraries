@@ -21,8 +21,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.net.SocketAddress;
 
-import io.undertow.server.SSLSessionInfo;
-import io.undertow.server.ServerConnection;
+import io.galeb.fork.undertow.server.SSLSessionInfo;
+import io.galeb.fork.undertow.server.ServerConnection;
 
 import org.xnio.ChannelListener.Setter;
 import org.xnio.XnioIoThread;

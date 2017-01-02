@@ -1,7 +1,7 @@
 package io.galeb.undertow.handlers;
 
-import io.undertow.server.ExchangeCompletionListener;
-import io.undertow.server.HttpServerExchange;
+import io.galeb.fork.undertow.server.ExchangeCompletionListener;
+import io.galeb.fork.undertow.server.HttpServerExchange;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

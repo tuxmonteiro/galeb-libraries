@@ -17,8 +17,8 @@
 package io.galeb.undertow.handlers;
 
 import io.galeb.core.statsd.StatsdClient;
-import io.undertow.server.HttpHandler;
-import io.undertow.server.HttpServerExchange;
+import io.galeb.fork.undertow.server.HttpHandler;
+import io.galeb.fork.undertow.server.HttpServerExchange;
 
 public class MonitorHeadersHandler implements HttpHandler {
 

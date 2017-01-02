@@ -21,8 +21,8 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 
 import org.junit.Test;
 
-import io.undertow.server.RenegotiationRequiredException;
-import io.undertow.server.SSLSessionInfo;
+import io.galeb.fork.undertow.server.RenegotiationRequiredException;
+import io.galeb.fork.undertow.server.SSLSessionInfo;
 
 public class FakeSSLSessionInfoTest {
 

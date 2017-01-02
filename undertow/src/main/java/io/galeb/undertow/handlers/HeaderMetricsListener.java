@@ -18,10 +18,10 @@ package io.galeb.undertow.handlers;
 
 import io.galeb.core.statsd.StatsdClient;
 import io.galeb.core.util.Constants;
-import io.undertow.attribute.ResponseTimeAttribute;
-import io.undertow.server.ExchangeCompletionListener;
-import io.undertow.server.HttpServerExchange;
-import io.undertow.util.HttpString;
+import io.galeb.fork.undertow.attribute.ResponseTimeAttribute;
+import io.galeb.fork.undertow.server.ExchangeCompletionListener;
+import io.galeb.fork.undertow.server.HttpServerExchange;
+import io.galeb.fork.undertow.util.HttpString;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

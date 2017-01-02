@@ -26,8 +26,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.galeb.core.extractable.SourceIP;
-import io.undertow.server.HttpServerExchange;
-import io.undertow.util.HttpString;
+import io.galeb.fork.undertow.server.HttpServerExchange;
+import io.galeb.fork.undertow.util.HttpString;
 
 public class UndertowSourceIPTest {
 
