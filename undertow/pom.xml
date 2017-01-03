@@ -244,12 +244,14 @@
               </includes>
             </source>
           </sources>
+          <!--
           <weaveDependencies>
             <weaveDependency>
               <groupId>io.undertow</groupId>
               <artifactId>undertow-core</artifactId>
             </weaveDependency>
           </weaveDependencies>
+          -->
           <verbose>true</verbose>
           <showWeaveInfo>true</showWeaveInfo>
         </configuration>

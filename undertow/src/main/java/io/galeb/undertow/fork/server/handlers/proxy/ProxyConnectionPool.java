@@ -18,6 +18,7 @@
 
 package io.galeb.undertow.fork.server.handlers.proxy;
 
+import io.galeb.core.util.map.ConnectionMapManager;
 import io.galeb.undertow.fork.UndertowLogger;
 import io.galeb.undertow.fork.UndertowMessages;
 import io.galeb.undertow.fork.client.ClientCallback;
@@ -56,6 +57,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Stuart Douglas
  */
 public class ProxyConnectionPool implements Closeable {
+
+    private final ConnectionMapManager connectionMapManager = ConnectionMapManager.INSTANCE;
 
     private final URI uri;
 
@@ -256,6 +259,9 @@ public class ProxyConnectionPool implements Closeable {
                 openConnection(task.exchange, task.callback, hostData, false);
             }
         }
+        final String uri = getUri().toString();
+        final int numConnections = getOpenConnections();
+        connectionMapManager.putOnCounterMap(uri, numConnections);
     }
 
     private void openConnection(final HttpServerExchange exchange, final ProxyCallback<ProxyConnection> callback, final HostThreadData data, final boolean exclusive) {
@@ -291,6 +297,9 @@ public class ProxyConnectionPool implements Closeable {
                 callback.failed(exchange);
             }
         }, bindAddress, getUri(), exchange.getIoThread(), ssl, exchange.getConnection().getByteBufferPool(), options);
+        final String uri = getUri().toString();
+        final int numConnections = getOpenConnections();
+        connectionMapManager.putOnCounterMap(uri, numConnections);
     }
 
     private void redistributeQueued(HostThreadData hostData) {
