@@ -1,6 +1,6 @@
-io.galeb.fork.undertow.client.http.HttpClientProvider
-io.galeb.fork.undertow.client.ajp.AjpClientProvider
-io.galeb.fork.undertow.client.spdy.SpdyClientProvider
-io.galeb.fork.undertow.client.http2.Http2ClientProvider
-io.galeb.fork.undertow.client.http2.Http2ClearClientProvider
-io.galeb.fork.undertow.client.http2.Http2PriorKnowledgeClientProvider
+io.galeb.undertow.fork.client.http.HttpClientProvider
+io.galeb.undertow.fork.client.ajp.AjpClientProvider
+io.galeb.undertow.fork.client.spdy.SpdyClientProvider
+io.galeb.undertow.fork.client.http2.Http2ClientProvider
+io.galeb.undertow.fork.client.http2.Http2ClearClientProvider
+io.galeb.undertow.fork.client.http2.Http2PriorKnowledgeClientProvider
