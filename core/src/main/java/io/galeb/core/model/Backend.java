@@ -32,7 +32,7 @@ public class Backend extends Entity {
         UNKNOWN
     }
 
-    @Expose private Health health = Health.HEALTHY;
+    @Expose private Health health = Health.UNKNOWN;
 
     private int connections = 0;
 
