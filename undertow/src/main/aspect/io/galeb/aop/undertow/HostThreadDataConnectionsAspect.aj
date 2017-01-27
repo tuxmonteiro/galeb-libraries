@@ -17,13 +17,13 @@
 package io.galeb.aop.undertow;
 
 import io.galeb.core.util.map.ConnectionMapManager;
-import io.galeb.undertow.fork.server.handlers.proxy.ProxyConnectionPool;
+import io.undertow.server.handlers.proxy.ProxyConnectionPool;
 
 public aspect HostThreadDataConnectionsAspect {
 
     private final ConnectionMapManager connectionMapManager = ConnectionMapManager.INSTANCE;
 
-    pointcut myPointcut() : execution(* io.galeb.undertow.fork.server.handlers.proxy.ProxyConnectionPool.handleClosedConnection(*,*)) || execution(* io.galeb.undertow.fork.server.handlers.proxy.ProxyConnectionPool.openConnection(*,*,*,*));
+    pointcut myPointcut() : execution(* io.undertow.server.handlers.proxy.ProxyConnectionPool.handleClosedConnection(*,*)) || execution(* io.undertow.server.handlers.proxy.ProxyConnectionPool.openConnection(*,*,*,*));
 
     after() : myPointcut() {
         if (thisJoinPoint.getThis() instanceof ProxyConnectionPool) {

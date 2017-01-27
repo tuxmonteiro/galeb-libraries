@@ -16,22 +16,22 @@
 
 package io.galeb.undertow.nullable;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.io.IOException;
 import java.net.SocketAddress;
 
-import io.galeb.undertow.fork.server.SSLSessionInfo;
-import io.galeb.undertow.fork.server.ServerConnection;
-
+import io.undertow.server.SSLSessionInfo;
+import io.undertow.server.ServerConnection;
 import org.xnio.ChannelListener.Setter;
 import org.xnio.XnioIoThread;
 import org.xnio.XnioWorker;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
 import org.xnio.Pool;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNull;
 
 public class FakeHttpServerExchangeTest {
 

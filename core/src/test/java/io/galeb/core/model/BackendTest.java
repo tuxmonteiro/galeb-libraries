@@ -37,7 +37,7 @@ public class BackendTest {
 
     @Test
     public void healthAtBackendHasDefault() {
-        assertThat(backend.getHealth()).isEqualTo(Health.HEALTHY);
+        assertThat(backend.getHealth()).isEqualTo(Health.UNKNOWN);
     }
 
     @Test
@@ -47,9 +47,9 @@ public class BackendTest {
     }
 
     @Test
-    public void healthSetUnknownAtBackend() {
-        backend.setHealth(Health.UNKNOWN);
-        assertThat(backend.getHealth()).isEqualTo(Health.UNKNOWN);
+    public void healthSetHealthyAtBackend() {
+        backend.setHealth(Health.HEALTHY);
+        assertThat(backend.getHealth()).isEqualTo(Health.HEALTHY);
     }
 
     @Test

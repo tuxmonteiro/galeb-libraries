@@ -16,13 +16,13 @@
 
 package io.galeb.undertow.nullable;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
+import io.undertow.server.RenegotiationRequiredException;
+import io.undertow.server.SSLSessionInfo;
 import org.junit.Test;
 
-import io.galeb.undertow.fork.server.RenegotiationRequiredException;
-import io.galeb.undertow.fork.server.SSLSessionInfo;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FakeSSLSessionInfoTest {
 

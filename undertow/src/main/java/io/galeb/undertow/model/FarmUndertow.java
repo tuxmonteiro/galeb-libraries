@@ -34,10 +34,6 @@ import io.galeb.undertow.loaders.BackendPoolLoader;
 import io.galeb.undertow.loaders.Loader;
 import io.galeb.undertow.loaders.RuleLoader;
 import io.galeb.undertow.loaders.VirtualHostLoader;
-import io.galeb.undertow.fork.server.HttpHandler;
-import io.galeb.undertow.fork.server.handlers.NameVirtualHostHandler;
-import io.galeb.undertow.fork.server.handlers.ResponseCodeHandler;
-import io.galeb.undertow.fork.server.handlers.accesslog.AccessLogReceiver;
 
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
@@ -48,8 +44,12 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.inject.Default;
 import javax.inject.Inject;
 
-import io.galeb.undertow.fork.util.CopyOnWriteMap;
-import io.galeb.undertow.fork.util.Headers;
+import io.undertow.server.HttpHandler;
+import io.undertow.server.handlers.NameVirtualHostHandler;
+import io.undertow.server.handlers.ResponseCodeHandler;
+import io.undertow.server.handlers.accesslog.AccessLogReceiver;
+import io.undertow.util.CopyOnWriteMap;
+import io.undertow.util.Headers;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;

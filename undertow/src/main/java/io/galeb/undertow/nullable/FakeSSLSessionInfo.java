@@ -16,13 +16,12 @@
 
 package io.galeb.undertow.nullable;
 
-import io.galeb.undertow.fork.server.HttpServerExchange;
-import io.galeb.undertow.fork.server.SSLSessionInfo;
-
 import java.security.cert.Certificate;
 
 import javax.security.cert.X509Certificate;
 
+import io.undertow.server.HttpServerExchange;
+import io.undertow.server.SSLSessionInfo;
 import org.xnio.SslClientAuthMode;
 
 public class FakeSSLSessionInfo {

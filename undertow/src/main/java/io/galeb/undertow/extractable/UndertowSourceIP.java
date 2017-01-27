@@ -17,7 +17,7 @@
 package io.galeb.undertow.extractable;
 
 import io.galeb.core.extractable.SourceIP;
-import io.galeb.undertow.fork.server.HttpServerExchange;
+import io.undertow.server.HttpServerExchange;
 
 public class UndertowSourceIP implements SourceIP {
 

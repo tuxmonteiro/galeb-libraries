@@ -19,12 +19,12 @@ package io.galeb.undertow.router;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.undertow.Undertow;
+import io.undertow.UndertowOptions;
+import io.undertow.server.HttpHandler;
 import org.xnio.Options;
 
 import io.galeb.core.model.Farm;
-import io.galeb.undertow.fork.Undertow;
-import io.galeb.undertow.fork.UndertowOptions;
-import io.galeb.undertow.fork.server.HttpHandler;
 
 public class RouterApplication {
 

@@ -29,12 +29,12 @@ import io.galeb.core.model.VirtualHost;
 import io.galeb.core.util.Constants.SysProp;
 import io.galeb.undertow.handlers.BackendProxyClient;
 import io.galeb.undertow.handlers.PathGlobHandler;
-import io.galeb.undertow.fork.server.HttpHandler;
-import io.galeb.undertow.fork.server.handlers.IPAddressAccessControlHandler;
-import io.galeb.undertow.fork.server.handlers.NameVirtualHostHandler;
-import io.galeb.undertow.fork.server.handlers.ResponseCodeHandler;
-import io.galeb.undertow.fork.server.handlers.proxy.ProxyHandler;
-import io.galeb.undertow.fork.util.StatusCodes;
+import io.undertow.server.HttpHandler;
+import io.undertow.server.handlers.IPAddressAccessControlHandler;
+import io.undertow.server.handlers.NameVirtualHostHandler;
+import io.undertow.server.handlers.ResponseCodeHandler;
+import io.undertow.server.handlers.proxy.ProxyHandler;
+import io.undertow.util.StatusCodes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

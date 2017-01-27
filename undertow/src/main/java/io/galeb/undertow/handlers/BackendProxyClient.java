@@ -23,22 +23,17 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import io.galeb.undertow.fork.UndertowLogger;
-import io.galeb.undertow.fork.client.ClientConnection;
-import io.galeb.undertow.fork.client.UndertowClient;
-import io.galeb.undertow.fork.util.AttachmentKey;
-import io.galeb.undertow.fork.util.Headers;
-import io.galeb.undertow.fork.util.StatusCodes;
+import io.undertow.UndertowLogger;
+import io.undertow.client.ClientConnection;
+import io.undertow.client.UndertowClient;
+import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.proxy.*;
+import io.undertow.util.AttachmentKey;
+import io.undertow.util.Headers;
+import io.undertow.util.StatusCodes;
 import org.xnio.IoUtils;
 import org.xnio.OptionMap;
 import org.xnio.ssl.XnioSsl;
-
-import io.galeb.undertow.fork.server.HttpServerExchange;
-import io.galeb.undertow.fork.server.handlers.proxy.ExclusivityChecker;
-import io.galeb.undertow.fork.server.handlers.proxy.LoadBalancingProxyClient;
-import io.galeb.undertow.fork.server.handlers.proxy.ProxyCallback;
-import io.galeb.undertow.fork.server.handlers.proxy.ProxyClient;
-import io.galeb.undertow.fork.server.handlers.proxy.ProxyConnection;
 
 public class BackendProxyClient implements ProxyClient {
 

@@ -18,10 +18,10 @@ package io.galeb.undertow.handlers;
 
 import io.galeb.core.statsd.StatsdClient;
 import io.galeb.core.util.Constants;
-import io.galeb.undertow.fork.attribute.ResponseTimeAttribute;
-import io.galeb.undertow.fork.server.ExchangeCompletionListener;
-import io.galeb.undertow.fork.server.HttpServerExchange;
-import io.galeb.undertow.fork.util.HttpString;
+import io.undertow.attribute.ResponseTimeAttribute;
+import io.undertow.server.ExchangeCompletionListener;
+import io.undertow.server.HttpServerExchange;
+import io.undertow.util.HttpString;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,7 +48,7 @@ class HeaderMetricsListener implements ExchangeCompletionListener, ProcessorLoca
                                             .replaceAll("[-_](blue|green)$","");
 
     @Override
-    public void exchangeEvent(final HttpServerExchange exchange, final NextListener nextListener) {
+    public void exchangeEvent(final HttpServerExchange exchange, final ExchangeCompletionListener.NextListener nextListener) {
         try {
             final String realDest = exchange.getAttachment(BackendSelector.REAL_DEST);
             String virtualhost = exchange.getHostName();

@@ -20,10 +20,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.galeb.core.model.Rule;
-import io.galeb.undertow.fork.server.HttpHandler;
-import io.galeb.undertow.fork.server.HttpServerExchange;
-import io.galeb.undertow.fork.server.handlers.ResponseCodeHandler;
-import io.galeb.undertow.fork.util.*;
+import io.undertow.server.HttpHandler;
+import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.ResponseCodeHandler;
+import io.undertow.util.CopyOnWriteMap;
 import jodd.util.Wildcard;
 
 public class PathGlobHandler implements HttpHandler {

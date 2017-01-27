@@ -4,8 +4,8 @@ import java.util.UUID;
 
 import io.galeb.core.extractable.RequestCookie;
 import io.galeb.core.loadbalance.hash.ExtractableKey;
-import io.galeb.undertow.fork.server.HttpServerExchange;
-import io.galeb.undertow.fork.server.handlers.Cookie;
+import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.Cookie;
 
 public class UndertowCookie implements RequestCookie {
 

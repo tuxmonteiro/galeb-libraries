@@ -21,13 +21,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetSocketAddress;
 
+import io.undertow.server.HttpServerExchange;
+import io.undertow.util.HttpString;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import io.galeb.core.extractable.SourceIP;
-import io.galeb.undertow.fork.server.HttpServerExchange;
-import io.galeb.undertow.fork.util.HttpString;
 
 public class UndertowSourceIPTest {
 
@@ -35,7 +35,7 @@ public class UndertowSourceIPTest {
 
     private UndertowSourceIP undertowSourceIP;
 
-    private  HttpServerExchange fakeExchange;
+    private HttpServerExchange fakeExchange;
 
 
     @Before
