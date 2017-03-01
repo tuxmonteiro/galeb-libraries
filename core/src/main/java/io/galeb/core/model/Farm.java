@@ -29,6 +29,7 @@ import io.galeb.core.model.collections.NullEntityCollection;
 import io.galeb.core.model.collections.RuleCollection;
 import io.galeb.core.model.collections.VirtualHostCollection;
 
+import java.lang.management.ManagementFactory;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,8 +38,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.enterprise.inject.Alternative;
-
-import com.google.gson.annotations.Expose;
 
 @Alternative
 public class Farm extends Entity {
@@ -49,10 +48,14 @@ public class Farm extends Entity {
 
     public static final String MAX_REQUEST_TIME_FARM_PROP    = "maxRequestTime";
     public static final String FORCE_CHANGE_STATUS_FARM_PROP = "forceChangeStatus";
+    public static final String FORCE_EMPTY_UNTIL_UPTIME_PROP = "FORCE_EMPTY_UNTIL_UPTIME";
 
     public static final Map<String, String> STATIC_PROPERTIES = Collections.synchronizedMap(new HashMap<>());
 
     public static final Map<String, Class<? extends Entity>> ENTITY_CLASSES = new ConcurrentHashMap<>();
+
+    private static final long FORCE_EMPTY_UNTIL_UPTIME = Long.parseLong(System.getProperty(FORCE_EMPTY_UNTIL_UPTIME_PROP, "0"));
+
     static {
         ENTITY_CLASSES.put(Backend.class.getSimpleName().toLowerCase(), Backend.class);
         ENTITY_CLASSES.put(BackendPool.class.getSimpleName().toLowerCase(), BackendPool.class);
@@ -167,7 +170,7 @@ public class Farm extends Entity {
     }
 
     protected boolean isVirtualhostsNotEmpty() {
-        return !virtualHosts.isEmpty();
+        return ManagementFactory.getRuntimeMXBean().getUptime() > FORCE_EMPTY_UNTIL_UPTIME && !virtualHosts.isEmpty();
     }
 
     // TODO: Check FAIL state
