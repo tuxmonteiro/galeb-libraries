@@ -334,6 +334,10 @@ public class BackendProxyClient implements ProxyClient {
         return null;
     }
 
+    public boolean contains(URI uri) {
+        return hosts.entrySet().stream().anyMatch(e -> e.getKey().equals(uri.toString()));
+    }
+
     public final class Host extends ConnectionPoolErrorHandler.SimpleConnectionPoolErrorHandler implements ConnectionPoolManager {
         final ProxyConnectionPool connectionPool;
         final String jvmRoute;
