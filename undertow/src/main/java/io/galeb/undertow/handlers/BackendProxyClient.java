@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Globo.com - ATeam
+ * Copyright (c) 2014-2017 Globo.com - ATeam
  * All rights reserved.
  *
  * This source is subject to the Apache License, Version 2.0.
@@ -16,221 +16,394 @@
 
 package io.galeb.undertow.handlers;
 
-import java.net.InetSocketAddress;
-import java.net.URI;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import io.undertow.UndertowLogger;
 import io.undertow.client.ClientConnection;
 import io.undertow.client.UndertowClient;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.server.handlers.proxy.*;
+import io.undertow.server.ServerConnection;
+import io.undertow.server.handlers.Cookie;
+import io.undertow.server.handlers.proxy.ConnectionPoolErrorHandler;
+import io.undertow.server.handlers.proxy.ConnectionPoolManager;
+import io.undertow.server.handlers.proxy.ExclusivityChecker;
+import io.undertow.server.handlers.proxy.ProxyCallback;
+import io.undertow.server.handlers.proxy.ProxyClient;
+import io.undertow.server.handlers.proxy.ProxyConnection;
+import io.undertow.server.handlers.proxy.ProxyConnectionPool;
 import io.undertow.util.AttachmentKey;
-import io.undertow.util.Headers;
+import io.undertow.util.AttachmentList;
+import io.undertow.util.CopyOnWriteMap;
 import io.undertow.util.StatusCodes;
 import org.xnio.IoUtils;
 import org.xnio.OptionMap;
 import org.xnio.ssl.XnioSsl;
 
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.undertow.server.handlers.proxy.ProxyConnectionPool.AvailabilityType.*;
+import static org.xnio.IoUtils.safeClose;
+
 public class BackendProxyClient implements ProxyClient {
 
-    private final LoadBalancingProxyClient loadBalanceProxyClient;
+    private final AttachmentKey<ExclusiveConnectionHolder> exclusiveConnectionKey = AttachmentKey.create(ExclusiveConnectionHolder.class);
+
+    private static final AttachmentKey<AttachmentList<Host>> ATTEMPTED_HOSTS = AttachmentKey.createList(Host.class);
+
+    private volatile int problemServerRetry = 10;
+
+    private final Set<String> sessionCookieNames = new CopyOnWriteArraySet<>();
+
+    private volatile int connectionsPerThread = 10;
+    private volatile int maxQueueSize = 0;
+    private volatile int softMaxConnectionsPerThread = 5;
+    private volatile int ttl = -1;
+
+    private final Map<String, Host> hosts = Collections.synchronizedMap(new LinkedHashMap<>());
     private final BackendSelector backendSelector = new BackendSelector();
-    private final Lock lock = new ReentrantLock();
+    private final HostSelector hostSelector;
+    private final UndertowClient client;
+    private final Map<String, Host> routes = new CopyOnWriteMap<>();
+    private final ExclusivityChecker exclusivityChecker;
+
+    private static final ProxyTarget PROXY_TARGET = new ProxyTarget() {
+    };
 
     public BackendProxyClient() {
-        final ExclusivityChecker exclusivityChecker = exchange -> {
-            // we always create a new connection for upgrade requests
-            return exchange.getRequestHeaders().contains(Headers.UPGRADE);
-        };
-        loadBalanceProxyClient = new LoadBalancingProxyClient(
-                                        UndertowClient.getInstance(),
-                                        exclusivityChecker,
-                                        backendSelector);
+        this(UndertowClient.getInstance());
     }
 
-    @Override
-    public ProxyTarget findTarget(final HttpServerExchange exchange) {
-        return loadBalanceProxyClient.findTarget(exchange);
+    public BackendProxyClient(UndertowClient client) {
+        this(client, null, null);
     }
 
-    @Override
-    public void getConnection(final ProxyTarget target,
-            final HttpServerExchange exchange,
-            final ProxyCallback<ProxyConnection> callback, long timeout, TimeUnit timeUnit) {
-
-        backendSelector.setExchange(exchange);
-        final ProxyCallback<ProxyConnection> newCallback = new LocalProxyCallback(callback);
-        loadBalanceProxyClient.getConnection(target, exchange, newCallback, timeout, timeUnit);
+    public BackendProxyClient(ExclusivityChecker client) {
+        this(UndertowClient.getInstance(), client, null);
     }
 
-    public BackendProxyClient addSessionCookieName(
-            final String sessionCookieName) {
-        loadBalanceProxyClient.addSessionCookieName(sessionCookieName);
+    public BackendProxyClient(UndertowClient client, ExclusivityChecker exclusivityChecker) {
+        this(client, exclusivityChecker, null);
+    }
+
+    public BackendProxyClient(UndertowClient client, ExclusivityChecker exclusivityChecker, HostSelector hostSelector) {
+        this.client = client;
+        this.exclusivityChecker = exclusivityChecker;
+        sessionCookieNames.add("JSESSIONID");
+        if(hostSelector == null) {
+            this.hostSelector = new RoundRobinHostSelector();
+        } else {
+            this.hostSelector = hostSelector;
+        }
+    }
+
+    public BackendProxyClient addSessionCookieName(final String sessionCookieName) {
+        sessionCookieNames.add(sessionCookieName);
         return this;
     }
 
-    public BackendProxyClient removeSessionCookieName(
-            final String sessionCookieName) {
-        loadBalanceProxyClient.removeSessionCookieName(sessionCookieName);
+    public BackendProxyClient removeSessionCookieName(final String sessionCookieName) {
+        sessionCookieNames.remove(sessionCookieName);
         return this;
     }
 
     public BackendProxyClient setProblemServerRetry(int problemServerRetry) {
-        loadBalanceProxyClient.setProblemServerRetry(problemServerRetry);
+        this.problemServerRetry = problemServerRetry;
         return this;
     }
 
     public int getProblemServerRetry() {
-        return loadBalanceProxyClient.getProblemServerRetry();
+        return problemServerRetry;
     }
 
     public int getConnectionsPerThread() {
-        return loadBalanceProxyClient.getConnectionsPerThread();
+        return connectionsPerThread;
     }
 
     public BackendProxyClient setConnectionsPerThread(int connectionsPerThread) {
-        loadBalanceProxyClient.setConnectionsPerThread(connectionsPerThread);
+        this.connectionsPerThread = connectionsPerThread;
         return this;
     }
 
     public int getMaxQueueSize() {
-        return loadBalanceProxyClient.getMaxQueueSize();
+        return maxQueueSize;
     }
 
     public BackendProxyClient setMaxQueueSize(int maxQueueSize) {
-        loadBalanceProxyClient.setMaxQueueSize(maxQueueSize);
+        this.maxQueueSize = maxQueueSize;
         return this;
     }
 
     public BackendProxyClient setTtl(int ttl) {
-        loadBalanceProxyClient.setTtl(ttl);
+        this.ttl = ttl;
         return this;
     }
 
-    public BackendProxyClient setSoftMaxConnectionsPerThread(
-            int softMaxConnectionsPerThread) {
-        loadBalanceProxyClient
-                .setSoftMaxConnectionsPerThread(softMaxConnectionsPerThread);
+    public BackendProxyClient setSoftMaxConnectionsPerThread(int softMaxConnectionsPerThread) {
+        this.softMaxConnectionsPerThread = softMaxConnectionsPerThread;
         return this;
     }
 
-    public synchronized BackendProxyClient setParams(
-            final Map<String, Object> myParams) {
-        backendSelector.setParams(myParams);
-        return this;
+    public synchronized BackendProxyClient addHost(final URI host) {
+        return addHost(host, null, null);
     }
 
-    public synchronized boolean contains(final URI host) {
-        return  backendSelector.contains(host);
+    public synchronized BackendProxyClient addHost(final URI host, XnioSsl ssl) {
+        return addHost(host, null, ssl);
     }
 
-    public BackendProxyClient addHost(final URI host) {
-        lock.lock();
-        try {
-            if (!backendSelector.contains(host)) {
-                loadBalanceProxyClient.addHost(host);
-                backendSelector.addHost(host);
-                backendSelector.reset();
+    public synchronized BackendProxyClient addHost(final URI host, String jvmRoute) {
+        return addHost(host, jvmRoute, null);
+    }
+
+
+    public synchronized BackendProxyClient addHost(final URI host, String jvmRoute, XnioSsl ssl) {
+        if (hosts != null) {
+            Host hostInstance = new Host(jvmRoute, null, host, ssl, OptionMap.EMPTY);
+            hosts.putIfAbsent(host.toString(), hostInstance);
+            if (jvmRoute != null) {
+                this.routes.put(jvmRoute, hostInstance);
             }
-        } finally {
-            lock.unlock();
         }
         return this;
     }
 
-    public BackendProxyClient addHost(final URI host, XnioSsl ssl) {
-        lock.lock();
-        try {
-            if (!backendSelector.contains(host)) {
-                loadBalanceProxyClient.addHost(host, ssl);
-                backendSelector.addHost(host);
-                backendSelector.reset();
+
+    public synchronized BackendProxyClient addHost(final URI host, String jvmRoute, XnioSsl ssl, OptionMap options) {
+        return addHost(null, host, jvmRoute, ssl, options);
+    }
+
+
+    public synchronized BackendProxyClient addHost(final InetSocketAddress bindAddress, final URI host, String jvmRoute, XnioSsl ssl, OptionMap options) {
+        if (hosts != null) {
+            Host hostInstance = new Host(jvmRoute, bindAddress, host, ssl, options);
+            hosts.putIfAbsent(host.toString(), hostInstance);
+            if (jvmRoute != null) {
+                this.routes.put(jvmRoute, hostInstance);
             }
-        } finally {
-            lock.unlock();
         }
         return this;
     }
 
-    public BackendProxyClient addHost(final URI host,
-            String jvmRoute) {
-        lock.lock();
-        try {
-            if (!backendSelector.contains(host)) {
-                loadBalanceProxyClient.addHost(host, jvmRoute);
-                backendSelector.addHost(host);
-                backendSelector.reset();
-            }
-        } finally {
-            lock.unlock();
+    public synchronized BackendProxyClient removeHost(final URI uri) {
+        if (hosts != null) {
+            Host host = hosts.get(uri.toString());
+            if (host != null) {
+                host.connectionPool.close();
+                hosts.remove(host);
+            };
         }
         return this;
     }
 
-    public BackendProxyClient addHost(final URI host,
-            String jvmRoute, XnioSsl ssl) {
-        lock.lock();
-        try {
-            if (!backendSelector.contains(host)) {
-                loadBalanceProxyClient.addHost(host, jvmRoute, ssl);
-                backendSelector.addHost(host);
-                backendSelector.reset();
-            }
-        } finally {
-            lock.unlock();
-        }
-        return this;
+    @Override
+    public ProxyTarget findTarget(HttpServerExchange exchange) {
+        return PROXY_TARGET;
     }
 
-    public BackendProxyClient addHost(final URI host,
-            String jvmRoute, XnioSsl ssl, OptionMap options) {
-        lock.lock();
-        try {
-            if (!backendSelector.contains(host)) {
-                loadBalanceProxyClient.addHost(host, jvmRoute, ssl, options);
-                backendSelector.addHost(host);
-                backendSelector.reset();
-            }
-        } finally {
-            lock.unlock();
+    @Override
+    public void getConnection(ProxyTarget target, HttpServerExchange exchange, final ProxyCallback<ProxyConnection> callback, long timeout, TimeUnit timeUnit) {
+        final ExclusiveConnectionHolder holder = exchange.getConnection().getAttachment(exclusiveConnectionKey);
+        if (holder != null && holder.connection.getConnection().isOpen()) {
+            // Something has already caused an exclusive connection to be allocated so keep using it.
+            callback.completed(exchange, holder.connection);
+            return;
         }
-        return this;
+
+        final Host host = selectHost(exchange);
+        if (host == null) {
+            callback.couldNotResolveBackend(exchange);
+        } else {
+            exchange.addToAttachmentList(ATTEMPTED_HOSTS, host);
+            if (holder != null || (exclusivityChecker != null && exclusivityChecker.isExclusivityRequired(exchange))) {
+                // If we have a holder, even if the connection was closed we now exclusivity was already requested so our client
+                // may be assuming it still exists.
+                host.connectionPool.connect(target, exchange, new ProxyCallback<ProxyConnection>() {
+
+                    @Override
+                    public void completed(HttpServerExchange exchange, ProxyConnection result) {
+                        if (holder != null) {
+                            holder.connection = result;
+                        } else {
+                            final ExclusiveConnectionHolder newHolder = new ExclusiveConnectionHolder();
+                            newHolder.connection = result;
+                            ServerConnection connection = exchange.getConnection();
+                            connection.putAttachment(exclusiveConnectionKey, newHolder);
+                            connection.addCloseListener(new ServerConnection.CloseListener() {
+
+                                @Override
+                                public void closed(ServerConnection connection) {
+                                    ClientConnection clientConnection = newHolder.connection.getConnection();
+                                    if (clientConnection.isOpen()) {
+                                        safeClose(clientConnection);
+                                    }
+                                }
+                            });
+                        }
+                        callback.completed(exchange, result);
+                    }
+
+                    @Override
+                    public void queuedRequestFailed(HttpServerExchange exchange) {
+                        callback.queuedRequestFailed(exchange);
+                    }
+
+                    @Override
+                    public void failed(HttpServerExchange exchange) {
+                        UndertowLogger.PROXY_REQUEST_LOGGER.proxyFailedToConnectToBackend(exchange.getRequestURI(), host.uri);
+                        callback.failed(exchange);
+                    }
+
+                    @Override
+                    public void couldNotResolveBackend(HttpServerExchange exchange) {
+                        callback.couldNotResolveBackend(exchange);
+                    }
+                }, timeout, timeUnit, true);
+            } else {
+                host.connectionPool.connect(target, exchange, callback, timeout, timeUnit, false);
+            }
+        }
     }
 
-    public BackendProxyClient addHost(
-            final InetSocketAddress bindAddress, final URI host,
-            String jvmRoute, XnioSsl ssl, OptionMap options) {
-        lock.lock();
-        try {
-            if (!backendSelector.contains(host)) {
-                loadBalanceProxyClient.addHost(bindAddress, host, jvmRoute, ssl,
-                        options);
-                backendSelector.addHost(host);
-                backendSelector.reset();
-            }
-        } finally {
-            lock.unlock();
+    protected Host selectHost(HttpServerExchange exchange) {
+        AttachmentList<Host> attempted = exchange.getAttachment(ATTEMPTED_HOSTS);
+        if (hosts.isEmpty()) {
+            return null;
         }
-        return this;
+        Host sticky = findStickyHost(exchange);
+        if (sticky != null) {
+            if(attempted == null || !attempted.contains(sticky)) {
+                return sticky;
+            }
+        }
+
+        // TODO: selectHost with direct Collection<Host> support (without array convertion)
+        final Host[] arrayOfHosts = hosts.entrySet().stream().map(Map.Entry::getValue).toArray(Host[]::new);
+        int host = hostSelector.selectHost(arrayOfHosts);
+
+        final int startHost = host; //if the all hosts have problems we come back to this one
+        Host full = null;
+        Host problem = null;
+        do {
+            Host selected = arrayOfHosts[host];
+            if(attempted == null || !attempted.contains(selected)) {
+                ProxyConnectionPool.AvailabilityType available = selected.connectionPool.available();
+                if (available == AVAILABLE) {
+                    return selected;
+                } else if (available == FULL && full == null) {
+                    full = selected;
+                } else if ((available == PROBLEM || available == FULL_QUEUE) && problem == null) {
+                    problem = selected;
+                }
+            }
+            host = (host + 1) % arrayOfHosts.length;
+        } while (host != startHost);
+        if (full != null) {
+            return full;
+        }
+        if (problem != null) {
+            return problem;
+        }
+        //no available hosts
+        return null;
     }
 
-    public BackendProxyClient removeHost(final URI host) {
-        lock.lock();
-        try {
-            if (backendSelector.contains(host)) {
-                loadBalanceProxyClient.removeHost(host);
-                backendSelector.removeHost(host);
-                backendSelector.reset();
+    protected Host findStickyHost(HttpServerExchange exchange) {
+        Map<String, Cookie> cookies = exchange.getRequestCookies();
+        for (String cookieName : sessionCookieNames) {
+            Cookie sk = cookies.get(cookieName);
+            if (sk != null) {
+                int index = sk.getValue().indexOf('.');
+
+                if (index == -1) {
+                    continue;
+                }
+                String route = sk.getValue().substring(index + 1);
+                index = route.indexOf('.');
+                if (index != -1) {
+                    route = route.substring(0, index);
+                }
+                return routes.get(route);
             }
-        } finally {
-            lock.unlock();
         }
-        return this;
+        return null;
     }
+
+    public final class Host extends ConnectionPoolErrorHandler.SimpleConnectionPoolErrorHandler implements ConnectionPoolManager {
+        final ProxyConnectionPool connectionPool;
+        final String jvmRoute;
+        final URI uri;
+        final XnioSsl ssl;
+
+        private Host(String jvmRoute, InetSocketAddress bindAddress, URI uri, XnioSsl ssl, OptionMap options) {
+            this.connectionPool = new ProxyConnectionPool(this, bindAddress, uri, ssl, client, options);
+            this.jvmRoute = jvmRoute;
+            this.uri = uri;
+            this.ssl = ssl;
+        }
+
+        @Override
+        public int getProblemServerRetry() {
+            return problemServerRetry;
+        }
+
+        @Override
+        public int getMaxConnections() {
+            return connectionsPerThread;
+        }
+
+        @Override
+        public int getMaxCachedConnections() {
+            return connectionsPerThread;
+        }
+
+        @Override
+        public int getSMaxConnections() {
+            return softMaxConnectionsPerThread;
+        }
+
+        @Override
+        public long getTtl() {
+            return ttl;
+        }
+
+        @Override
+        public int getMaxQueueSize() {
+            return maxQueueSize;
+        }
+
+        public URI getUri() {
+            return uri;
+        }
+    }
+
+    private static class ExclusiveConnectionHolder {
+
+        private ProxyConnection connection;
+
+    }
+
+    public interface HostSelector {
+
+        int selectHost(Host[] availableHosts);
+
+    }
+
+    static class RoundRobinHostSelector implements HostSelector {
+
+        private final AtomicInteger currentHost = new AtomicInteger(0);
+
+        @Override
+        public int selectHost(Host[] availableHosts) {
+            return currentHost.incrementAndGet() % availableHosts.length;
+        }
+    }
+
 
     public void reset() {
         backendSelector.reset();
