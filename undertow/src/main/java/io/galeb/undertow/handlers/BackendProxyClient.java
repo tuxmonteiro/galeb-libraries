@@ -18,6 +18,7 @@ package io.galeb.undertow.handlers;
 
 import io.undertow.UndertowLogger;
 import io.undertow.client.ClientConnection;
+import io.undertow.client.ClientStatistics;
 import io.undertow.client.UndertowClient;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.ServerConnection;
@@ -389,6 +390,14 @@ public class BackendProxyClient implements ProxyClient {
 
         public URI getUri() {
             return uri;
+        }
+
+        public int getOpenConnection() {
+            return connectionPool.getOpenConnections();
+        }
+
+        public ClientStatistics getClientStatistics() {
+            return connectionPool.getClientStatistics();
         }
     }
 

@@ -64,6 +64,8 @@ public abstract class LoadBalancePolicy {
     public static final String PROP_FROM_ATTRIB = "fromAttrib";
     public static final String PROP_STICK       = "enableStickCookie";
 
+    public static final String CRITERIA_CONNECTIONS_COUNTER = "connectionsCounter";
+
     protected final Map<String, Object> loadBalancePolicyCriteria = new HashMap<>();
 
     protected AtomicInteger last = new AtomicInteger(0);

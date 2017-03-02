@@ -17,12 +17,9 @@
 package io.galeb.core.loadbalance.impl;
 
 import io.galeb.core.loadbalance.LoadBalancePolicy;
-import io.galeb.core.model.Backend;
-import io.galeb.core.model.BackendPool;
-import io.galeb.core.model.Entity;
-import io.galeb.core.model.Farm;
 
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -32,45 +29,35 @@ public class LeastConnPolicy extends LoadBalancePolicy {
 
     public static final String PROP_CUTTING_LINE = "lbCuttingLine";
 
-    private Farm farm = null;
-    private String backendPoolId = null;
-    private ConcurrentLinkedQueue<String> backends = new ConcurrentLinkedQueue<>();
+    private ConcurrentLinkedQueue<Integer> connectionsOrdered = new ConcurrentLinkedQueue<>();
     private double cuttingLine = 0.666;
 
+    @SuppressWarnings("unchecked")
     @Override
     public int getChoice() {
-        if (farm!=null && backendPoolId!=null && backends.isEmpty()) {
-
-            Comparator<? super Entity> backendComparator = (b1, b2) ->
-                Integer.compare(((Backend) b1).getConnections(), ((Backend) b2).getConnections());
-
-            backends.addAll(farm.getCollection(Backend.class).stream()
-                                .filter(backend -> backend.getParentId().equals(backendPoolId))
-                                .sorted(backendComparator)
-                                .limit(Integer.toUnsignedLong((int) ((uris.size()*cuttingLine) - Float.MIN_VALUE)))
-                                .map(backend -> backend.getId())
-                                .collect(Collectors.toCollection(LinkedList::new)));
+        Object criteriaConnections = loadBalancePolicyCriteria.get(CRITERIA_CONNECTIONS_COUNTER);
+        if (criteriaConnections instanceof LinkedHashMap && connectionsOrdered.isEmpty()) {
+            LinkedHashMap<Integer, Integer> connections;
+            try {
+                connections = (LinkedHashMap<Integer, Integer>) criteriaConnections;
+                connectionsOrdered.addAll(connections.entrySet()
+                        .stream().sorted(Comparator.comparingInt(Map.Entry::getValue))
+                        .limit(Integer.toUnsignedLong((int) ((connections.size()*cuttingLine) - Float.MIN_VALUE)))
+                        .map(Map.Entry::getKey)
+                        .collect(Collectors.toCollection(LinkedList::new)));
+            } catch (ClassCastException ex) {
+                return 0;
+            }
         }
-
-        int pos = 0;
-        String choice = backends.poll();
-        if (choice!=null) {
-            pos = uris.indexOf(choice);
-        }
-        return pos >= 0 ? pos : 0;
+        return connectionsOrdered.isEmpty() ? 0 : connectionsOrdered.poll();
     }
 
     @Override
     public LoadBalancePolicy setCriteria(Map<String, Object> criteria) {
         super.setCriteria(criteria);
-        final Object farmObj = loadBalancePolicyCriteria.get(Farm.class.getSimpleName());
-        if (farmObj!=null && farmObj instanceof Farm) {
-            farm = (Farm)farmObj;
-            backendPoolId = (String) loadBalancePolicyCriteria.get(BackendPool.class.getSimpleName());
-            Double limitObj = (Double) loadBalancePolicyCriteria.get(PROP_CUTTING_LINE);
-            if (limitObj!=null) {
-                cuttingLine = limitObj;
-            }
+        Double limitObj = (Double) loadBalancePolicyCriteria.get(PROP_CUTTING_LINE);
+        if (limitObj!=null) {
+            cuttingLine = limitObj;
         }
         return this;
     }

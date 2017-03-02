@@ -20,12 +20,14 @@ import static io.galeb.core.extractable.RequestCookie.DEFAULT_COOKIE;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import io.galeb.core.loadbalance.LoadBalancePolicy;
 import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
+import io.galeb.core.loadbalance.impl.LeastConnPolicy;
 import io.galeb.core.util.consistenthash.HashAlgorithm;
 import io.galeb.core.util.consistenthash.HashAlgorithm.HashType;
 import io.galeb.undertow.extractable.UndertowCookie;
@@ -63,6 +65,13 @@ public class BackendSelector implements HostSelector {
             loadBalancePolicy = loadBalancePolicyLocator.setParams(params).get();
             loadBalancePolicy.setKeyTypeLocator(UndertowKeyTypeLocator.INSTANCE).reset();
             enabledStickCookie = null;
+        }
+        if (loadBalancePolicy instanceof LeastConnPolicy) {
+            LinkedHashMap<Integer, Integer> connections = new LinkedHashMap<>();
+            for (int pos=0; pos<availableHosts.length; pos++) {
+                connections.put(pos, availableHosts[pos].getOpenConnection());
+            }
+            addParam(LoadBalancePolicy.CRITERIA_CONNECTIONS_COUNTER, connections);
         }
         if (enabledStickCookie==null) {
             enabledStickCookie = params.get(LoadBalancePolicy.PROP_STICK) != null;
