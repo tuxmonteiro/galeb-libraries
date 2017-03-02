@@ -149,6 +149,12 @@ public class BackendProxyClient implements ProxyClient {
         return this;
     }
 
+    public synchronized BackendProxyClient setParams(
+        final Map<String, Object> myParams) {
+        backendSelector.setParams(myParams);
+        return this;
+    }
+
     public synchronized BackendProxyClient addHost(final URI host) {
         return addHost(host, null, null);
     }
