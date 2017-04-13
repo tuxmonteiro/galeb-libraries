@@ -1,7 +1,7 @@
 pipeline {
   agent {
-    docker {
-      image 'rhel6'
+    node {
+      label 'rhel6'
     }
     
   }
@@ -13,23 +13,26 @@ pipeline {
     }
     stage('Build') {
       steps {
-        sh 'export JAVA_HOME=/opt/java18/ ; mvn clean install -DskipTests'
+        sh 'mvn clean install -DskipTests'
       }
     }
     stage('Tests') {
       steps {
-        sh 'export JAVA_HOME=/opt/java18/ ; mvn test'
+        sh 'mvn test'
       }
     }
     stage('Jacoco') {
       steps {
-        sh 'export JAVA_HOME=/opt/java18/ ; mvn jacoco:prepare-agent jacoco:prepare-agent-integration'
+        sh 'mvn jacoco:prepare-agent jacoco:prepare-agent-integration'
       }
     }
     stage('Sonar') {
       steps {
-        sh 'export JAVA_HOME=/opt/java18/ ; mvn sonar:sonar'
+        sh 'mvn sonar:sonar'
       }
     }
+  }
+  environment {
+    JAVA_HOME = '/opt/java18/'
   }
 }
