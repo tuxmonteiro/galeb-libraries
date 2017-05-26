@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Globo.com - ATeam
+ * Copyright (c) 2014-2017 Globo.com - ATeam
  * All rights reserved.
  *
  * This source is subject to the Apache License, Version 2.0.
@@ -16,10 +16,7 @@
 
 package io.galeb.core.loadbalance.impl;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import io.galeb.core.loadbalance.LoadBalancePolicy;
 import io.galeb.core.util.consistenthash.ConsistentHash;
@@ -34,14 +31,14 @@ public class HashPolicy extends LoadBalancePolicy {
 
     public static final String NUM_REPLICAS   = "NumReplicas";
 
-    private final Set<Integer> listPos = new LinkedHashSet<>();
+    private final Set<Integer> listPos = new TreeSet<>();
 
     private HashAlgorithm hashAlgorithm = new HashAlgorithm(HashType.SIP24);
 
     private int numReplicas = 1;
 
     private final ConsistentHash<Integer> consistentHash =
-            new ConsistentHash<Integer>(hashAlgorithm, numReplicas, new ArrayList<Integer>());
+            new ConsistentHash<>(hashAlgorithm, numReplicas, Collections.emptyList());
 
     private void reloadPos() {
         listPos.clear();
@@ -57,9 +54,7 @@ public class HashPolicy extends LoadBalancePolicy {
             consistentHash.rebuild(hashAlgorithm, numReplicas, listPos);
             rebuilt();
         }
-        final int chosen = consistentHash.get(aKey.orElse(DEFAULT_KEY));
-        last.lazySet(chosen);
-        return chosen;
+        return consistentHash.get(aKey.orElse(DEFAULT_KEY));
     }
 
     @Override

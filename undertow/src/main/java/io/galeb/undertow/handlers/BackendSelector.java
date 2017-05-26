@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Globo.com - ATeam
+ * Copyright (c) 2014-2017 Globo.com - ATeam
  * All rights reserved.
  *
  * This source is subject to the Apache License, Version 2.0.
@@ -97,6 +97,7 @@ public class BackendSelector implements HostSelector {
                                       .extractKeyFrom(exchange)
                                       .mapOfHosts(Arrays.stream(availableHosts)
                                               .map(host -> host.getUri().toString())
+                                              .sorted()
                                               .collect(Collectors.toCollection(LinkedList::new)))
                                       .getChoice();
         return hostID;

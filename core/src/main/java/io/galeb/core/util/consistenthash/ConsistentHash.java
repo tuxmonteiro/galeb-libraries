@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2015 Globo.com - ATeam
+ * Copyright (c) 2014-2017 Globo.com - ATeam
  * All rights reserved.
  *
  * This source is subject to the Apache License, Version 2.0.
@@ -19,6 +19,7 @@ package io.galeb.core.util.consistenthash;
 import java.util.Collection;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.stream.IntStream;
 
 public class ConsistentHash<T> {
 
@@ -29,7 +30,7 @@ public class ConsistentHash<T> {
     private int                         numberOfReplicas;
 
     /** The circle. */
-    private final SortedMap<Integer, T> circle  = new TreeMap<Integer, T>();
+    private final SortedMap<Integer, T> circle  = new TreeMap<>();
 
     /**
      * Instantiates a new consistent hash.
@@ -42,10 +43,7 @@ public class ConsistentHash<T> {
             Collection<T> nodes) {
         this.hashAlgorithm = hashAlgorithm;
         this.numberOfReplicas = numberOfReplicas;
-
-        for (T node : nodes) {
-            add(node);
-        }
+        nodes.forEach(this::add);
     }
 
     /**
@@ -54,9 +52,8 @@ public class ConsistentHash<T> {
      * @param node a node
      */
     public void add(T node) {
-        for (int i = 0; i < numberOfReplicas; i++) {
-            circle.put(hashAlgorithm.hash(node.toString() + i).asInt(), node);
-        }
+        IntStream.range(0, numberOfReplicas).forEach(i ->
+            circle.put(hashAlgorithm.hash(node.toString() + i).asInt(), node));
     }
 
     /**
@@ -65,9 +62,8 @@ public class ConsistentHash<T> {
      * @param node a node
      */
     public void remove(T node) {
-        for (int i = 0; i < numberOfReplicas; i++) {
-            circle.remove(hashAlgorithm.hash(node.toString() + i).asInt());
-        }
+        IntStream.range(0, numberOfReplicas).forEach(i ->
+            circle.remove(hashAlgorithm.hash(node.toString() + i).asInt()));
     }
 
     /**
@@ -107,9 +103,7 @@ public class ConsistentHash<T> {
         }
 
         circle.clear();
-        for (T node : nodes) {
-            add(node);
-        }
+        nodes.forEach(this::add);
     }
 
 }
