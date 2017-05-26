@@ -42,8 +42,9 @@ public class HashPolicy extends LoadBalancePolicy {
 
     private void reloadPos() {
         listPos.clear();
-        for (final String uri: uris) {
-            listPos.add(uris.indexOf(uri));
+        final LinkedList<String> linkedList = new LinkedList<>(uris);
+        for (final String uri: linkedList) {
+            listPos.add(linkedList.indexOf(uri));
         }
     }
 

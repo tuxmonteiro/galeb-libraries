@@ -16,11 +16,7 @@
 
 package io.galeb.core.loadbalance;
 
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -70,7 +66,7 @@ public abstract class LoadBalancePolicy {
 
     private final AtomicBoolean needRebuild = new AtomicBoolean(true);
 
-    protected LinkedList<String> uris = new LinkedList<>();
+    protected TreeSet<String> uris = new TreeSet<>();
 
     protected volatile Optional<String> aKey = Optional.empty();
 
@@ -115,7 +111,7 @@ public abstract class LoadBalancePolicy {
         return this;
     }
 
-    public LoadBalancePolicy mapOfHosts(final LinkedList<String> uris) {
+    public LoadBalancePolicy mapOfHosts(final TreeSet<String> uris) {
         if (isReseted()) {
             this.uris = uris;
         }

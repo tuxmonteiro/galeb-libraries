@@ -22,6 +22,7 @@ import io.galeb.core.model.Backend;
 import io.galeb.core.model.BackendPool;
 
 import java.util.LinkedList;
+import java.util.TreeSet;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +37,7 @@ public class RandomPolicyTest {
     public void setUp() {
         backendPool = new BackendPool();
         randomPolicy = new RandomPolicy();
-        final LinkedList<String> uris = new LinkedList<>();
+        final TreeSet<String> uris = new TreeSet<>();
 
         for (int x=0; x<numBackends; x++) {
             final String backendId = String.format("http://0.0.0.0:%s", x);

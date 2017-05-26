@@ -19,11 +19,7 @@ package io.galeb.undertow.handlers;
 import static io.galeb.core.extractable.RequestCookie.DEFAULT_COOKIE;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import io.galeb.core.loadbalance.LoadBalancePolicy;
@@ -93,14 +89,12 @@ public class BackendSelector implements HostSelector {
     }
 
     private int getChoice(final Host[] availableHosts) {
-        int hostID = loadBalancePolicy.setCriteria(params)
+        return loadBalancePolicy.setCriteria(params)
                                       .extractKeyFrom(exchange)
                                       .mapOfHosts(Arrays.stream(availableHosts)
                                               .map(host -> host.getUri().toString())
-                                              .sorted()
-                                              .collect(Collectors.toCollection(LinkedList::new)))
+                                              .collect(Collectors.toCollection(TreeSet::new)))
                                       .getChoice();
-        return hostID;
     }
 
     private void setStickCookie(final String host) {

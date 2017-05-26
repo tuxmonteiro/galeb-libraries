@@ -18,11 +18,7 @@ package io.galeb.core.loadbalance.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.junit.After;
 import org.junit.Before;
@@ -47,14 +43,14 @@ public class HashPolicyTest {
     public void setUp() {
         backendPool = new BackendPool();
         hashPolicy = new HashPolicy();
-        final LinkedList<String> uris = new LinkedList<>();
+        final TreeSet<String> uris = new TreeSet<>();
 
         for (int x=0; x<numBackends; x++) {
             uris.add(String.format("http://0.0.0.0:%s", x));
             backendPool.addBackend(JsonObject.toJsonString(new Backend().setId(String.format("http://0.0.0.0:%s", x))));
         }
         hashPolicy.mapOfHosts(uris);
-        criteria = new HashMap<String, Object>();
+        criteria = new HashMap<>();
     }
 
     @After
