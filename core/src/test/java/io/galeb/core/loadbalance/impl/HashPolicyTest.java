@@ -16,100 +16,95 @@
 
 package io.galeb.core.loadbalance.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
-
-import org.junit.After;
-import org.junit.Before;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import org.junit.Test;
 
-import io.galeb.core.json.JsonObject;
-import io.galeb.core.loadbalance.hash.ExtractableKey;
-import io.galeb.core.loadbalance.hash.KeyTypeLocator;
-import io.galeb.core.model.Backend;
-import io.galeb.core.model.BackendPool;
-import io.galeb.core.util.consistenthash.HashAlgorithm;
-import io.galeb.core.util.consistenthash.HashAlgorithm.HashType;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.IntStream;
+
+import static com.google.common.hash.Hashing.md5;
+import static com.google.common.hash.Hashing.murmur3_128;
+import static com.google.common.hash.Hashing.sha256;
+import static com.google.common.hash.Hashing.sipHash24;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class HashPolicyTest {
 
-    int numBackends = 10;
-    HashPolicy hashPolicy;
-    BackendPool backendPool;
-    Map<String, Object> criteria;
-
-    @Before
-    public void setUp() {
-        backendPool = new BackendPool();
-        hashPolicy = new HashPolicy();
-        final LinkedList<String> uris = new LinkedList<>();
-
-        for (int x=0; x<numBackends; x++) {
-            uris.add(String.format("http://0.0.0.0:%s", x));
-            backendPool.addBackend(JsonObject.toJsonString(new Backend().setId(String.format("http://0.0.0.0:%s", x))));
-        }
-        hashPolicy.mapOfHosts(uris);
-        criteria = new HashMap<String, Object>();
-    }
-
-    @After
-    public void tearDown() {
-        criteria.clear();
-    }
+    private int numBackends = 10;
 
     @Test
     public void checkUniformDistribution() {
-        final long samples = 10000L;
+        final long samples = 100000L;
         final int rounds = 5;
         final double percentMarginOfError = 0.5;
-        final int numClients = 100;
-        final Set<HashType> hashs = EnumSet.allOf(HashAlgorithm.HashType.class);
+        final int numKeys = 100;
 
         for (int round=0; round < rounds; round++) {
-            System.out.println(String.format("IPHashPolicyTest.checkUniformDistribution - round %s: %d samples", round+1, samples));
+            System.out.println(String.format("IPHashPolicyTest.checkUniformDistribution - round %s: %d samples", round + 1, samples));
 
-            for (final HashType hash: hashs) {
-
-                criteria.put(HashPolicy.HASH_ALGORITHM, hash.toString());
-
+            for (final HashFunction hash: new HashFunction[]{md5(), murmur3_128(), sipHash24(), sha256()}) {
                 long sum = 0L;
                 final long initialTime = System.currentTimeMillis();
-                for (Integer counter=0; counter<samples; counter++) {
-                    final int chosen = (int) (Math.random() * (numClients - Float.MIN_VALUE));
-                    hashPolicy.setCriteria(criteria);
-                    hashPolicy.setKeyTypeLocator(new KeyTypeLocator() {
-                        @Override
-                        public ExtractableKey getKey(String keyType) {
-                            return new ExtractableKey() {
-                                @Override
-                                public String get(Object extractable) {
-                                    return Integer.toString(chosen);
-                                }
-                            };
-                        }
-                    });
-                    sum += hashPolicy.getChoice();
+                for (Integer counter = 0; counter < samples; counter++) {
+                    final int chosen = (int) (Math.random() * (numKeys - Float.MIN_VALUE));
+                    sum += Hashing.consistentHash(hash.hashInt(chosen), numBackends);
                 }
 
                 final long finishTime = System.currentTimeMillis();
 
-                final double result = (numBackends*(numBackends-1)/2.0) * (samples/numBackends);
+                final double result = (numBackends * (numBackends - 1) / 2.0) * (samples / numBackends);
 
                 System.out.println(String.format("-> TestHashPolicy.checkUniformDistribution (%s): Time spent (ms): %d. NonUniformDistRatio (smaller is better): %.4f%%",
-                        hash, finishTime-initialTime, Math.abs(100.0*(result-sum)/result)));
+                        hash, finishTime - initialTime, Math.abs(100.0 * (result-sum) / result)));
 
-                final double topLimit = sum*(1.0+percentMarginOfError);
-                final double bottomLimit = sum*(1.0-percentMarginOfError);
+                final double topLimit = sum * (1.0 + percentMarginOfError);
+                final double bottomLimit = sum * (1.0 - percentMarginOfError);
 
-                assertThat(result).isGreaterThanOrEqualTo(bottomLimit)
-                                  .isLessThanOrEqualTo(topLimit);
+                assertThat(result).isGreaterThanOrEqualTo(bottomLimit).isLessThanOrEqualTo(topLimit);
             }
         }
+    }
+
+    @Test
+    public void checkIfChoiceIsConsistent() {
+        int samples = 10000;
+        Map<HashFunction, Integer> hashs = new HashMap<>();
+        hashs.put(md5(), 8);
+        hashs.put(sipHash24(), 0);
+        hashs.put(murmur3_128(), 8);
+        hashs.put(sha256(), 4);
+        IntStream.range(0, samples).forEach(x ->
+                hashs.forEach((hash, result) ->
+                        assertThat(Hashing.consistentHash(hash.hashInt(1), numBackends)).isEqualTo(result)));
+    }
+
+    @Test
+    public void checkIfChoiceIsConsistentWithOnlyOneBackend() {
+        int samples = 10000;
+        Map<HashFunction, Integer> hashs = new HashMap<>();
+        hashs.put(md5(), 0);
+        hashs.put(sipHash24(), 0);
+        hashs.put(murmur3_128(), 0);
+        hashs.put(sha256(), 0);
+        IntStream.range(0, samples).forEach(x ->
+                hashs.forEach((hash, result) ->
+                        assertThat(Hashing.consistentHash(hash.hashInt(1), 1)).isEqualTo(result)));
+    }
+
+    @Test
+    public void checkIfChoiceIsConsistentWithTwoBackends() {
+        int samples = 10000;
+        Map<HashFunction, Integer> hashs = new HashMap<>();
+        hashs.put(md5(), 0);
+        hashs.put(sipHash24(), 0);
+        hashs.put(murmur3_128(), 1);
+        hashs.put(sha256(), 0);
+        IntStream.range(0, samples).forEach(x ->
+            hashs.forEach((hash, result) ->
+                    assertThat(Hashing.consistentHash(hash.hashInt(1), 2)).isEqualTo(result)));
+
     }
 
 }
