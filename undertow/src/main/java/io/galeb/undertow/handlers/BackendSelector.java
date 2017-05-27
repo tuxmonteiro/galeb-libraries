@@ -21,6 +21,7 @@ import static io.galeb.core.extractable.RequestCookie.DEFAULT_COOKIE;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 
 import io.galeb.core.loadbalance.LoadBalancePolicy;
 import io.galeb.core.loadbalance.LoadBalancePolicyLocator;
+import io.galeb.core.loadbalance.impl.HashPolicy;
 import io.galeb.core.util.consistenthash.HashAlgorithm;
 import io.galeb.core.util.consistenthash.HashAlgorithm.HashType;
 import io.galeb.undertow.extractable.UndertowCookie;
@@ -61,11 +63,20 @@ public class BackendSelector implements HostSelector {
     private Boolean enabledStickCookie = null;
 
     @Override
-    public int selectHost(final Host[] availableHosts) {
+    public int selectHost(Host[] availableHosts) {
         if (loadBalancePolicy == LoadBalancePolicy.NULL) {
             loadBalancePolicy = loadBalancePolicyLocator.setParams(params).get();
             loadBalancePolicy.setKeyTypeLocator(UndertowKeyTypeLocator.INSTANCE).reset();
             enabledStickCookie = null;
+            if (loadBalancePolicy instanceof HashPolicy) {
+                final Host[] hostOrdered = Arrays.stream(availableHosts)
+                                    .sorted(Comparator.comparing(Host::getUri))
+                                    .collect(Collectors.toCollection(LinkedList::new)).toArray(new Host[availableHosts.length - 1]);
+                //noinspection SynchronizationOnLocalVariableOrMethodParameter
+                synchronized (availableHosts) {
+                    availableHosts = hostOrdered;
+                }
+            }
         }
         if (enabledStickCookie==null) {
             enabledStickCookie = params.get(LoadBalancePolicy.PROP_STICK) != null;
@@ -93,13 +104,12 @@ public class BackendSelector implements HostSelector {
     }
 
     private int getChoice(final Host[] availableHosts) {
-        int hostID = loadBalancePolicy.setCriteria(params)
+        return loadBalancePolicy.setCriteria(params)
                                       .extractKeyFrom(exchange)
                                       .mapOfHosts(Arrays.stream(availableHosts)
                                               .map(host -> host.getUri().toString())
                                               .collect(Collectors.toCollection(LinkedList::new)))
                                       .getChoice();
-        return hostID;
     }
 
     private void setStickCookie(final String host) {
