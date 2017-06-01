@@ -68,14 +68,8 @@ public class BackendSelector implements HostSelector {
             loadBalancePolicy = loadBalancePolicyLocator.setParams(params).get();
             loadBalancePolicy.setKeyTypeLocator(UndertowKeyTypeLocator.INSTANCE).reset();
             enabledStickCookie = null;
-            if (loadBalancePolicy instanceof HashPolicy) {
-                final Host[] hostOrdered = Arrays.stream(availableHosts)
-                                    .sorted(Comparator.comparing(Host::getUri))
-                                    .collect(Collectors.toCollection(LinkedList::new)).toArray(new Host[availableHosts.length - 1]);
-                //noinspection SynchronizationOnLocalVariableOrMethodParameter
-                synchronized (availableHosts) {
-                    availableHosts = hostOrdered;
-                }
+            synchronized (availableHosts) {
+                Arrays.sort(availableHosts, Comparator.comparing(Host::getUri));
             }
         }
         if (enabledStickCookie==null) {
