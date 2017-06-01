@@ -154,7 +154,7 @@ public class BackendSelector implements HostSelector {
         return this;
     }
 
-    public void reset() {
+    public synchronized void reset() {
         loadBalancePolicy = LoadBalancePolicy.NULL;
     }
 
