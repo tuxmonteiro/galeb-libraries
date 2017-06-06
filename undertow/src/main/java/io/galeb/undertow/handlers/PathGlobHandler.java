@@ -32,7 +32,7 @@ public class PathGlobHandler implements HttpHandler {
     private final Map<Rule, HttpHandler> rules = new CopyOnWriteMap<>();
 
     private Comparator<Map.Entry<Rule, HttpHandler>> ruleOrderComparator() {
-        return (e1, e2) -> Integer.compare(e1.getKey().getRuleOrder(), e2.getKey().getRuleOrder());
+        return Comparator.comparingInt(e -> e.getKey().getRuleOrder());
     }
 
     @Override
